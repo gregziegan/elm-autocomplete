@@ -1,4 +1,4 @@
-module Autocomplete (Autocomplete, Item, ClassListConfig, ClassList, init, initWithClasses, initItem, initItemCustomHtml, customizeNoMatches, customizeLoading, Action, update, view) where
+module Autocomplete (Autocomplete, ClassListConfig, init, initWithClasses, customizeNoMatches, customizeLoading, Action, update, view, getSelectedItemText) where
 
 {-| A customizable autocomplete component.
 
@@ -11,10 +11,13 @@ Selection is modified by keyboard input, mouse clicks,
 and is also styled via css classes.
 
 # Definition
-@docs Autocomplete, Item, ClassListConfig, ClassList
+@docs Autocomplete
 
 # Creating an Autocomplete
-@docs init, initWithClasses, initItem, initItemCustomHtml, customizeNoMatches, customizeLoading
+@docs init, initWithClasses, customizeNoMatches, customizeLoading
+
+# Configuration
+@docs ClassListConfig
 
 # Update
 @docs Action, update
@@ -32,7 +35,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Effects exposing (Effects)
 import Signal
-import String exposing (..)
+import String
 import Task exposing (Task)
 import Styling exposing (getStyling, ClassConfig, Classes)
 
@@ -42,11 +45,12 @@ import Styling exposing (getStyling, ClassConfig, Classes)
 -}
 type alias Autocomplete =
   { value : String
-  , items : List Item
+  , getItemHtml : String -> Html
+  , items : List String
   , maxListSize : Int
-  , filteredItems : List Item
-  , filterFn : Item -> String -> Bool
-  , compareFn : Item -> Item -> Order
+  , matches : List String
+  , filterFn : String -> String -> Bool
+  , compareFn : String -> String -> Order
   , getItemsTask : GetItemsTask
   , selectedItemIndex : Index
   , classes : Maybe ClassListConfig
@@ -58,7 +62,7 @@ type alias Autocomplete =
 
 
 type alias GetItemsTask =
-  String -> Index -> Task Effects.Never (List Item)
+  String -> Index -> Task Effects.Never (List String)
 
 
 type alias Index =
@@ -77,32 +81,16 @@ type alias ClassList =
   Classes
 
 
-{-| A possible selection in the autocomplete.
--}
-type alias Item =
-  { key : ID
-  , text : Text
-  , html : Html
-  }
-
-
-type alias ID =
-  String
-
-
-type alias Text =
-  String
-
-
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
 -}
-init : List Item -> Int -> GetItemsTask -> ( Autocomplete, Effects Action )
+init : List String -> Int -> GetItemsTask -> ( Autocomplete, Effects Action )
 init items maxListSize getItemsTask =
   ( { value = ""
+    , getItemHtml = (\item -> text item)
     , items = items
     , maxListSize = maxListSize
-    , filteredItems = items
-    , filterFn = (\item value -> String.startsWith value item.text)
+    , matches = items
+    , filterFn = (\item value -> String.startsWith value item)
     , compareFn = normalComparison
     , getItemsTask = getItemsTask
     , selectedItemIndex = 0
@@ -118,13 +106,14 @@ init items maxListSize getItemsTask =
 
 {-| Creates an Autocomplete with custom class names
 -}
-initWithClasses : List Item -> Int -> GetItemsTask -> ClassListConfig -> ( Autocomplete, Effects Action )
+initWithClasses : List String -> Int -> GetItemsTask -> ClassListConfig -> ( Autocomplete, Effects Action )
 initWithClasses items maxListSize getItemsTask classListConfig =
   ( { value = ""
+    , getItemHtml = (\item -> text item)
     , items = items
-    , filteredItems = items
+    , matches = items
     , maxListSize = maxListSize
-    , filterFn = (\item value -> String.startsWith value item.text)
+    , filterFn = (\item value -> String.startsWith value item)
     , compareFn = normalComparison
     , getItemsTask = getItemsTask
     , selectedItemIndex = 0
@@ -160,29 +149,9 @@ customizeLoading loadingHtml tup =
     ( { model | loadingDisplay = loadingHtml }, snd tup )
 
 
-{-| Creates an Autocomplete Item
--}
-initItem : ID -> Text -> Item
-initItem id text' =
-  { key = id
-  , text = text'
-  , html = text text'
-  }
-
-
-{-| Creates an Autocomplete Item with custom read-only Html
--}
-initItemCustomHtml : ID -> Text -> Html -> Item
-initItemCustomHtml id text' html =
-  { key = id
-  , text = text'
-  , html = html
-  }
-
-
-normalComparison : Item -> Item -> Order
+normalComparison : String -> String -> Order
 normalComparison item1 item2 =
-  case compare item1.text item2.text of
+  case compare item1 item2 of
     LT ->
       LT
 
@@ -193,10 +162,12 @@ normalComparison item1 item2 =
       GT
 
 
+{-| A description of a potential update
+-}
 type Action
   = NoOp
   | SetValue String
-  | UpdateItems (List Item)
+  | UpdateItems (List String)
   | Complete
   | ChangeSelection Int
   | ShowMenu Bool
@@ -216,7 +187,7 @@ update action model =
     UpdateItems items ->
       ( { model
           | items = items
-          , filteredItems =
+          , matches =
               List.filter (\item -> model.filterFn item model.value) model.items
                 |> List.sortWith model.compareFn
           , showLoading = False
@@ -227,7 +198,7 @@ update action model =
     Complete ->
       case (getSelectedItem model) of
         Just item ->
-          ( { model | value = item.text, showMenu = False }, Effects.none )
+          ( { model | value = item, showMenu = False }, Effects.none )
 
         Nothing ->
           ( model, Effects.none )
@@ -236,7 +207,7 @@ update action model =
       let
         boundedNewIndex =
           Basics.max newIndex 0
-            |> Basics.min ((List.length model.filteredItems) - 1)
+            |> Basics.min ((List.length model.matches) - 1)
             |> Basics.min (model.maxListSize - 1)
       in
         ( { model | selectedItemIndex = boundedNewIndex }, Effects.none )
@@ -257,7 +228,7 @@ view address model =
         div [] []
       else if model.showLoading then
         model.loadingDisplay
-      else if List.isEmpty model.filteredItems then
+      else if List.isEmpty model.matches then
         model.noMatchesDisplay
       else
         viewMenu address model
@@ -294,24 +265,24 @@ viewInput address model =
       []
 
 
-viewItem : Signal.Address Action -> Autocomplete -> Item -> Index -> Html
+viewItem : Signal.Address Action -> Autocomplete -> String -> Index -> Html
 viewItem address model item index =
   li
     [ classList (getStyling model.classes Styling.Item).classes'
     , (getStyling model.classes Styling.Item).inlineStyle
     , onMouseEnter address (ChangeSelection index)
     ]
-    [ item.html ]
+    [ model.getItemHtml item ]
 
 
-viewSelectedItem : Signal.Address Action -> Autocomplete -> Item -> Html
+viewSelectedItem : Signal.Address Action -> Autocomplete -> String -> Html
 viewSelectedItem address model item =
   li
     [ classList (getStyling model.classes Styling.SelectedItem).classes'
     , (getStyling model.classes Styling.SelectedItem).inlineStyle
     , onClick address Complete
     ]
-    [ item.html ]
+    [ model.getItemHtml item ]
 
 
 viewMenu : Signal.Address Action -> Autocomplete -> Html
@@ -336,7 +307,7 @@ viewList address model =
       [ classList (getStyling model.classes Styling.List).classes'
       , (getStyling model.classes Styling.List).inlineStyle
       ]
-      (List.indexedMap getItemView model.filteredItems
+      (List.indexedMap getItemView model.matches
         |> List.take model.maxListSize
       )
 
@@ -356,12 +327,12 @@ getMoreItems value model =
 -- Helpers
 
 
-updateInputValue : Text -> Autocomplete -> ( Autocomplete, Effects Action )
-updateInputValue text model =
-  if text == "" then
+updateInputValue : String -> Autocomplete -> ( Autocomplete, Effects Action )
+updateInputValue value model =
+  if value == "" then
     ( { model
-        | value = text
-        , filteredItems =
+        | value = value
+        , matches =
             model.items
               |> List.sortWith model.compareFn
         , selectedItemIndex = 0
@@ -370,39 +341,39 @@ updateInputValue text model =
     )
   else
     let
-      filteredItems =
-        List.filter (\item -> model.filterFn item text) model.items
+      matches =
+        List.filter (\item -> model.filterFn item value) model.items
           |> List.sortWith model.compareFn
 
       showLoading =
-        if List.isEmpty filteredItems then
+        if List.isEmpty matches then
           True
         else
           False
     in
       ( { model
-          | value = text
-          , filteredItems = filteredItems
+          | value = value
+          , matches = matches
           , showLoading = showLoading
           , selectedItemIndex = 0
         }
-      , getMoreItems text model
+      , getMoreItems value model
       )
 
 
-getSelectedItem : Autocomplete -> Maybe Item
+getSelectedItem : Autocomplete -> Maybe String
 getSelectedItem model =
-  List.drop model.selectedItemIndex model.filteredItems
+  List.drop model.selectedItemIndex model.matches
     |> List.head
 
 
 {-| Get the text of the currently selected item
 -}
-getSelectedItemText : Autocomplete -> Text
+getSelectedItemText : Autocomplete -> String
 getSelectedItemText model =
   case (getSelectedItem model) of
     Just item ->
-      item.text
+      item
 
     Nothing ->
       model.value
