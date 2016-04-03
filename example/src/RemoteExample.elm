@@ -3,7 +3,7 @@ module Main (..) where
 import Effects exposing (Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Autocomplete exposing (initWithClasses, update, view)
+import Autocomplete exposing (init, update, view)
 import StartApp
 import Task exposing (Task)
 import Http
@@ -28,35 +28,23 @@ responseToItems maybeString =
       []
 
 
-testData : List String
-testData =
-  []
-
-
-initExampleClassListConfig : Autocomplete.ClassListConfig
-initExampleClassListConfig =
-  { menu = [ ( "autocomplete-menu-default", True ) ]
-  , item = [ ( "autocomplete-item-default", True ) ]
-  , selectedItem = [ ( "autocomplete-selected-item-default", True ) ]
-  , list = [ ( "autocomplete-list-default", True ) ]
-  , input = [ ( "autocomplete-input-default", True ) ]
-  }
-
-
 getItemsTask : String -> Int -> Task Effects.Never (List String)
 getItemsTask value index =
   fetchMoreItems "https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt"
 
 
 app =
-  StartApp.start
-    { init =
-        initWithClasses testData 5 getItemsTask initExampleClassListConfig
-          |> Autocomplete.customizeLoading (img [ src "assets/loading.svg" ] [])
-    , update = update
-    , view = view
-    , inputs = []
-    }
+  let
+    config =
+      Autocomplete.defaultConfig
+        |> Autocomplete.setLoadingDisplay (img [ src "assets/loading.svg" ] [])
+  in
+    StartApp.start
+      { init = init [] getItemsTask
+      , update = update
+      , view = view
+      , inputs = []
+      }
 
 
 main : Signal Html.Html
