@@ -1,4 +1,4 @@
-module Autocomplete (init, initWithConfig, GetItemsTask, Action, update, view, getSelectedItemText) where
+module Autocomplete (init, initWithConfig, GetItemsTask, defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay, Action, update, view, getSelectedItemText) where
 
 {-| A customizable autocomplete component.
 
@@ -10,8 +10,11 @@ The currently selected item is preserved.
 Selection is modified by keyboard input, mouse clicks,
 and is also styled via css classes.
 
-# Creating an Autocomplete
+# Initialize
 @docs init, initWithConfig, GetItemsTask
+
+# Configure
+@docs defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
 
 # Update
 @docs Action, update
@@ -24,7 +27,7 @@ and is also styled via css classes.
 
 -}
 
-import Autocomplete.Config exposing (Config, defaultConfig)
+import Autocomplete.Config as Config exposing (Config)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -39,8 +42,8 @@ import Autocomplete.Styling as Styling
 -}
 type alias Autocomplete =
   { value : String
-  , items : List String
-  , matches : List String
+  , items : List Text
+  , matches : List Text
   , selectedItemIndex : Index
   , getItemsTask : GetItemsTask
   , showMenu : Bool
@@ -60,6 +63,12 @@ type alias GetItemsTask =
 -}
 type alias Index =
   Int
+
+
+{-| Item text
+-}
+type alias Text =
+  String
 
 
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
@@ -94,6 +103,62 @@ initWithConfig items getItemsTask config =
     }
   , Effects.none
   )
+
+
+{-| A simple Autocomplete configuration
+-}
+defaultConfig : Config
+defaultConfig =
+  Config.defaultConfig
+
+
+{-| Provide a function that produces an attribute to style a particular View
+-}
+setStyleViewFn : (Styling.View -> Attribute) -> Config -> Config
+setStyleViewFn styleViewFn config =
+  { config | styleViewFn = styleViewFn }
+
+
+{-| Provide a custom HTML view for an Autocomplete item's text
+-}
+setItemHtml : Config.ItemHtmlFn -> Config -> Config
+setItemHtml itemHtmlFn config =
+  Config.setItemHtml itemHtmlFn config
+
+
+{-| Provide a maximum list size for the Autocomplete menu
+-}
+setMaxListSize : Int -> Config -> Config
+setMaxListSize maxListSize config =
+  Config.setMaxListSize maxListSize config
+
+
+{-| Provide a custom filter function used to filter Autocomplete items.
+-}
+setFilterFn : (Text -> Config.InputValue -> Bool) -> Config -> Config
+setFilterFn filterFn config =
+  Config.setFilterFn filterFn config
+
+
+{-| Provide a custom comparison function to order the Autocomplete matches.
+-}
+setCompareFn : (Text -> Text -> Order) -> Config -> Config
+setCompareFn compareFn config =
+  Config.setCompareFn compareFn config
+
+
+{-| Provide a custom HTML display for the case that nothing matches.
+-}
+setNoMatchesDisplay : Html -> Config -> Config
+setNoMatchesDisplay noMatchesDisplay config =
+  Config.setNoMatchesDisplay noMatchesDisplay config
+
+
+{-| Provide a custom loading display for the case when more items are being fetched
+-}
+setLoadingDisplay : Html -> Config -> Config
+setLoadingDisplay loadingDisplay config =
+  Config.setLoadingDisplay loadingDisplay config
 
 
 {-| A description of a state change

@@ -1,34 +1,50 @@
 module Main (..) where
 
-import Autocomplete.Simple exposing (init, update, view)
+import Autocomplete.Simple as Autocomplete exposing (initWithConfig, update, view)
+import Autocomplete.Styling as Styling
 import StartApp.Simple
 import Html
+import Html.Attributes exposing (class)
 
 
-testData : List Item
+testData : List String
 testData =
-  [ initItem "0" "elm"
-  , initItem "1" "makes"
-  , initItem "2" "coding"
-  , initItem "3" "life"
-  , initItem "4" "easy"
+  [ "elm"
+  , "makes"
+  , "coding"
+  , "life"
+  , "easy"
   ]
 
 
-initExampleClassListConfig : ClassListConfig
-initExampleClassListConfig =
-  { menu = [ ( "autocomplete-menu-default", True ) ]
-  , item = [ ( "autocomplete-item-default", True ) ]
-  , selectedItem = [ ( "autocomplete-selected-item-default", True ) ]
-  , list = [ ( "autocomplete-list-default", True ) ]
-  , input = [ ( "autocomplete-input-default", True ) ]
-  }
+styleView : Styling.View -> Html.Attribute
+styleView view =
+  case view of
+    Styling.Menu ->
+      class "autocomplete-menu-default"
+
+    Styling.List ->
+      class "autocomplete-list-default"
+
+    Styling.Item ->
+      class "autocomplete-item-default"
+
+    Styling.SelectedItem ->
+      class "autocomplete-selected-item-default"
+
+    Styling.Input ->
+      class "autocomplete-input-default"
 
 
 main : Signal Html.Html
 main =
-  StartApp.Simple.start
-    { model = init testData 5 initExampleClassListConfig
-    , update = update
-    , view = view
-    }
+  let
+    config =
+      Autocomplete.defaultConfig
+        |> Autocomplete.setStyleViewFn styleView
+  in
+    StartApp.Simple.start
+      { model = initWithConfig testData config
+      , update = update
+      , view = view
+      }

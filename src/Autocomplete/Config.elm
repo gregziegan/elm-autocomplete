@@ -1,4 +1,4 @@
-module Autocomplete.Config (Config, defaultConfig, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
+module Autocomplete.Config (..) where
 
 {-| Configuration module for the Autocomplete component.
 
@@ -6,7 +6,7 @@ module Autocomplete.Config (Config, defaultConfig, setItemHtml, setMaxListSize, 
 @docs defaultConfig
 
 # Modifiers
-@docs setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
+@docs setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
 
 
 -}
@@ -43,6 +43,13 @@ type alias Text =
 -}
 type alias InputValue =
   String
+
+
+{-| Provide a function that produces an attribute to style a particular View
+-}
+setStyleViewFn : (Styling.View -> Attribute) -> Config -> Config
+setStyleViewFn styleViewFn config =
+  { config | styleViewFn = styleViewFn }
 
 
 {-| Provide a custom HTML view for an Autocomplete item's text
