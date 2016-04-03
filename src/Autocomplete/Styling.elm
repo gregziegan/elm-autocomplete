@@ -63,8 +63,7 @@ menuStyle : Attribute
 menuStyle =
   style
     [ ( "position", "absolute" )
-    , ( "top", "10px" )
-    , ( "left", "0" )
+    , ( "left", "5px" )
     , ( "margin-top", "5px" )
     , ( "background", "white" )
     , ( "color", "black" )
@@ -117,7 +116,5 @@ inputStyle =
     , ( "position", "relative" )
     , ( "display", "block" )
     , ( "padding", "0.8em" )
-    , ( "border", "none" )
-    , ( "font-size", "14px" )
-    , ( "font-weight", "bold" )
+    , ( "font-size", "12px" )
     ]

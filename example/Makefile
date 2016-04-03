@@ -20,7 +20,10 @@ new: clean-build all
 $(ELM_BUILD): elm
 
 simple:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/Example.elm
+	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/SimpleExample.elm
+
+styled:
+	elm make --yes --output ${ELM_BUILD} ${SOURCE_DIR}/StyledExample.elm
 
 remote:
 	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/RemoteExample.elm

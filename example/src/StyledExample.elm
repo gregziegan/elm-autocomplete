@@ -1,6 +1,6 @@
 module Main (..) where
 
-import Autocomplete.Simple exposing (Item, ClassListConfig, initWithClasses, initItem, update, view)
+import Autocomplete.Simple exposing (init, update, view)
 import StartApp.Simple
 import Html
 
@@ -28,7 +28,7 @@ initExampleClassListConfig =
 main : Signal Html.Html
 main =
   StartApp.Simple.start
-    { model = initWithClasses testData 5 initExampleClassListConfig
+    { model = init testData 5 initExampleClassListConfig
     , update = update
     , view = view
     }
