@@ -9,6 +9,7 @@
     "exposed-modules": [
         "Autocomplete",
         "Autocomplete.Simple",
+        "Autocomplete.Config",
         "Autocomplete.Styling"
     ],
     "dependencies": {

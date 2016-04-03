@@ -1,6 +1,9 @@
-module Autocomplete.Config (..) where
+module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
 
 {-| Configuration module for the Autocomplete component.
+
+# Definition
+@docs Config, ItemHtmlFn, Text, InputValue, Index
 
 # Defaults
 @docs defaultConfig
@@ -16,7 +19,13 @@ import String
 import Autocomplete.Styling as Styling
 
 
+{-| The configuration record for an Autocomplete component.
+-}
 type alias Config =
+  Model
+
+
+type alias Model =
   { styleViewFn : Styling.View -> Attribute
   , itemHtmlFn : ItemHtmlFn
   , maxListSize : Int
@@ -45,51 +54,57 @@ type alias InputValue =
   String
 
 
+{-| Positive integer index of selected item in list
+-}
+type alias Index =
+  Int
+
+
 {-| Provide a function that produces an attribute to style a particular View
 -}
-setStyleViewFn : (Styling.View -> Attribute) -> Config -> Config
+setStyleViewFn : (Styling.View -> Attribute) -> Model -> Model
 setStyleViewFn styleViewFn config =
   { config | styleViewFn = styleViewFn }
 
 
 {-| Provide a custom HTML view for an Autocomplete item's text
 -}
-setItemHtml : ItemHtmlFn -> Config -> Config
+setItemHtml : ItemHtmlFn -> Model -> Model
 setItemHtml itemHtmlFn config =
   { config | itemHtmlFn = itemHtmlFn }
 
 
 {-| Provide a maximum list size for the Autocomplete menu
 -}
-setMaxListSize : Int -> Config -> Config
+setMaxListSize : Int -> Model -> Model
 setMaxListSize maxListSize config =
   { config | maxListSize = maxListSize }
 
 
 {-| Provide a custom filter function used to filter Autocomplete items.
 -}
-setFilterFn : (Text -> InputValue -> Bool) -> Config -> Config
+setFilterFn : (Text -> InputValue -> Bool) -> Model -> Model
 setFilterFn filterFn config =
   { config | filterFn = filterFn }
 
 
 {-| Provide a custom comparison function to order the Autocomplete matches.
 -}
-setCompareFn : (Text -> Text -> Order) -> Config -> Config
+setCompareFn : (Text -> Text -> Order) -> Model -> Model
 setCompareFn compareFn config =
   { config | compareFn = compareFn }
 
 
 {-| Provide a custom HTML display for the case that nothing matches.
 -}
-setNoMatchesDisplay : Html -> Config -> Config
+setNoMatchesDisplay : Html -> Model -> Model
 setNoMatchesDisplay noMatchesDisplay config =
   { config | noMatchesDisplay = noMatchesDisplay }
 
 
 {-| Provide a custom loading display for the case when more items are being fetched
 -}
-setLoadingDisplay : Html -> Config -> Config
+setLoadingDisplay : Html -> Model -> Model
 setLoadingDisplay loadingDisplay config =
   { config | loadingDisplay = loadingDisplay }
 
@@ -100,7 +115,7 @@ setLoadingDisplay loadingDisplay config =
 
 {-| A simple Autocomplete configuration
 -}
-defaultConfig : Config
+defaultConfig : Model
 defaultConfig =
   { styleViewFn = Styling.defaultStyles
   , itemHtmlFn = (\item -> text item)

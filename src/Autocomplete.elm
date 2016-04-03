@@ -1,4 +1,4 @@
-module Autocomplete (init, initWithConfig, GetItemsTask, defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay, Action, update, view, getSelectedItemText) where
+module Autocomplete (Autocomplete, GetItemsTask, init, initWithConfig, Action, update, view, getSelectedItemText) where
 
 {-| A customizable autocomplete component.
 
@@ -10,11 +10,11 @@ The currently selected item is preserved.
 Selection is modified by keyboard input, mouse clicks,
 and is also styled via css classes.
 
-# Initialize
-@docs init, initWithConfig, GetItemsTask
+# Definition
+@docs Autocomplete, GetItemsTask
 
-# Configure
-@docs defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
+# Initialize
+@docs init, initWithConfig
 
 # Update
 @docs Action, update
@@ -27,7 +27,7 @@ and is also styled via css classes.
 
 -}
 
-import Autocomplete.Config as Config exposing (Config)
+import Autocomplete.Config as Config exposing (Config, Index, Text, InputValue)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -41,7 +41,14 @@ import Autocomplete.Styling as Styling
     It assumes filtering is based upon strings.
 -}
 type alias Autocomplete =
-  { value : String
+  Model
+
+
+{-| The Autocomplete model.
+    It assumes filtering is based upon strings.
+-}
+type alias Model =
+  { value : InputValue
   , items : List Text
   , matches : List Text
   , selectedItemIndex : Index
@@ -56,19 +63,7 @@ type alias Autocomplete =
 the input's value or selection index is changed.
 -}
 type alias GetItemsTask =
-  String -> Index -> Task Effects.Never (List String)
-
-
-{-| Positive integer index of selected item in list
--}
-type alias Index =
-  Int
-
-
-{-| Item text
--}
-type alias Text =
-  String
+  InputValue -> Index -> Task Effects.Never (List String)
 
 
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
@@ -82,7 +77,7 @@ init items getItemsTask =
     , getItemsTask = getItemsTask
     , showMenu = False
     , showLoading = False
-    , config = defaultConfig
+    , config = Config.defaultConfig
     }
   , Effects.none
   )
@@ -103,62 +98,6 @@ initWithConfig items getItemsTask config =
     }
   , Effects.none
   )
-
-
-{-| A simple Autocomplete configuration
--}
-defaultConfig : Config
-defaultConfig =
-  Config.defaultConfig
-
-
-{-| Provide a function that produces an attribute to style a particular View
--}
-setStyleViewFn : (Styling.View -> Attribute) -> Config -> Config
-setStyleViewFn styleViewFn config =
-  { config | styleViewFn = styleViewFn }
-
-
-{-| Provide a custom HTML view for an Autocomplete item's text
--}
-setItemHtml : Config.ItemHtmlFn -> Config -> Config
-setItemHtml itemHtmlFn config =
-  Config.setItemHtml itemHtmlFn config
-
-
-{-| Provide a maximum list size for the Autocomplete menu
--}
-setMaxListSize : Int -> Config -> Config
-setMaxListSize maxListSize config =
-  Config.setMaxListSize maxListSize config
-
-
-{-| Provide a custom filter function used to filter Autocomplete items.
--}
-setFilterFn : (Text -> Config.InputValue -> Bool) -> Config -> Config
-setFilterFn filterFn config =
-  Config.setFilterFn filterFn config
-
-
-{-| Provide a custom comparison function to order the Autocomplete matches.
--}
-setCompareFn : (Text -> Text -> Order) -> Config -> Config
-setCompareFn compareFn config =
-  Config.setCompareFn compareFn config
-
-
-{-| Provide a custom HTML display for the case that nothing matches.
--}
-setNoMatchesDisplay : Html -> Config -> Config
-setNoMatchesDisplay noMatchesDisplay config =
-  Config.setNoMatchesDisplay noMatchesDisplay config
-
-
-{-| Provide a custom loading display for the case when more items are being fetched
--}
-setLoadingDisplay : Html -> Config -> Config
-setLoadingDisplay loadingDisplay config =
-  Config.setLoadingDisplay loadingDisplay config
 
 
 {-| A description of a state change

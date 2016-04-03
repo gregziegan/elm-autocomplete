@@ -1,48 +1,52 @@
 module Main (..) where
 
-import Autocomplete.Simple as Autocomplete
-import Autocomplete.Simple exposing (Item, ClassListConfig, Action, initWithClasses, initItem, getSelectedItemText)
+import Autocomplete.Simple as Autocomplete exposing (getSelectedItemText)
+import Autocomplete.Styling as Styling
 import StartApp.Simple
 import Html exposing (..)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (style, class)
 import String
 
 
-testData : List Item
-testData =
-  [ initItem "0" "elm"
-  , initItem "1" "makes"
-  , initItem "2" "coding"
-  , initItem "3" "life"
-  , initItem "4" "easy"
-  ]
+styleView : Styling.View -> Html.Attribute
+styleView view =
+  case view of
+    Styling.Menu ->
+      class "autocomplete-menu-default"
 
+    Styling.List ->
+      class "autocomplete-list-default"
 
-initExampleClassListConfig : ClassListConfig
-initExampleClassListConfig =
-  { menu = [ ( "autocomplete-menu-default", True ) ]
-  , item = [ ( "autocomplete-item-default", True ) ]
-  , selectedItem = [ ( "autocomplete-selected-item-default", True ) ]
-  , list = [ ( "autocomplete-list-default", True ) ]
-  , input = [ ( "autocomplete-input-default", True ) ]
-  }
+    Styling.Item ->
+      class "autocomplete-item-default"
+
+    Styling.SelectedItem ->
+      class "autocomplete-selected-item-default"
+
+    Styling.Input ->
+      class "autocomplete-input-default"
 
 
 type alias Model =
   { autocompleteRemaining : String
-  , autocomplete : Autocomplete.Autocomplete
+  , autocomplete : Autocomplete.Model
   }
 
 
 init : Model
 init =
-  { autocompleteRemaining = ""
-  , autocomplete = initWithClasses testData 5 initExampleClassListConfig
-  }
+  let
+    config =
+      Autocomplete.defaultConfig
+        |> Autocomplete.setStyleViewFn styleView
+  in
+    { autocompleteRemaining = ""
+    , autocomplete = Autocomplete.initWithConfig [ "elm", "makes", "coding", "life", "easy" ] config
+    }
 
 
 type Action
-  = Autocomplete Autocomplete.Simple.Action
+  = Autocomplete Autocomplete.Action
 
 
 update : Action -> Model -> Model

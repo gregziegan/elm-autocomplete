@@ -1,4 +1,4 @@
-module Autocomplete.Simple (init, initWithConfig, defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, Action, update, view, getSelectedItemText) where
+module Autocomplete.Simple (Autocomplete, init, initWithConfig, Action, update, view, getSelectedItemText) where
 
 {-| A customizable autocomplete component.
 
@@ -10,11 +10,11 @@ The currently selected item is preserved.
 Selection is modified by keyboard input, mouse clicks,
 and is also styled via css classes.
 
+# Definition
+@docs Autocomplete
+
 # Initialize
 @docs init, initWithConfig
-
-# Configure
-@docs defaultConfig, setStyleViewFn, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay
 
 # Update
 @docs Action, update
@@ -24,9 +24,10 @@ and is also styled via css classes.
 
 # Helpers
 @docs getSelectedItemText
+
 -}
 
-import Autocomplete.Config as Config exposing (Config)
+import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -38,23 +39,20 @@ import Autocomplete.Styling as Styling
     It assumes filtering is based upon strings.
 -}
 type alias Autocomplete =
-  { value : String
-  , items : List String
-  , matches : List String
+  Model
+
+
+{-| The Autocomplete model.
+    It assumes filtering is based upon strings.
+-}
+type alias Model =
+  { value : InputValue
+  , items : List Text
+  , matches : List Text
   , selectedItemIndex : Index
   , showMenu : Bool
   , config : Config
   }
-
-
-{-| Positive integer index of selected item in list
--}
-type alias Index =
-  Int
-
-
-type alias Text =
-  String
 
 
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
@@ -66,7 +64,7 @@ init items =
   , matches = items
   , selectedItemIndex = 0
   , showMenu = False
-  , config = defaultConfig
+  , config = Config.defaultConfig
   }
 
 
@@ -79,55 +77,6 @@ initWithConfig items config =
       init items
   in
     { model | config = config }
-
-
-{-| A simple Autocomplete configuration
--}
-defaultConfig : Config
-defaultConfig =
-  Config.defaultConfig
-
-
-{-| Provide a function that produces an attribute to style a particular View
--}
-setStyleViewFn : (Styling.View -> Attribute) -> Config -> Config
-setStyleViewFn styleViewFn config =
-  { config | styleViewFn = styleViewFn }
-
-
-{-| Provide a custom HTML view for an Autocomplete item's text
--}
-setItemHtml : Config.ItemHtmlFn -> Config -> Config
-setItemHtml itemHtmlFn config =
-  Config.setItemHtml itemHtmlFn config
-
-
-{-| Provide a maximum list size for the Autocomplete menu
--}
-setMaxListSize : Int -> Config -> Config
-setMaxListSize maxListSize config =
-  Config.setMaxListSize maxListSize config
-
-
-{-| Provide a custom filter function used to filter Autocomplete items.
--}
-setFilterFn : (Text -> Config.InputValue -> Bool) -> Config -> Config
-setFilterFn filterFn config =
-  Config.setFilterFn filterFn config
-
-
-{-| Provide a custom comparison function to order the Autocomplete matches.
--}
-setCompareFn : (Text -> Text -> Order) -> Config -> Config
-setCompareFn compareFn config =
-  Config.setCompareFn compareFn config
-
-
-{-| Provide a custom HTML display for the case that nothing matches.
--}
-setNoMatchesDisplay : Html -> Config -> Config
-setNoMatchesDisplay noMatchesDisplay config =
-  Config.setNoMatchesDisplay noMatchesDisplay config
 
 
 {-| A description of a state change
