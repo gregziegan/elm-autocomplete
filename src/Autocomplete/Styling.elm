@@ -1,73 +1,62 @@
-module Styling (..) where
+module Autocomplete.Styling (View(Menu, List, Item, SelectedItem, Input), defaultStyles) where
+
+{-| Styling module for the Autocomplete component.
+
+The autocomplete consists of a menu, a list, list items, and an input.
+This module includes functions to provide css class names for styling those
+child views.
+
+# Child Views
+@docs View
+
+# Defaults
+@docs defaultStyles
+
+-}
 
 import Html exposing (Attribute)
 import Html.Attributes exposing (style)
-import List
 
 
+{-| A list of class names and their associated status (added/removed) as a boolean value.
+-}
 type alias Classes =
   List ( String, Bool )
 
 
-type alias ClassConfig =
-  { menu : Classes
-  , list : Classes
-  , item : Classes
-  , selectedItem : Classes
-  , input : Classes
-  }
-
-
-type Components
+{-| The stylable views of the Autocomplete component.
+-}
+type View
   = Menu
-  | SelectedItem
-  | Item
   | List
+  | Item
+  | SelectedItem
   | Input
 
 
-getStyling : Maybe ClassConfig -> Components -> { inlineStyle : Attribute, classes' : Classes }
-getStyling maybeClassConfig subcomponent =
-  let
-    classConfig =
-      case maybeClassConfig of
-        Just config ->
-          config
+{-| Produces a style attribute for a View. Uses some pretty defaults.
+-}
+defaultStyles : View -> Attribute
+defaultStyles view =
+  case view of
+    Menu ->
+      menuStyle
 
-        Nothing ->
-          ClassConfig [] [] [] [] []
+    List ->
+      listStyle
 
-    styleWithDefault classList defaultStyle' =
-      if not (List.isEmpty classList) then
-        style []
-      else
-        defaultStyle'
-  in
-    case subcomponent of
-      Menu ->
-        { inlineStyle = styleWithDefault classConfig.menu menuStyle
-        , classes' = classConfig.menu
-        }
+    Item ->
+      itemStyle
 
-      SelectedItem ->
-        { inlineStyle = styleWithDefault classConfig.selectedItem selectedItemStyle
-        , classes' = classConfig.selectedItem
-        }
+    SelectedItem ->
+      selectedItemStyle
 
-      Item ->
-        { inlineStyle = styleWithDefault classConfig.item itemStyle
-        , classes' = classConfig.item
-        }
+    Input ->
+      inputStyle
 
-      List ->
-        { inlineStyle = styleWithDefault classConfig.list listStyle
-        , classes' = classConfig.list
-        }
 
-      Input ->
-        { inlineStyle = styleWithDefault classConfig.input inputStyle
-        , classes' = classConfig.input
-        }
+
+-- DEFAULTS
 
 
 menuStyle : Attribute

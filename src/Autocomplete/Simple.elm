@@ -1,4 +1,4 @@
-module Autocomplete.Simple (Autocomplete, Item, ClassListConfig, ClassList, init, initWithClasses, initItem, customizeNoMatches, Action, update, view, getSelectedItemText) where
+module Autocomplete.Simple (init, initWithConfig, Action, update, view, getSelectedItemText) where
 
 {-| A customizable autocomplete component.
 
@@ -10,11 +10,8 @@ The currently selected item is preserved.
 Selection is modified by keyboard input, mouse clicks,
 and is also styled via css classes.
 
-# Definition
-@docs Autocomplete, Item, ClassListConfig, ClassList
-
 # Creating an Autocomplete
-@docs init, initWithClasses, initItem, customizeNoMatches
+@docs init, initWithConfig
 
 # Update
 @docs Action, update
@@ -24,15 +21,14 @@ and is also styled via css classes.
 
 # Helpers
 @docs getSelectedItemText
-
 -}
 
+import Autocomplete.Config exposing (defaultConfig)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Signal exposing (..)
-import String exposing (..)
-import Styling exposing (getStyling, ClassConfig, Classes)
+import Autocomplete.Styling as Styling
 
 
 {-| The Autocomplete model.
@@ -40,44 +36,18 @@ import Styling exposing (getStyling, ClassConfig, Classes)
 -}
 type alias Autocomplete =
   { value : String
-  , items : List Item
-  , maxListSize : Int
-  , filteredItems : List Item
-  , filterFn : Item -> String -> Bool
-  , compareFn : Item -> Item -> Order
+  , items : List String
+  , matches : List String
   , selectedItemIndex : Index
-  , classes : Maybe ClassListConfig
-  , noMatchesDisplay : Html
   , showMenu : Bool
+  , config : Autocomplete.Config.Config
   }
 
 
+{-| Positive integer index of selected item in list
+-}
 type alias Index =
   Int
-
-
-{-| A collection of class names attributed to each piece of the component.
--}
-type alias ClassListConfig =
-  ClassConfig
-
-
-{-| Alias for the argument to an elm-html classList
--}
-type alias ClassList =
-  Classes
-
-
-{-| A possible selection in the autocomplete.
--}
-type alias Item =
-  { key : ID
-  , text : Text
-  }
-
-
-type alias ID =
-  String
 
 
 type alias Text =
@@ -86,61 +56,30 @@ type alias Text =
 
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
 -}
-init : List Item -> Int -> Autocomplete
-init items maxSize =
+init : List String -> Autocomplete
+init items =
   { value = ""
   , items = items
-  , maxListSize = maxSize
-  , filteredItems = items
-  , filterFn = (\item value -> String.startsWith value item.text)
-  , compareFn = normalComparison
+  , matches = items
   , selectedItemIndex = 0
-  , classes = Nothing
-  , noMatchesDisplay = p [] [ text "No Matches" ]
   , showMenu = False
+  , config = defaultConfig
   }
 
 
-{-| Creates an Autocomplete with custom class names
+{-| Creates an Autocomplete with a custom configuration
 -}
-initWithClasses : List Item -> Int -> ClassListConfig -> Autocomplete
-initWithClasses items maxSize classListConfig =
+initWithConfig : List String -> Autocomplete.Config.Config -> Autocomplete
+initWithConfig items config =
   let
     model =
-      init items maxSize
+      init items
   in
-    { model | classes = Just classListConfig }
+    { model | config = config }
 
 
-{-| Add some custom HTML to display when there are no matches
+{-| A description of a state change
 -}
-customizeNoMatches : Html -> Autocomplete -> Autocomplete
-customizeNoMatches noMatchesHtml model =
-  { model | noMatchesDisplay = noMatchesHtml }
-
-
-{-| Creates an Autocomplete Item
--}
-initItem : ID -> Text -> Item
-initItem id text =
-  { key = id
-  , text = text
-  }
-
-
-normalComparison : Item -> Item -> Order
-normalComparison item1 item2 =
-  case compare item1.text item2.text of
-    LT ->
-      LT
-
-    EQ ->
-      EQ
-
-    GT ->
-      GT
-
-
 type Action
   = NoOp
   | SetValue String
@@ -161,29 +100,29 @@ update action model =
       if value == "" then
         { model
           | value = value
-          , filteredItems =
+          , matches =
               model.items
-                |> List.sortWith model.compareFn
+                |> List.sortWith model.config.compareFn
           , selectedItemIndex = 0
         }
       else
         { model
           | value = value
-          , filteredItems =
-              List.filter (\item -> model.filterFn item value) model.items
-                |> List.sortWith model.compareFn
+          , matches =
+              List.filter (\item -> model.config.filterFn item value) model.items
+                |> List.sortWith model.config.compareFn
           , selectedItemIndex = 0
         }
 
     Complete ->
       let
         selectedItem =
-          List.drop model.selectedItemIndex model.filteredItems
+          List.drop model.selectedItemIndex model.matches
             |> List.head
       in
         case selectedItem of
           Just item ->
-            { model | value = item.text, showMenu = False }
+            { model | value = item, showMenu = False }
 
           Nothing ->
             model
@@ -192,8 +131,8 @@ update action model =
       let
         boundedNewIndex =
           Basics.max newIndex 0
-            |> Basics.min ((List.length model.filteredItems) - 1)
-            |> Basics.min (model.maxListSize - 1)
+            |> Basics.min ((List.length model.matches) - 1)
+            |> Basics.min (model.config.maxListSize - 1)
       in
         { model | selectedItemIndex = boundedNewIndex }
 
@@ -211,8 +150,8 @@ view address model =
     [ viewInput address model
     , if not model.showMenu then
         div [] []
-      else if List.isEmpty model.filteredItems then
-        model.noMatchesDisplay
+      else if List.isEmpty model.matches then
+        model.config.noMatchesDisplay
       else
         viewMenu address model
     ]
@@ -241,37 +180,32 @@ viewInput address model =
       , on "keydown" keyCode (\code -> Signal.message address (handleKeyDown code))
       , onFocus address (ShowMenu True)
       , value model.value
-      , classList (getStyling model.classes Styling.Input).classes'
-      , (getStyling model.classes Styling.Input).inlineStyle
+      , model.config.styleViewFn Styling.Input
       ]
       []
 
 
-viewItem : Signal.Address Action -> Autocomplete -> Item -> Index -> Html
+viewItem : Signal.Address Action -> Autocomplete -> Text -> Index -> Html
 viewItem address model item index =
   li
-    [ id item.key
-    , classList (getStyling model.classes Styling.Item).classes'
-    , (getStyling model.classes Styling.Item).inlineStyle
+    [ model.config.styleViewFn Styling.Item
     , onMouseEnter address (ChangeSelection index)
     ]
-    [ text item.text ]
+    [ text item ]
 
 
-viewSelectedItem : Autocomplete -> Item -> Html
+viewSelectedItem : Autocomplete -> Text -> Html
 viewSelectedItem model item =
   li
-    [ classList (getStyling model.classes Styling.SelectedItem).classes'
-    , (getStyling model.classes Styling.SelectedItem).inlineStyle
+    [ model.config.styleViewFn Styling.SelectedItem
     ]
-    [ text item.text ]
+    [ text item ]
 
 
 viewMenu : Signal.Address Action -> Autocomplete -> Html
 viewMenu address model =
   div
-    [ classList (getStyling model.classes Styling.Menu).classes'
-    , (getStyling model.classes Styling.Menu).inlineStyle
+    [ model.config.styleViewFn Styling.Menu
     ]
     [ viewList address model ]
 
@@ -286,19 +220,18 @@ viewList address model =
         viewItem address model item index
   in
     ul
-      [ classList (getStyling model.classes Styling.List).classes'
-      , (getStyling model.classes Styling.List).inlineStyle
+      [ model.config.styleViewFn Styling.List
       ]
-      (List.indexedMap getItemView model.filteredItems)
+      (List.indexedMap getItemView model.matches)
 
 
 
 -- Helpers
 
 
-getSelectedItem : Autocomplete -> Maybe Item
+getSelectedItem : Autocomplete -> Maybe String
 getSelectedItem model =
-  List.drop model.selectedItemIndex model.filteredItems
+  List.drop model.selectedItemIndex model.matches
     |> List.head
 
 
@@ -308,7 +241,7 @@ getSelectedItemText : Autocomplete -> Text
 getSelectedItemText model =
   case (getSelectedItem model) of
     Just item ->
-      item.text
+      item
 
     Nothing ->
       model.value
