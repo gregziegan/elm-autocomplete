@@ -51,45 +51,43 @@ import Autocomplete.Styling as Styling
 {-| The Autocomplete model.
     It assumes filtering is based upon strings.
 -}
-type alias Autocomplete =
-  Model
-
-
-{-| The Autocomplete model.
-    It assumes filtering is based upon strings.
--}
-type alias Model =
-  { value : InputValue
-  , items : List Text
-  , matches : List Text
-  , selectedItemIndex : Index
-  , showMenu : Bool
-  , config : Config
-  }
+type Autocomplete
+  = Autocomplete
+      { value : InputValue
+      , items : List Text
+      , matches : List Text
+      , selectedItemIndex : Index
+      , showMenu : Bool
+      , config : Config
+      }
 
 
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
 -}
 init : List String -> Autocomplete
 init items =
-  { value = ""
-  , items = items
-  , matches = items
-  , selectedItemIndex = 0
-  , showMenu = False
-  , config = Config.defaultConfig
-  }
+  Autocomplete
+    { value = ""
+    , items = items
+    , matches = items
+    , selectedItemIndex = 0
+    , showMenu = False
+    , config = Config.defaultConfig
+    }
 
 
 {-| Creates an Autocomplete with a custom configuration
 -}
 initWithConfig : List String -> Config.Config -> Autocomplete
 initWithConfig items config =
-  let
-    model =
-      init items
-  in
-    { model | config = config }
+  Autocomplete
+    { value = ""
+    , items = items
+    , matches = items
+    , selectedItemIndex = 0
+    , showMenu = False
+    , config = config
+    }
 
 
 {-| A description of a state change
@@ -105,28 +103,30 @@ type Action
 {-| The quintessential Elm Architecture reducer.
 -}
 update : Action -> Autocomplete -> Autocomplete
-update action model =
+update action (Autocomplete model) =
   case action of
     NoOp ->
-      model
+      Autocomplete model
 
     SetValue value ->
       if value == "" then
-        { model
-          | value = value
-          , matches =
-              model.items
-                |> List.sortWith model.config.compareFn
-          , selectedItemIndex = 0
-        }
+        Autocomplete
+          { model
+            | value = value
+            , matches =
+                model.items
+                  |> List.sortWith model.config.compareFn
+            , selectedItemIndex = 0
+          }
       else
-        { model
-          | value = value
-          , matches =
-              List.filter (\item -> model.config.filterFn item value) model.items
-                |> List.sortWith model.config.compareFn
-          , selectedItemIndex = 0
-        }
+        Autocomplete
+          { model
+            | value = value
+            , matches =
+                List.filter (\item -> model.config.filterFn item value) model.items
+                  |> List.sortWith model.config.compareFn
+            , selectedItemIndex = 0
+          }
 
     Complete ->
       let
@@ -136,10 +136,10 @@ update action model =
       in
         case selectedItem of
           Just item ->
-            { model | value = item, showMenu = False }
+            Autocomplete { model | value = item, showMenu = False }
 
           Nothing ->
-            model
+            Autocomplete model
 
     ChangeSelection newIndex ->
       let
@@ -148,31 +148,31 @@ update action model =
             |> Basics.min ((List.length model.matches) - 1)
             |> Basics.min (model.config.maxListSize - 1)
       in
-        { model | selectedItemIndex = boundedNewIndex }
+        Autocomplete { model | selectedItemIndex = boundedNewIndex }
 
     ShowMenu bool ->
-      { model | showMenu = bool }
+      Autocomplete { model | showMenu = bool }
 
 
 {-| The full Autocomplete view, with menu and input.
     Needs a Signal.Address and Autocomplete (typical of the Elm Architecture).
 -}
 view : Address Action -> Autocomplete -> Html
-view address model =
+view address (Autocomplete model) =
   div
     [ onBlur address (ShowMenu False) ]
-    [ viewInput address model
+    [ viewInput address (Autocomplete model)
     , if not model.showMenu then
         div [] []
       else if List.isEmpty model.matches then
         model.config.noMatchesDisplay
       else
-        viewMenu address model
+        viewMenu address (Autocomplete model)
     ]
 
 
 viewInput : Address Action -> Autocomplete -> Html
-viewInput address model =
+viewInput address (Autocomplete model) =
   let
     arrowUp =
       38
@@ -202,7 +202,7 @@ viewInput address model =
 
 
 viewItem : Signal.Address Action -> Autocomplete -> Text -> Index -> Html
-viewItem address model item index =
+viewItem address (Autocomplete model) item index =
   li
     [ model.config.styleViewFn Styling.Item
     , onMouseEnter address (ChangeSelection index)
@@ -211,7 +211,7 @@ viewItem address model item index =
 
 
 viewSelectedItem : Signal.Address Action -> Autocomplete -> Text -> Html
-viewSelectedItem address model item =
+viewSelectedItem address (Autocomplete model) item =
   li
     [ model.config.styleViewFn Styling.SelectedItem
     , onClick address Complete
@@ -220,21 +220,21 @@ viewSelectedItem address model item =
 
 
 viewMenu : Signal.Address Action -> Autocomplete -> Html
-viewMenu address model =
+viewMenu address (Autocomplete model) =
   div
     [ model.config.styleViewFn Styling.Menu
     ]
-    [ viewList address model ]
+    [ viewList address (Autocomplete model) ]
 
 
 viewList : Signal.Address Action -> Autocomplete -> Html
-viewList address model =
+viewList address (Autocomplete model) =
   let
     getItemView index item =
       if index == model.selectedItemIndex then
-        viewSelectedItem address model item
+        viewSelectedItem address (Autocomplete model) item
       else
-        viewItem address model item index
+        viewItem address (Autocomplete model) item index
   in
     ul
       [ model.config.styleViewFn Styling.List
@@ -247,7 +247,7 @@ viewList address model =
 
 
 getSelectedItem : Autocomplete -> Maybe String
-getSelectedItem model =
+getSelectedItem (Autocomplete model) =
   List.drop model.selectedItemIndex model.matches
     |> List.head
 
@@ -255,8 +255,8 @@ getSelectedItem model =
 {-| Get the text of the currently selected item
 -}
 getSelectedItemText : Autocomplete -> Text
-getSelectedItemText model =
-  case (getSelectedItem model) of
+getSelectedItemText (Autocomplete model) =
+  case (getSelectedItem (Autocomplete model)) of
     Just item ->
       item
 
