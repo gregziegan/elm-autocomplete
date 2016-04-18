@@ -1,10 +1,12 @@
 module Autocomplete.View (viewMenu) where
 
+import Autocomplete.DefaultStyles as DefaultStyles
 import Autocomplete.Update as Autocomplete exposing (Action)
 import Autocomplete.Model exposing (Model)
 import Autocomplete.Config exposing (Text, Index, InputValue)
 import Autocomplete.Styling as Styling
 import Html exposing (..)
+import Html.Attributes exposing (classList)
 import Html.Events exposing (..)
 import Signal exposing (Address)
 
@@ -12,7 +14,10 @@ import Signal exposing (Address)
 viewItem : Address Action -> Model -> Text -> Index -> Html
 viewItem address model item index =
   li
-    [ model.config.styleViewFn Styling.Item
+    [ if model.config.useDefaultStyles then
+        DefaultStyles.itemStyle
+      else
+        classList <| model.config.getClasses Styling.Item
     , onMouseEnter address (Autocomplete.ChangeSelection index)
     ]
     [ model.config.itemHtmlFn item ]
@@ -21,7 +26,10 @@ viewItem address model item index =
 viewSelectedItem : Address Action -> Model -> Text -> Html
 viewSelectedItem address model item =
   li
-    [ model.config.styleViewFn Styling.SelectedItem
+    [ if model.config.useDefaultStyles then
+        DefaultStyles.selectedItemStyle
+      else
+        classList <| model.config.getClasses Styling.SelectedItem
     , onClick address Autocomplete.Complete
     ]
     [ model.config.itemHtmlFn item ]
@@ -30,7 +38,10 @@ viewSelectedItem address model item =
 viewMenu : Address Action -> Model -> Html
 viewMenu address model =
   div
-    [ model.config.styleViewFn Styling.Menu
+    [ if model.config.useDefaultStyles then
+        DefaultStyles.menuStyle
+      else
+        classList <| model.config.getClasses Styling.Menu
     ]
     [ viewList address model ]
 
@@ -45,6 +56,9 @@ viewList address model =
         viewItem address model item index
   in
     ul
-      [ model.config.styleViewFn Styling.List
+      [ if model.config.useDefaultStyles then
+          DefaultStyles.listStyle
+        else
+          classList <| model.config.getClasses Styling.List
       ]
       (List.indexedMap getItemView model.matches)

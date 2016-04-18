@@ -84,6 +84,7 @@ The above example can be found in `example/src/RemoteExample.elm`.
 -}
 
 import Autocomplete.Config as Config exposing (Config, Index, Text, InputValue)
+import Autocomplete.DefaultStyles as DefaultStyles
 import Autocomplete.Model exposing (Model)
 import Autocomplete.Update as Autocomplete
 import Autocomplete.View exposing (viewMenu)
@@ -201,9 +202,9 @@ viewInput address (Autocomplete model) =
 
     handleKeyDown code =
       if code == arrowUp then
-        UpdateAutocomplete (Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1))
+        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1)
       else if code == arrowDown then
-        UpdateAutocomplete (Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1))
+        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1)
       else if (List.member code model.autocomplete.config.completionKeyCodes) then
         UpdateAutocomplete Autocomplete.Complete
       else
@@ -215,8 +216,10 @@ viewInput address (Autocomplete model) =
       , on "keydown" keyCode (\code -> Signal.message address (handleKeyDown code))
       , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.autocomplete.value
-      , model.autocomplete.config.styleViewFn Styling.Input
-      , autocomplete True
+      , if model.autocomplete.config.useDefaultStyles then
+          DefaultStyles.inputStyle
+        else
+          classList <| model.autocomplete.config.getClasses Styling.Input
       ]
       []
 

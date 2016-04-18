@@ -9,23 +9,23 @@ import Html.Attributes exposing (style, class)
 import String
 
 
-styleView : Styling.View -> Html.Attribute
-styleView view =
+getClasses : Styling.View -> Styling.Classes
+getClasses view =
   case view of
     Styling.Menu ->
-      class "autocomplete-menu-default"
+      [ ( "autocomplete-menu", True ) ]
 
     Styling.List ->
-      class "autocomplete-list-default"
+      [ ( "autocomplete-list", True ) ]
 
     Styling.Item ->
-      class "autocomplete-item-default"
+      [ ( "autocomplete-item", True ) ]
 
     Styling.SelectedItem ->
-      class "autocomplete-selected-item-default"
+      [ ( "autocomplete-selected-item", True ) ]
 
     Styling.Input ->
-      class "autocomplete-input-default"
+      [ ( "autocomplete-input", True ) ]
 
 
 type alias Model =
@@ -39,7 +39,7 @@ init =
   let
     config =
       Autocomplete.Config.defaultConfig
-        |> Autocomplete.Config.setStyleViewFn styleView
+        |> Autocomplete.Config.setGetClasses getClasses
         |> Autocomplete.Config.setItemHtml getItemHtml
   in
     { autocompleteRemaining = ""

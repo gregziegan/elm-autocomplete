@@ -1,4 +1,4 @@
-module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, defaultConfig, setStyleViewFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
+module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, defaultConfig, setGetClasses, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
 
 {-| Configuration module for the Autocomplete component.
 
@@ -9,7 +9,7 @@ module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, default
 @docs defaultConfig
 
 # Modifiers
-@docs setStyleViewFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
+@docs setGetClasses, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
 
 
 -}
@@ -27,7 +27,8 @@ type alias Config =
 
 
 type alias Model =
-  { styleViewFn : Styling.View -> Attribute
+  { getClasses : Styling.View -> Styling.Classes
+  , useDefaultStyles : Bool
   , completionKeyCodes : List KeyCode
   , itemHtmlFn : ItemHtmlFn
   , maxListSize : Int
@@ -62,11 +63,11 @@ type alias Index =
   Int
 
 
-{-| Provide a function that produces an attribute to style a particular View
+{-| Provide a function that produces an list of classes to style a particular View
 -}
-setStyleViewFn : (Styling.View -> Attribute) -> Config -> Config
-setStyleViewFn styleViewFn config =
-  { config | styleViewFn = styleViewFn }
+setGetClasses : (Styling.View -> Styling.Classes) -> Config -> Config
+setGetClasses getClasses config =
+  { config | getClasses = getClasses, useDefaultStyles = False }
 
 
 {-| Provide keycodes for autocompletion. By default, completion happens on tab press.
@@ -126,7 +127,8 @@ setLoadingDisplay loadingDisplay config =
 -}
 defaultConfig : Config
 defaultConfig =
-  { styleViewFn = Styling.defaultStyles
+  { getClasses = (\view -> [])
+  , useDefaultStyles = True
   , completionKeyCodes =
       [ 9 ]
       -- defaults to tab

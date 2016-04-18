@@ -41,14 +41,15 @@ main =
 -}
 
 import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Signal exposing (..)
+import Autocomplete.DefaultStyles as DefaultStyles
 import Autocomplete.Styling as Styling
 import Autocomplete.Model exposing (Model)
 import Autocomplete.View exposing (viewMenu)
 import Autocomplete.Update as Autocomplete
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Signal exposing (..)
 
 
 {-| The Autocomplete model.
@@ -121,9 +122,9 @@ viewInput address model =
 
     handleKeyDown code =
       if code == arrowUp then
-        UpdateAutocomplete (Autocomplete.ChangeSelection (model.selectedItemIndex - 1))
+        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
       else if code == arrowDown then
-        UpdateAutocomplete (Autocomplete.ChangeSelection (model.selectedItemIndex + 1))
+        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
       else if List.member code model.config.completionKeyCodes then
         UpdateAutocomplete Autocomplete.Complete
       else
@@ -135,7 +136,10 @@ viewInput address model =
       , on "keydown" keyCode (\code -> Signal.message address (handleKeyDown code))
       , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.value
-      , model.config.styleViewFn Styling.Input
+      , if model.config.useDefaultStyles then
+          DefaultStyles.inputStyle
+        else
+          classList <| model.config.getClasses Styling.Input
       ]
       []
 

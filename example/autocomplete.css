@@ -1,4 +1,4 @@
-.autocomplete-menu-default {
+.autocomplete-menu {
     position:absolute;
     left: 5px;
     margin-top: 5px;
@@ -11,16 +11,15 @@
     z-index: 11110 !important;
 }
 
-.autocomplete-selected-item-default {
-    background: #3366FF;
-    color: white;
+.autocomplete-selected-item {
+    color: #3366FF;
     display: block;
     padding: 5px 10px;
     border-bottom: 1px solid #DDD;
     cursor: pointer;
 }
 
-.autocomplete-list-default {
+.autocomplete-list {
     list-style:none;
     padding:0;
     margin:auto;
@@ -28,14 +27,14 @@
     overflow-y: auto;
 }
 
-.autocomplete-item-default {
+.autocomplete-item {
     display: block;
     padding: 5px 10px;
     border-bottom: 1px solid #DDD;
     cursor: pointer;
 }
 
-.autocomplete-input-default {
+.autocomplete-input {
     min-width: 120px;
     color: black;
     position: relative;
