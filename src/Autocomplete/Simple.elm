@@ -1,4 +1,4 @@
-module Autocomplete.Simple (Autocomplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue) where
+module Autocomplete.Simple (Autocomplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete) where
 
 {-| A customizable Autocomplete component.
 
@@ -37,6 +37,9 @@ main =
 
 # Helpers
 @docs getSelectedItemText, getCurrentValue
+
+# Controlling Behavior
+@docs showMenu, setValue, isComplete
 
 -}
 
@@ -101,7 +104,10 @@ view : Address Action -> Autocomplete -> Html
 view address (Autocomplete model) =
   div
     [ onBlur address (UpdateAutocomplete (Autocomplete.ShowMenu False)) ]
-    [ viewInput address model
+    [ if model.config.isValueControlled then
+        div [] []
+      else
+        viewInput address model
     , if not model.showMenu then
         div [] []
       else if List.isEmpty model.matches then
@@ -142,6 +148,27 @@ viewInput address model =
           classList <| model.config.getClasses Styling.Input
       ]
       []
+
+
+{-| Set whether the menu should be shown
+-}
+showMenu : Bool -> Autocomplete -> Autocomplete
+showMenu bool auto =
+  update (UpdateAutocomplete (Autocomplete.ShowMenu True)) auto
+
+
+{-| Set current autocomplete value
+-}
+setValue : String -> Autocomplete -> Autocomplete
+setValue value auto =
+  update (SetValue value) auto
+
+
+{-| Returns true if Autocomplete matches an item exactly
+-}
+isComplete : Autocomplete -> Bool
+isComplete (Autocomplete model) =
+  List.member model.value model.items
 
 
 

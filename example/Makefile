@@ -31,6 +31,8 @@ remote:
 advanced:
 	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/AdvancedExample.elm
 
+controlled:
+	elm make --yes --output ${ELM_BUILD} ${SOURCE_DIR}/ControlledExample.elm
 
 $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
