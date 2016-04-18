@@ -84,6 +84,9 @@ The above example can be found in `example/src/RemoteExample.elm`.
 -}
 
 import Autocomplete.Config as Config exposing (Config, Index, Text, InputValue)
+import Autocomplete.Model exposing (Model)
+import Autocomplete.Update as Autocomplete
+import Autocomplete.View exposing (viewMenu)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -98,14 +101,9 @@ import Autocomplete.Styling as Styling
 -}
 type Autocomplete
   = Autocomplete
-      { value : InputValue
-      , items : List Text
-      , matches : List Text
-      , selectedItemIndex : Index
+      { autocomplete : Model
       , getItemsTask : GetItemsTask
-      , showMenu : Bool
       , showLoading : Bool
-      , config : Config
       }
 
 
@@ -121,14 +119,9 @@ type alias GetItemsTask =
 init : List String -> GetItemsTask -> ( Autocomplete, Effects Action )
 init items getItemsTask =
   ( Autocomplete
-      { value = ""
-      , items = items
-      , matches = items
-      , selectedItemIndex = 0
+      { autocomplete = Autocomplete.Model.init items
       , getItemsTask = getItemsTask
-      , showMenu = False
       , showLoading = False
-      , config = Config.defaultConfig
       }
   , Effects.none
   )
@@ -139,14 +132,9 @@ init items getItemsTask =
 initWithConfig : List String -> GetItemsTask -> Config -> ( Autocomplete, Effects Action )
 initWithConfig items getItemsTask config =
   ( Autocomplete
-      { value = ""
-      , items = items
-      , matches = items
-      , selectedItemIndex = 0
+      { autocomplete = Autocomplete.Model.initWithConfig items config
       , getItemsTask = getItemsTask
-      , showMenu = False
       , showLoading = False
-      , config = config
       }
   , Effects.none
   )
@@ -155,12 +143,9 @@ initWithConfig items getItemsTask config =
 {-| A description of a state change
 -}
 type Action
-  = NoOp
+  = UpdateAutocomplete Autocomplete.Action
   | SetValue String
   | UpdateItems (List String)
-  | Complete
-  | ChangeSelection Int
-  | ShowMenu Bool
 
 
 {-| The quintessential Elm Architecture reducer.
@@ -168,8 +153,10 @@ type Action
 update : Action -> Autocomplete -> ( Autocomplete, Effects Action )
 update action (Autocomplete model) =
   case action of
-    NoOp ->
-      ( Autocomplete model, Effects.none )
+    UpdateAutocomplete act ->
+      ( Autocomplete { model | autocomplete = Autocomplete.update act model.autocomplete }
+      , Effects.none
+      )
 
     SetValue value ->
       updateInputValue value (Autocomplete model)
@@ -177,34 +164,11 @@ update action (Autocomplete model) =
     UpdateItems items ->
       ( Autocomplete
           { model
-            | items = items
-            , matches =
-                List.filter (\item -> model.config.filterFn item model.value) model.items
-                  |> List.sortWith model.config.compareFn
+            | autocomplete = Autocomplete.update (Autocomplete.UpdateItems items) model.autocomplete
             , showLoading = False
           }
       , Effects.none
       )
-
-    Complete ->
-      case getSelectedItem <| Autocomplete model of
-        Just item ->
-          ( Autocomplete { model | value = item, showMenu = False }, Effects.none )
-
-        Nothing ->
-          ( Autocomplete model, Effects.none )
-
-    ChangeSelection newIndex ->
-      let
-        boundedNewIndex =
-          Basics.max newIndex 0
-            |> Basics.min ((List.length model.matches) - 1)
-            |> Basics.min (model.config.maxListSize - 1)
-      in
-        ( Autocomplete { model | selectedItemIndex = boundedNewIndex }, Effects.none )
-
-    ShowMenu bool ->
-      ( Autocomplete { model | showMenu = bool }, Effects.none )
 
 
 {-| The full Autocomplete view, with menu and input.
@@ -213,16 +177,16 @@ update action (Autocomplete model) =
 view : Signal.Address Action -> Autocomplete -> Html
 view address (Autocomplete model) =
   div
-    [ onBlur address (ShowMenu False) ]
+    [ onBlur (Signal.forwardTo address UpdateAutocomplete) (Autocomplete.ShowMenu False) ]
     [ viewInput address (Autocomplete model)
-    , if not model.showMenu then
+    , if not model.autocomplete.showMenu then
         div [] []
       else if model.showLoading then
-        model.config.loadingDisplay
-      else if List.isEmpty model.matches then
-        model.config.noMatchesDisplay
+        model.autocomplete.config.loadingDisplay
+      else if List.isEmpty model.autocomplete.matches then
+        model.autocomplete.config.noMatchesDisplay
       else
-        viewMenu address (Autocomplete model)
+        viewMenu (Signal.forwardTo address UpdateAutocomplete) model.autocomplete
     ]
 
 
@@ -237,67 +201,24 @@ viewInput address (Autocomplete model) =
 
     handleKeyDown code =
       if code == arrowUp then
-        ChangeSelection (model.selectedItemIndex - 1)
+        UpdateAutocomplete (Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1))
       else if code == arrowDown then
-        ChangeSelection (model.selectedItemIndex + 1)
-      else if (List.member code model.config.completionKeyCodes) then
-        Complete
+        UpdateAutocomplete (Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1))
+      else if (List.member code model.autocomplete.config.completionKeyCodes) then
+        UpdateAutocomplete Autocomplete.Complete
       else
-        NoOp
+        UpdateAutocomplete Autocomplete.NoOp
   in
     input
       [ type' "text"
       , on "input" targetValue (Signal.message address << SetValue)
       , on "keydown" keyCode (\code -> Signal.message address (handleKeyDown code))
-      , onFocus address (ShowMenu True)
-      , value model.value
-      , model.config.styleViewFn Styling.Input
+      , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
+      , value model.autocomplete.value
+      , model.autocomplete.config.styleViewFn Styling.Input
       , autocomplete True
       ]
       []
-
-
-viewItem : Signal.Address Action -> Autocomplete -> String -> Index -> Html
-viewItem address (Autocomplete model) item index =
-  li
-    [ model.config.styleViewFn Styling.Item
-    , onMouseEnter address (ChangeSelection index)
-    ]
-    [ model.config.itemHtmlFn item ]
-
-
-viewSelectedItem : Signal.Address Action -> Autocomplete -> String -> Html
-viewSelectedItem address (Autocomplete model) item =
-  li
-    [ model.config.styleViewFn Styling.SelectedItem
-    , onClick address Complete
-    ]
-    [ model.config.itemHtmlFn item ]
-
-
-viewMenu : Signal.Address Action -> Autocomplete -> Html
-viewMenu address (Autocomplete model) =
-  div
-    [ model.config.styleViewFn Styling.Menu
-    ]
-    [ viewList address (Autocomplete model) ]
-
-
-viewList : Signal.Address Action -> Autocomplete -> Html
-viewList address (Autocomplete model) =
-  let
-    getItemView index item =
-      if index == model.selectedItemIndex then
-        viewSelectedItem address (Autocomplete model) item
-      else
-        viewItem address (Autocomplete model) item index
-  in
-    ul
-      [ model.config.styleViewFn Styling.List
-      ]
-      (List.indexedMap getItemView model.matches
-        |> List.take model.config.maxListSize
-      )
 
 
 
@@ -306,54 +227,48 @@ viewList address (Autocomplete model) =
 
 getMoreItems : String -> Autocomplete -> Effects Action
 getMoreItems value (Autocomplete model) =
-  model.getItemsTask value model.selectedItemIndex
+  model.getItemsTask value model.autocomplete.selectedItemIndex
     |> Task.map UpdateItems
     |> Effects.task
 
 
-
--- Helpers
-
-
 updateInputValue : String -> Autocomplete -> ( Autocomplete, Effects Action )
 updateInputValue value (Autocomplete model) =
-  if value == "" then
-    ( Autocomplete
-        { model
-          | value = value
-          , matches =
-              model.items
-                |> List.sortWith model.config.compareFn
-          , selectedItemIndex = 0
-        }
-    , Effects.none
-    )
-  else
-    let
-      matches =
-        List.filter (\item -> model.config.filterFn item value) model.items
-          |> List.sortWith model.config.compareFn
-
-      showLoading =
-        if List.isEmpty matches then
-          True
-        else
-          False
-    in
+  let
+    updatedAutocomplete =
+      Autocomplete.update (Autocomplete.SetValue value) model.autocomplete
+  in
+    if value == "" then
       ( Autocomplete
           { model
-            | value = value
-            , matches = matches
-            , showLoading = showLoading
-            , selectedItemIndex = 0
+            | autocomplete = updatedAutocomplete
           }
-      , getMoreItems value (Autocomplete model)
+      , Effects.none
       )
+    else
+      let
+        showLoading =
+          if List.isEmpty updatedAutocomplete.matches then
+            True
+          else
+            False
+      in
+        ( Autocomplete
+            { model
+              | autocomplete = updatedAutocomplete
+              , showLoading = showLoading
+            }
+        , getMoreItems value (Autocomplete model)
+        )
+
+
+
+-- HELPERS
 
 
 getSelectedItem : Autocomplete -> Maybe String
 getSelectedItem (Autocomplete model) =
-  List.drop model.selectedItemIndex model.matches
+  List.drop model.autocomplete.selectedItemIndex model.autocomplete.matches
     |> List.head
 
 
@@ -361,16 +276,16 @@ getSelectedItem (Autocomplete model) =
 -}
 getSelectedItemText : Autocomplete -> Text
 getSelectedItemText (Autocomplete model) =
-  case (getSelectedItem (Autocomplete model)) of
+  case getSelectedItem <| (Autocomplete model) of
     Just item ->
       item
 
     Nothing ->
-      model.value
+      model.autocomplete.value
 
 
 {-| Get the string currently entered by the user in the Autocomplete
 -}
 getCurrentValue : Autocomplete -> String
 getCurrentValue (Autocomplete model) =
-  model.value
+  model.autocomplete.value

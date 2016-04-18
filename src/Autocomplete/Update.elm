@@ -10,6 +10,8 @@ type Action
   | Complete
   | ChangeSelection Int
   | ShowMenu Bool
+  | UpdateItems (List String)
+  | SetValue String
 
 
 {-| The quintessential Elm Architecture reducer.
@@ -44,3 +46,29 @@ update action model =
 
     ShowMenu bool ->
       { model | showMenu = bool }
+
+    UpdateItems items ->
+      { model
+        | items = items
+        , matches =
+            List.filter (\item -> model.config.filterFn item model.value) model.items
+              |> List.sortWith model.config.compareFn
+      }
+
+    SetValue value ->
+      if value == "" then
+        { model
+          | value = value
+          , matches =
+              model.items
+                |> List.sortWith model.config.compareFn
+          , selectedItemIndex = 0
+        }
+      else
+        { model
+          | value = value
+          , matches =
+              List.filter (\item -> model.config.filterFn item value) model.items
+                |> List.sortWith model.config.compareFn
+          , selectedItemIndex = 0
+        }

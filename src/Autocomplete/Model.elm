@@ -1,4 +1,4 @@
-module Autocomplete.Model (Model) where
+module Autocomplete.Model (Model, init, initWithConfig) where
 
 import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue)
 
@@ -13,4 +13,26 @@ type alias Model =
   , selectedItemIndex : Index
   , showMenu : Bool
   , config : Config
+  }
+
+
+init : List String -> Model
+init items =
+  { value = ""
+  , items = items
+  , matches = items
+  , selectedItemIndex = 0
+  , showMenu = False
+  , config = Config.defaultConfig
+  }
+
+
+initWithConfig : List String -> Config -> Model
+initWithConfig items config =
+  { value = ""
+  , items = items
+  , matches = items
+  , selectedItemIndex = 0
+  , showMenu = False
+  , config = config
   }

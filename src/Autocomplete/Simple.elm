@@ -70,13 +70,7 @@ type Action
 init : List String -> Autocomplete
 init items =
   Autocomplete
-    { value = ""
-    , items = items
-    , matches = items
-    , selectedItemIndex = 0
-    , showMenu = False
-    , config = Config.defaultConfig
-    }
+    (Autocomplete.Model.init items)
 
 
 {-| Creates an Autocomplete with a custom configuration
@@ -84,13 +78,7 @@ init items =
 initWithConfig : List String -> Config.Config -> Autocomplete
 initWithConfig items config =
   Autocomplete
-    { value = ""
-    , items = items
-    , matches = items
-    , selectedItemIndex = 0
-    , showMenu = False
-    , config = config
-    }
+    (Autocomplete.Model.initWithConfig items config)
 
 
 {-| The quintessential Elm Architecture reducer.
@@ -102,24 +90,7 @@ update action (Autocomplete model) =
       Autocomplete (Autocomplete.update act model)
 
     SetValue value ->
-      if value == "" then
-        Autocomplete
-          { model
-            | value = value
-            , matches =
-                model.items
-                  |> List.sortWith model.config.compareFn
-            , selectedItemIndex = 0
-          }
-      else
-        Autocomplete
-          { model
-            | value = value
-            , matches =
-                List.filter (\item -> model.config.filterFn item value) model.items
-                  |> List.sortWith model.config.compareFn
-            , selectedItemIndex = 0
-          }
+      Autocomplete (Autocomplete.update (Autocomplete.SetValue value) model)
 
 
 {-| The full Autocomplete view, with menu and input.
@@ -170,7 +141,7 @@ viewInput address model =
 
 
 
--- Helpers
+-- HELPERS
 
 
 getSelectedItem : Autocomplete -> Maybe String
@@ -183,7 +154,7 @@ getSelectedItem (Autocomplete model) =
 -}
 getSelectedItemText : Autocomplete -> Text
 getSelectedItemText (Autocomplete model) =
-  case (getSelectedItem (Autocomplete model)) of
+  case getSelectedItem <| (Autocomplete model) of
     Just item ->
       item
 
