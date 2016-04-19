@@ -67,7 +67,7 @@ setValue value model =
   { model
     | value = value
     , showMenu = not (Autocomplete.isComplete model.autocomplete)
-    , autocomplete = Autocomplete.showMenu (not <| (Debug.log "isComplete" (Autocomplete.isComplete model.autocomplete))) model.autocomplete
+    , autocomplete = Autocomplete.showMenu (not <| (Autocomplete.isComplete model.autocomplete))) model.autocomplete
   }
 
 
@@ -76,6 +76,7 @@ getValue model =
   model.value
 
 
+view : Signal.Address Action -> AtMention -> Html
 view address model =
   div
     []

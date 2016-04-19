@@ -39,10 +39,17 @@ app =
     config =
       Autocomplete.Config.defaultConfig
         |> Autocomplete.Config.setLoadingDisplay (img [ src "assets/loading.svg" ] [])
+
+    updateAutocomplete act model =
+      let
+        ( updatedAutocomplete, effects, complete ) =
+          update act model
+      in
+        ( updatedAutocomplete, effects )
   in
     StartApp.start
       { init = init [] getItemsTask
-      , update = update
+      , update = updateAutocomplete
       , view = view
       , inputs = []
       }

@@ -1,4 +1,4 @@
-module Autocomplete.Simple (Autocomplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete) where
+module Autocomplete.Simple (Autocomplete, IsComplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete) where
 
 {-| A customizable Autocomplete component.
 
@@ -24,7 +24,7 @@ main =
 ```
 
 # Definition
-@docs Autocomplete
+@docs Autocomplete, IsComplete
 
 # Initialize
 @docs init, initWithConfig
@@ -69,6 +69,12 @@ type Action
   | SetValue String
 
 
+{-| Is the autocomplete completed?
+-}
+type alias IsComplete =
+  Bool
+
+
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
 -}
 init : List String -> Autocomplete
@@ -87,14 +93,22 @@ initWithConfig items config =
 
 {-| The quintessential Elm Architecture reducer.
 -}
-update : Action -> Autocomplete -> Autocomplete
+update : Action -> Autocomplete -> ( Autocomplete, IsComplete )
 update action (Autocomplete model) =
   case action of
     UpdateAutocomplete act ->
-      Autocomplete (Autocomplete.update act model)
+      let
+        ( updatedModel, isComplete ) =
+          Autocomplete.update act model
+      in
+        ( Autocomplete updatedModel, isComplete )
 
     SetValue value ->
-      Autocomplete (Autocomplete.update (Autocomplete.SetValue value) model)
+      let
+        ( updatedModel, isComplete ) =
+          Autocomplete.update (Autocomplete.SetValue value) model
+      in
+        ( Autocomplete updatedModel, isComplete )
 
 
 {-| The full Autocomplete view, with menu and input.
@@ -154,14 +168,14 @@ viewInput address model =
 -}
 showMenu : Bool -> Autocomplete -> Autocomplete
 showMenu bool auto =
-  update (UpdateAutocomplete (Autocomplete.ShowMenu True)) auto
+  fst (update (UpdateAutocomplete (Autocomplete.ShowMenu True)) auto)
 
 
 {-| Set current autocomplete value
 -}
 setValue : String -> Autocomplete -> Autocomplete
 setValue value auto =
-  update (SetValue value) auto
+  fst (update (SetValue value) auto)
 
 
 {-| Returns true if Autocomplete matches an item exactly

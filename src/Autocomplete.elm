@@ -83,7 +83,7 @@ The above example can be found in `example/src/RemoteExample.elm`.
 
 -}
 
-import Autocomplete.Config as Config exposing (Config, Index, Text, InputValue)
+import Autocomplete.Config as Config exposing (Config, Index, Text, InputValue, Completed)
 import Autocomplete.DefaultStyles as DefaultStyles
 import Autocomplete.Model exposing (Model)
 import Autocomplete.Update as Autocomplete
@@ -151,25 +151,35 @@ type Action
 
 {-| The quintessential Elm Architecture reducer.
 -}
-update : Action -> Autocomplete -> ( Autocomplete, Effects Action )
+update : Action -> Autocomplete -> ( Autocomplete, Effects Action, Completed )
 update action (Autocomplete model) =
   case action of
     UpdateAutocomplete act ->
-      ( Autocomplete { model | autocomplete = Autocomplete.update act model.autocomplete }
-      , Effects.none
-      )
+      let
+        ( updatedModel, completed ) =
+          Autocomplete.update act model.autocomplete
+      in
+        ( Autocomplete { model | autocomplete = updatedModel }
+        , Effects.none
+        , completed
+        )
 
     SetValue value ->
       updateInputValue value (Autocomplete model)
 
     UpdateItems items ->
-      ( Autocomplete
-          { model
-            | autocomplete = Autocomplete.update (Autocomplete.UpdateItems items) model.autocomplete
-            , showLoading = False
-          }
-      , Effects.none
-      )
+      let
+        ( updatedModel, completed ) =
+          Autocomplete.update (Autocomplete.UpdateItems items) model.autocomplete
+      in
+        ( Autocomplete
+            { model
+              | autocomplete = updatedModel
+              , showLoading = False
+            }
+        , Effects.none
+        , completed
+        )
 
 
 {-| The full Autocomplete view, with menu and input.
@@ -235,33 +245,35 @@ getMoreItems value (Autocomplete model) =
     |> Effects.task
 
 
-updateInputValue : String -> Autocomplete -> ( Autocomplete, Effects Action )
+updateInputValue : String -> Autocomplete -> ( Autocomplete, Effects Action, Completed )
 updateInputValue value (Autocomplete model) =
   let
-    updatedAutocomplete =
+    ( updatedModel, completed ) =
       Autocomplete.update (Autocomplete.SetValue value) model.autocomplete
   in
     if value == "" then
       ( Autocomplete
           { model
-            | autocomplete = updatedAutocomplete
+            | autocomplete = updatedModel
           }
       , Effects.none
+      , completed
       )
     else
       let
         showLoading =
-          if List.isEmpty updatedAutocomplete.matches then
+          if List.isEmpty updatedModel.matches then
             True
           else
             False
       in
         ( Autocomplete
             { model
-              | autocomplete = updatedAutocomplete
+              | autocomplete = updatedModel
               , showLoading = showLoading
             }
         , getMoreItems value (Autocomplete model)
+        , completed
         )
 
 

@@ -1,9 +1,9 @@
-module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, defaultConfig, isValueControlled, setGetClasses, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
+module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, Completed, defaultConfig, isValueControlled, setGetClasses, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
 
 {-| Configuration module for the Autocomplete component.
 
 # Definition
-@docs Config, ItemHtmlFn, Text, InputValue, Index
+@docs Config, ItemHtmlFn, Text, InputValue, Index, Completed
 
 # Defaults
 @docs defaultConfig
@@ -62,6 +62,12 @@ type alias InputValue =
 -}
 type alias Index =
   Int
+
+
+{-| True if Autocomplete was completed by the current update
+-}
+type alias Completed =
+  Bool
 
 
 {-| Provide True to control the autocomplete value,

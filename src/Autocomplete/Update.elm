@@ -1,6 +1,7 @@
 module Autocomplete.Update (..) where
 
 import Autocomplete.Model exposing (Model)
+import Autocomplete.Config exposing (Completed)
 
 
 {-| A description of a state change
@@ -16,11 +17,11 @@ type Action
 
 {-| The quintessential Elm Architecture reducer.
 -}
-update : Action -> Model -> Model
+update : Action -> Model -> ( Model, Completed )
 update action model =
   case action of
     NoOp ->
-      model
+      ( model, False )
 
     Complete ->
       let
@@ -30,10 +31,10 @@ update action model =
       in
         case selectedItem of
           Just item ->
-            { model | value = item, showMenu = False }
+            ( { model | value = item, showMenu = False }, True )
 
           Nothing ->
-            model
+            ( model, True )
 
     ChangeSelection newIndex ->
       let
@@ -42,33 +43,39 @@ update action model =
             |> Basics.min ((List.length model.matches) - 1)
             |> Basics.min (model.config.maxListSize - 1)
       in
-        { model | selectedItemIndex = boundedNewIndex }
+        ( { model | selectedItemIndex = boundedNewIndex }, False )
 
     ShowMenu bool ->
-      { model | showMenu = bool }
+      ( { model | showMenu = bool }, False )
 
     UpdateItems items ->
-      { model
-        | items = items
-        , matches =
-            List.filter (\item -> model.config.filterFn item model.value) model.items
-              |> List.sortWith model.config.compareFn
-      }
+      ( { model
+          | items = items
+          , matches =
+              List.filter (\item -> model.config.filterFn item model.value) model.items
+                |> List.sortWith model.config.compareFn
+        }
+      , False
+      )
 
     SetValue value ->
       if value == "" then
-        { model
-          | value = value
-          , matches =
-              model.items
-                |> List.sortWith model.config.compareFn
-          , selectedItemIndex = 0
-        }
+        ( { model
+            | value = value
+            , matches =
+                model.items
+                  |> List.sortWith model.config.compareFn
+            , selectedItemIndex = 0
+          }
+        , False
+        )
       else
-        { model
-          | value = value
-          , matches =
-              List.filter (\item -> model.config.filterFn item value) model.items
-                |> List.sortWith model.config.compareFn
-          , selectedItemIndex = 0
-        }
+        ( { model
+            | value = value
+            , matches =
+                List.filter (\item -> model.config.filterFn item value) model.items
+                  |> List.sortWith model.config.compareFn
+            , selectedItemIndex = 0
+          }
+        , False
+        )

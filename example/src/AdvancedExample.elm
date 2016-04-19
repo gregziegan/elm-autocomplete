@@ -6,7 +6,6 @@ import Autocomplete.Styling as Styling
 import StartApp.Simple
 import Html exposing (..)
 import Html.Attributes exposing (style, class)
-import Html.Events exposing (..)
 import String
 
 
@@ -44,7 +43,6 @@ init =
       Autocomplete.Config.defaultConfig
         |> Autocomplete.Config.setGetClasses getClasses
         |> Autocomplete.Config.setItemHtml getItemHtml
-        |> Autocomplete.Config.isValueControlled True
   in
     { autocompleteRemaining = ""
     , autocomplete = Autocomplete.initWithConfig [ "elm", "makes", "coding", "life", "easy" ] config
@@ -64,7 +62,7 @@ update action model =
   case action of
     Autocomplete act ->
       let
-        updatedAutocomplete =
+        ( updatedAutocomplete, completed ) =
           Autocomplete.update act model.autocomplete
 
         preview =
@@ -93,12 +91,6 @@ view address model =
         [ span [ style [ ( "visibility", "none" ) ] ] [ text (Autocomplete.getCurrentValue model.autocomplete) ]
         , span [ style [ ( "color", "gray" ) ] ] [ text model.autocompleteRemaining ]
         ]
-    , textarea
-        [ on "input" targetValue (Signal.message address << SetValue)
-        , onFocus address (ShowMenu True)
-        , onBlur address (ShowMenu False)
-        ]
-        []
     , Autocomplete.view (Signal.forwardTo address Autocomplete) model.autocomplete
     ]
 

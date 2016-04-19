@@ -45,6 +45,6 @@ main =
   in
     StartApp.Simple.start
       { model = initWithConfig testData config
-      , update = update
+      , update = (\act model -> fst (update act model))
       , view = view
       }
