@@ -2,6 +2,7 @@ module AtMention (..) where
 
 import Autocomplete.Simple as Autocomplete exposing (Autocomplete)
 import Autocomplete.Config
+import Html exposing (..)
 
 
 people : List String
@@ -33,7 +34,7 @@ init : AtMention
 init =
   { autocomplete = createAutocomplete
   , value = ""
-  , showMenu = True
+  , showMenu = False
   }
 
 
@@ -50,11 +51,32 @@ update action model =
       { model | autocomplete = Autocomplete.update act model.autocomplete }
 
     SetValue value ->
-      { model
-        | value = value
-        , showMenu = not (Autocomplete.isComplete model.autocomplete)
-        , autocomplete = Autocomplete.showMenu (not <| Autocomplete.isComplete model.autocomplete) model.autocomplete
-      }
+      setValue value model
 
     ShowMenu bool ->
-      { model | showMenu = bool, autocomplete = Autocomplete.showMenu bool model.autocomplete }
+      showMenu bool model
+
+
+showMenu : Bool -> AtMention -> AtMention
+showMenu bool model =
+  { model | showMenu = bool, autocomplete = Autocomplete.showMenu bool model.autocomplete }
+
+
+setValue : String -> AtMention -> AtMention
+setValue value model =
+  { model
+    | value = value
+    , showMenu = not (Autocomplete.isComplete model.autocomplete)
+    , autocomplete = Autocomplete.showMenu (not <| (Debug.log "isComplete" (Autocomplete.isComplete model.autocomplete))) model.autocomplete
+  }
+
+
+getValue : AtMention -> String
+getValue model =
+  model.value
+
+
+view address model =
+  div
+    []
+    [ Autocomplete.view (Signal.forwardTo address Autocomplete) model.autocomplete ]

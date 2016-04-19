@@ -4,7 +4,6 @@ import StartApp.Simple
 import Html exposing (..)
 import Html.Events exposing (..)
 import Dict exposing (Dict)
-import Set
 import String
 import AtMention exposing (AtMention)
 
@@ -12,6 +11,7 @@ import AtMention exposing (AtMention)
 type alias Model =
   { mentions : Dict Position AtMention
   , value : String
+  , currentMention : Maybe Position
   }
 
 
@@ -19,6 +19,7 @@ init : Model
 init =
   { mentions = Dict.empty
   , value = ""
+  , currentMention = Nothing
   }
 
 
@@ -27,56 +28,57 @@ type alias Position =
 
 
 type Action
-  = AtMention AtMention.Action Position
+  = AtMention AtMention.Action Position AtMention
   | SetValue String
-
-
-addNewMention : Model -> String -> Dict Position AtMention
-addNewMention model newValue =
-  let
-    oldMentions =
-      String.indices "@" model.value
-
-    currentMentions =
-      String.indices "@" newValue
-
-    newMentionsSet =
-      Set.diff (Set.fromList currentMentions) (Set.fromList oldMentions)
-
-    newMentions =
-      Set.toList newMentionsSet
-        |> List.map (\pos -> ( pos, AtMention.init ))
-        |> Dict.fromList
-  in
-    Dict.union newMentions model.mentions
 
 
 update : Action -> Model -> Model
 update action model =
   case action of
-    AtMention act pos ->
-      let
-        maybeMention =
-          Dict.get pos model.mentions
-      in
-        case maybeMention of
-          Just mention ->
-            { model | mentions = Dict.insert pos (AtMention.update act mention) model.mentions }
-
-          Nothing ->
-            model
+    AtMention act pos mention ->
+      { model
+        | mentions = Dict.insert pos (AtMention.update act mention) model.mentions
+      }
 
     SetValue value ->
       let
-        updatedMentions =
-          addNewMention model value
+        -- getCurrentMention =
+        --   case model.currentMention of
+        --     Just pos ->
+        --       getMention pos
+        --     Nothing ->
+        --       setCurrentMention
+        getMention pos =
+          Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
 
-        mentionList =
-          Debug.log "mentions" (Dict.keys updatedMentions)
+        getMentionLength mention =
+          AtMention.getValue mention
+            |> String.length
+
+        getNewMentionValue pos =
+          String.slice pos (pos + (getMentionLength <| getMention pos) + 1) value
+
+        updateMentions =
+          let
+            position =
+              Maybe.withDefault (String.length value) model.currentMention
+          in
+            case model.currentMention of
+              Just pos ->
+                (AtMention.setValue (Debug.log "newValue" (getNewMentionValue pos)) (getMention pos))
+                  |> AtMention.showMenu True
+                  |> (\mention -> ( (Dict.insert position mention model.mentions), Just pos ))
+
+              Nothing ->
+                if String.endsWith "@" value then
+                  ( Dict.insert position AtMention.init model.mentions, Just position )
+                else
+                  ( model.mentions, model.currentMention )
       in
         { model
           | value = value
-          , mentions = updatedMentions
+          , mentions = (fst updateMentions)
+          , currentMention = Debug.log "currentMention" (snd updateMentions)
         }
 
 
@@ -88,6 +90,16 @@ view address model =
         [ on "input" targetValue (Signal.message address << SetValue)
         ]
         []
+    , case model.currentMention of
+        Just pos ->
+          let
+            mention =
+              Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
+          in
+            AtMention.view (Signal.forwardTo address (\act -> AtMention act pos mention)) mention
+
+        Nothing ->
+          div [] []
     ]
 
 
