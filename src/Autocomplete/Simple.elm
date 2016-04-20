@@ -52,6 +52,7 @@ import Autocomplete.Update as Autocomplete
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as Json
 import Signal exposing (..)
 
 
@@ -134,26 +135,41 @@ view address (Autocomplete model) =
 viewInput : Address Action -> Model -> Html
 viewInput address model =
   let
-    arrowUp =
-      38
+    options =
+      { preventDefault = True, stopPropagation = False }
 
-    arrowDown =
-      40
+    dec =
+      (Json.customDecoder
+        keyCode
+        (\k ->
+          if List.member k (List.append [ 38, 40 ] model.config.completionKeyCodes) then
+            Ok k
+          else
+            Err "not handling that key"
+        )
+      )
 
     handleKeyDown code =
-      if code == arrowUp then
-        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
-      else if code == arrowDown then
-        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
-      else if List.member code model.config.completionKeyCodes then
-        UpdateAutocomplete Autocomplete.Complete
-      else
-        UpdateAutocomplete Autocomplete.NoOp
+      case code of
+        38 ->
+          UpdateAutocomplete
+            <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
+
+        40 ->
+          UpdateAutocomplete
+            <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
+
+        _ ->
+          UpdateAutocomplete Autocomplete.Complete
   in
     input
       [ type' "text"
       , on "input" targetValue (Signal.message address << SetValue)
-      , on "keydown" keyCode (\code -> Signal.message address (handleKeyDown code))
+      , onWithOptions
+          "keydown"
+          options
+          dec
+          (\k -> Signal.message address <| handleKeyDown k)
       , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.value
       , if model.config.useDefaultStyles then

@@ -92,6 +92,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Effects exposing (Effects)
+import Json.Decode as Json
 import Signal
 import Task exposing (Task)
 import Autocomplete.Styling as Styling
@@ -204,21 +205,32 @@ view address (Autocomplete model) =
 viewInput : Signal.Address Action -> Autocomplete -> Html
 viewInput address (Autocomplete model) =
   let
-    arrowUp =
-      38
+    options =
+      { preventDefault = True, stopPropagation = False }
 
-    arrowDown =
-      40
+    dec =
+      (Json.customDecoder
+        keyCode
+        (\k ->
+          if List.member k (List.append [ 38, 40 ] model.autocomplete.config.completionKeyCodes) then
+            Ok k
+          else
+            Err "not handling that key"
+        )
+      )
 
     handleKeyDown code =
-      if code == arrowUp then
-        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1)
-      else if code == arrowDown then
-        UpdateAutocomplete <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1)
-      else if (List.member code model.autocomplete.config.completionKeyCodes) then
-        UpdateAutocomplete Autocomplete.Complete
-      else
-        UpdateAutocomplete Autocomplete.NoOp
+      case code of
+        38 ->
+          UpdateAutocomplete
+            <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1)
+
+        40 ->
+          UpdateAutocomplete
+            <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1)
+
+        _ ->
+          UpdateAutocomplete Autocomplete.Complete
   in
     input
       [ type' "text"

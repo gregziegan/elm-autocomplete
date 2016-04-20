@@ -7,8 +7,7 @@ import Autocomplete.Config exposing (Completed)
 {-| A description of a state change
 -}
 type Action
-  = NoOp
-  | Complete
+  = Complete
   | ChangeSelection Int
   | ShowMenu Bool
   | UpdateItems (List String)
@@ -20,9 +19,6 @@ type Action
 update : Action -> Model -> ( Model, Completed )
 update action model =
   case action of
-    NoOp ->
-      ( model, False )
-
     Complete ->
       let
         selectedItem =
@@ -66,6 +62,7 @@ update action model =
                 model.items
                   |> List.sortWith model.config.compareFn
             , selectedItemIndex = 0
+            , showMenu = True
           }
         , False
         )
@@ -76,6 +73,7 @@ update action model =
                 List.filter (\item -> model.config.filterFn item value) model.items
                   |> List.sortWith model.config.compareFn
             , selectedItemIndex = 0
+            , showMenu = True
           }
         , False
         )
