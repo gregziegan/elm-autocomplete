@@ -44,17 +44,30 @@ type Action
   | ShowMenu Bool
 
 
-update : Action -> AtMention -> AtMention
+type alias Completed =
+  Bool
+
+
+update : Action -> AtMention -> ( AtMention, Completed )
 update action model =
   case action of
     Autocomplete act ->
-      { model | autocomplete = Autocomplete.update act model.autocomplete }
+      let
+        ( updatedAutocomplete, completed ) =
+          Autocomplete.update act model.autocomplete
+      in
+        ( { model
+            | autocomplete = updatedAutocomplete
+            , value = Autocomplete.getCurrentValue updatedAutocomplete
+          }
+        , completed
+        )
 
     SetValue value ->
-      setValue value model
+      ( setValue value model, False )
 
     ShowMenu bool ->
-      showMenu bool model
+      ( showMenu bool model, False )
 
 
 showMenu : Bool -> AtMention -> AtMention
@@ -64,11 +77,7 @@ showMenu bool model =
 
 setValue : String -> AtMention -> AtMention
 setValue value model =
-  { model
-    | value = value
-    , showMenu = not (Autocomplete.isComplete model.autocomplete)
-    , autocomplete = Autocomplete.showMenu (not <| (Autocomplete.isComplete model.autocomplete))) model.autocomplete
-  }
+  { model | value = value, autocomplete = Autocomplete.setValue value model.autocomplete }
 
 
 getValue : AtMention -> String

@@ -2,6 +2,7 @@ module Main (..) where
 
 import StartApp.Simple
 import Html exposing (..)
+import Html.Attributes exposing (value)
 import Html.Events exposing (..)
 import Dict exposing (Dict)
 import String
@@ -36,18 +37,29 @@ update : Action -> Model -> Model
 update action model =
   case action of
     AtMention act pos mention ->
-      { model
-        | mentions = Dict.insert pos (AtMention.update act mention) model.mentions
-      }
+      let
+        ( updatedMention, completed ) =
+          AtMention.update act mention
+
+        currentMentionLength =
+          AtMention.getValue mention
+            |> String.length
+
+        newValue =
+          (String.slice 0 pos model.value) ++ (AtMention.getValue updatedMention) ++ (String.slice pos (pos + currentMentionLength - 1) model.value)
+      in
+        if completed then
+          { model
+            | mentions = Dict.insert pos updatedMention model.mentions
+            , value = Debug.log "newValue" newValue
+          }
+        else
+          { model
+            | mentions = Dict.insert pos updatedMention model.mentions
+          }
 
     SetValue value ->
       let
-        -- getCurrentMention =
-        --   case model.currentMention of
-        --     Just pos ->
-        --       getMention pos
-        --     Nothing ->
-        --       setCurrentMention
         getMention pos =
           Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
 
@@ -65,7 +77,7 @@ update action model =
           in
             case model.currentMention of
               Just pos ->
-                (AtMention.setValue (Debug.log "newValue" (getNewMentionValue pos)) (getMention pos))
+                (AtMention.setValue (getNewMentionValue pos)) (getMention pos)
                   |> AtMention.showMenu True
                   |> (\mention -> ( (Dict.insert position mention model.mentions), Just pos ))
 
@@ -78,7 +90,7 @@ update action model =
         { model
           | value = value
           , mentions = (fst updateMentions)
-          , currentMention = Debug.log "currentMention" (snd updateMentions)
+          , currentMention = (snd updateMentions)
         }
 
 
@@ -88,6 +100,7 @@ view address model =
     []
     [ textarea
         [ on "input" targetValue (Signal.message address << SetValue)
+        , value model.value
         ]
         []
     , case model.currentMention of
