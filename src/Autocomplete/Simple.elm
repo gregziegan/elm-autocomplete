@@ -1,4 +1,4 @@
-module Autocomplete.Simple (Autocomplete, IsComplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete) where
+module Autocomplete.Simple (Autocomplete, IsComplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete, MenuNavigation(Previous, Next, Select), navigateMenu) where
 
 {-| A customizable Autocomplete component.
 
@@ -39,7 +39,7 @@ main =
 @docs getSelectedItemText, getCurrentValue
 
 # Controlling Behavior
-@docs showMenu, setValue, isComplete
+@docs showMenu, setValue, isComplete, MenuNavigation, navigateMenu
 
 -}
 
@@ -149,18 +149,16 @@ viewInput address model =
         )
       )
 
-    handleKeyDown code =
+    navigate code =
       case code of
         38 ->
-          UpdateAutocomplete
-            <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
+          navigateMenu Previous (Autocomplete model)
 
         40 ->
-          UpdateAutocomplete
-            <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
+          navigateMenu Next (Autocomplete model)
 
         _ ->
-          UpdateAutocomplete Autocomplete.Complete
+          navigateMenu Select (Autocomplete model)
   in
     input
       [ type' "text"
@@ -169,7 +167,7 @@ viewInput address model =
           "keydown"
           options
           dec
-          (\k -> Signal.message address <| handleKeyDown k)
+          (\k -> Signal.message address <| navigate k)
       , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.value
       , if model.config.useDefaultStyles then
@@ -228,3 +226,29 @@ getSelectedItemText (Autocomplete model) =
 getCurrentValue : Autocomplete -> String
 getCurrentValue (Autocomplete model) =
   model.value
+
+
+{-| The possible actions to navigate the autocomplete menu
+-}
+type MenuNavigation
+  = Previous
+  | Next
+  | Select
+
+
+{-| When controlling the Autocomplete value, use this function
+    to provide an action for updating the menu selection.
+-}
+navigateMenu : MenuNavigation -> Autocomplete -> Action
+navigateMenu navigation (Autocomplete model) =
+  case navigation of
+    Previous ->
+      UpdateAutocomplete
+        <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
+
+    Next ->
+      UpdateAutocomplete
+        <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
+
+    Select ->
+      UpdateAutocomplete Autocomplete.Complete

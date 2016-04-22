@@ -5,8 +5,10 @@ import Html exposing (..)
 import Html.Attributes exposing (value)
 import Html.Events exposing (..)
 import Dict exposing (Dict)
+import Json.Decode as Json
 import String
 import AtMention exposing (AtMention)
+import Autocomplete.Simple as Autocomplete
 
 
 type alias Model =
@@ -29,13 +31,17 @@ type alias Position =
 
 
 type Action
-  = AtMention AtMention.Action Position AtMention
+  = NoOp
+  | AtMention AtMention.Action Position AtMention
   | SetValue String
 
 
 update : Action -> Model -> Model
 update action model =
   case action of
+    NoOp ->
+      model
+
     AtMention act pos mention ->
       let
         ( updatedMention, completed ) =
@@ -96,24 +102,64 @@ update action model =
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div
-    []
-    [ textarea
-        [ on "input" targetValue (Signal.message address << SetValue)
-        , value model.value
-        ]
-        []
-    , case model.currentMention of
+  let
+    options =
+      { preventDefault = True, stopPropagation = False }
+
+    dec =
+      (Json.customDecoder
+        keyCode
+        (\k ->
+          if List.member k [ 38, 40, 9, 13 ] then
+            Ok k
+          else
+            Err "not handling that key"
+        )
+      )
+
+    navigateMenu code pos mention =
+      case code of
+        38 ->
+          AtMention (AtMention.NavigateMenu Autocomplete.Previous) pos mention
+
+        40 ->
+          AtMention (AtMention.NavigateMenu Autocomplete.Next) pos mention
+
+        _ ->
+          AtMention (AtMention.NavigateMenu Autocomplete.Select) pos mention
+
+    navigate code =
+      case model.currentMention of
         Just pos ->
-          let
-            mention =
-              Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
-          in
-            AtMention.view (Signal.forwardTo address (\act -> AtMention act pos mention)) mention
+          case Dict.get pos model.mentions of
+            Just mention ->
+              navigateMenu code pos mention
+
+            Nothing ->
+              NoOp
 
         Nothing ->
-          div [] []
-    ]
+          NoOp
+  in
+    div
+      []
+      [ textarea
+          [ on "input" targetValue (Signal.message address << SetValue)
+          , onWithOptions "keydown" options dec (\code -> Signal.message address <| (navigate code))
+          , value model.value
+          ]
+          []
+      , case model.currentMention of
+          Just pos ->
+            let
+              mention =
+                Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
+            in
+              AtMention.view (Signal.forwardTo address (\act -> AtMention act pos mention)) mention
+
+          Nothing ->
+            div [] []
+      ]
 
 
 main : Signal Html.Html

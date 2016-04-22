@@ -39,9 +39,11 @@ init =
 
 
 type Action
-  = Autocomplete Autocomplete.Action
+  = NoOp
+  | Autocomplete Autocomplete.Action
   | SetValue String
   | ShowMenu Bool
+  | NavigateMenu Autocomplete.MenuNavigation
 
 
 type alias Completed =
@@ -51,6 +53,9 @@ type alias Completed =
 update : Action -> AtMention -> ( AtMention, Completed )
 update action model =
   case action of
+    NoOp ->
+      ( model, False )
+
     Autocomplete act ->
       let
         ( updatedAutocomplete, completed ) =
@@ -68,6 +73,27 @@ update action model =
 
     ShowMenu bool ->
       ( showMenu bool model, False )
+
+    NavigateMenu navigation ->
+      navigateMenu navigation model
+
+
+navigateMenu : Autocomplete.MenuNavigation -> AtMention -> ( AtMention, Completed )
+navigateMenu navigation model =
+  let
+    navAction =
+      Autocomplete.navigateMenu navigation model.autocomplete
+
+    ( updatedAutocomplete, completed ) =
+      Autocomplete.update navAction model.autocomplete
+  in
+    ( { model
+        | autocomplete = updatedAutocomplete
+        , showMenu = not completed
+        , value = Autocomplete.getCurrentValue updatedAutocomplete
+      }
+    , completed
+    )
 
 
 showMenu : Bool -> AtMention -> AtMention
