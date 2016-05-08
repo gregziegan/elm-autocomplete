@@ -182,7 +182,7 @@ viewInput address model =
 -}
 showMenu : Bool -> Autocomplete -> Autocomplete
 showMenu bool auto =
-  fst (update (UpdateAutocomplete (Autocomplete.ShowMenu True)) auto)
+  fst (update (UpdateAutocomplete (Autocomplete.ShowMenu bool)) auto)
 
 
 {-| Set current autocomplete value

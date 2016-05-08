@@ -34,6 +34,7 @@ type Action
   = NoOp
   | AtMention AtMention.Action Position AtMention
   | SetValue String
+  | ToggleMenu Bool
 
 
 update : Action -> Model -> Model
@@ -66,15 +67,12 @@ update action model =
 
     SetValue value ->
       let
-        getMention pos =
-          Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
-
         getMentionLength mention =
           AtMention.getValue mention
             |> String.length
 
         getNewMentionValue pos =
-          String.slice pos (pos + (getMentionLength <| getMention pos) + 1) value
+          String.slice pos (pos + (getMentionLength <| getMention pos model.mentions) + 1) value
 
         updateMentions =
           let
@@ -83,7 +81,7 @@ update action model =
           in
             case model.currentMention of
               Just pos ->
-                (AtMention.setValue (getNewMentionValue pos)) (getMention pos)
+                (AtMention.setValue (getNewMentionValue pos)) (getMention pos model.mentions)
                   |> AtMention.showMenu True
                   |> (\mention -> ( (Dict.insert position mention model.mentions), Just pos ))
 
@@ -98,7 +96,24 @@ update action model =
           , mentions = (fst updateMentions)
           , currentMention = (snd updateMentions)
         }
+    ToggleMenu bool ->
+      let
+          updatedMention pos mentions =
+            getMention pos mentions
+              |> AtMention.showMenu bool
+          updatedMentions pos mentions =
+              Dict.insert pos (updatedMention pos mentions) mentions
+      in
+        case model.currentMention of
+          Just mentionPos ->
+            { model |
+                mentions  = updatedMentions mentionPos model.mentions
+            }
+          Nothing ->
+            model
 
+getMention pos mentions =
+  Maybe.withDefault AtMention.init (Dict.get pos mentions)
 
 view : Signal.Address Action -> Model -> Html
 view address model =
@@ -140,9 +155,16 @@ view address model =
 
         Nothing ->
           NoOp
+
+    toggleMenu code =
+      case code of
+        27 ->
+          ToggleMenu  False
+        _ ->
+          NoOp
   in
     div
-      []
+      [ on "keydown" keyCode (\code -> Signal.message address <| (toggleMenu code)) ]
       [ textarea
           [ on "input" targetValue (Signal.message address << SetValue)
           , onWithOptions "keydown" options dec (\code -> Signal.message address <| (navigate code))
