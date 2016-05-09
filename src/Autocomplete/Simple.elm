@@ -177,6 +177,7 @@ viewInput address model =
       ]
       []
 
+-- CONTROL FUNCTIONS
 
 {-| Set whether the menu should be shown
 -}
@@ -198,6 +199,31 @@ isComplete : Autocomplete -> Bool
 isComplete (Autocomplete model) =
   List.member model.value model.items
 
+
+{-| The possible actions to navigate the autocomplete menu
+-}
+type MenuNavigation
+  = Previous
+  | Next
+  | Select
+
+
+{-| When controlling the Autocomplete value, use this function
+    to provide an action for updating the menu selection.
+-}
+navigateMenu : MenuNavigation -> Autocomplete -> Action
+navigateMenu navigation (Autocomplete model) =
+  case navigation of
+    Previous ->
+      UpdateAutocomplete
+        <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
+
+    Next ->
+      UpdateAutocomplete
+        <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
+
+    Select ->
+      UpdateAutocomplete Autocomplete.Complete
 
 
 -- HELPERS
@@ -226,29 +252,3 @@ getSelectedItemText (Autocomplete model) =
 getCurrentValue : Autocomplete -> String
 getCurrentValue (Autocomplete model) =
   model.value
-
-
-{-| The possible actions to navigate the autocomplete menu
--}
-type MenuNavigation
-  = Previous
-  | Next
-  | Select
-
-
-{-| When controlling the Autocomplete value, use this function
-    to provide an action for updating the menu selection.
--}
-navigateMenu : MenuNavigation -> Autocomplete -> Action
-navigateMenu navigation (Autocomplete model) =
-  case navigation of
-    Previous ->
-      UpdateAutocomplete
-        <| Autocomplete.ChangeSelection (model.selectedItemIndex - 1)
-
-    Next ->
-      UpdateAutocomplete
-        <| Autocomplete.ChangeSelection (model.selectedItemIndex + 1)
-
-    Select ->
-      UpdateAutocomplete Autocomplete.Complete

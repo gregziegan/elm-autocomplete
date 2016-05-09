@@ -1,4 +1,4 @@
-module Autocomplete (Autocomplete, GetItemsTask, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue) where
+module Autocomplete (Autocomplete, GetItemsTask, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete, MenuNavigation(Previous, Next, Select), navigateMenu) where
 
 {-| A customizable Autocomplete component.
 
@@ -80,6 +80,9 @@ The above example can be found in `example/src/RemoteExample.elm`.
 
 # Helpers
 @docs getSelectedItemText, getCurrentValue
+
+# Controlling Behavior
+@docs showMenu, setValue, isComplete, MenuNavigation, navigateMenu
 
 -}
 
@@ -288,7 +291,60 @@ updateInputValue value (Autocomplete model) =
         , completed
         )
 
+-- CONTROL FUNCTIONS
 
+{-| Set whether the menu should be shown
+-}
+showMenu : Bool -> Autocomplete -> Autocomplete
+showMenu bool auto =
+  let
+    (auto, effects, completed) =
+      update (UpdateAutocomplete (Autocomplete.ShowMenu bool)) auto
+  in
+    auto
+
+
+{-| Set current autocomplete value
+-}
+setValue : String -> Autocomplete -> Autocomplete
+setValue value auto =
+  let
+    (auto, effects, completed) =
+      update (SetValue value) auto
+  in
+    auto
+
+
+{-| Returns true if Autocomplete matches an item exactly
+-}
+isComplete : Autocomplete -> Bool
+isComplete (Autocomplete model) =
+  List.member model.autocomplete.value model.autocomplete.items
+
+{-| The possible actions to navigate the autocomplete menu
+-}
+type MenuNavigation
+  = Previous
+  | Next
+  | Select
+
+
+{-| When controlling the Autocomplete value, use this function
+    to provide an action for updating the menu selection.
+-}
+navigateMenu : MenuNavigation -> Autocomplete -> Action
+navigateMenu navigation (Autocomplete model) =
+  case navigation of
+    Previous ->
+      UpdateAutocomplete
+        <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1)
+
+    Next ->
+      UpdateAutocomplete
+        <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1)
+
+    Select ->
+      UpdateAutocomplete Autocomplete.Complete
 
 -- HELPERS
 
@@ -316,29 +372,3 @@ getSelectedItemText (Autocomplete model) =
 getCurrentValue : Autocomplete -> String
 getCurrentValue (Autocomplete model) =
   model.autocomplete.value
-
-
-{-| The possible actions to navigate the autocomplete menu
--}
-type MenuNavigation
-  = Previous
-  | Next
-  | Select
-
-
-{-| When controlling the Autocomplete value, use this function
-    to provide an action for updating the menu selection.
--}
-navigateMenu : MenuNavigation -> Autocomplete -> Action
-navigateMenu navigation (Autocomplete model) =
-  case navigation of
-    Previous ->
-      UpdateAutocomplete
-        <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex - 1)
-
-    Next ->
-      UpdateAutocomplete
-        <| Autocomplete.ChangeSelection (model.autocomplete.selectedItemIndex + 1)
-
-    Select ->
-      UpdateAutocomplete Autocomplete.Complete
