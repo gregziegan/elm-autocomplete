@@ -248,7 +248,7 @@ viewInput address (Autocomplete model) =
     input
       [ type' "text"
       , on "input" targetValue (Signal.message address << SetValue)
-      , on "keydown" keyCode (\code -> Signal.message address (handleKeyDown code))
+      , onWithOptions "keydown" options dec (\code -> Signal.message address <| handleKeyDown code)
       , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.autocomplete.value
       , if model.autocomplete.config.useDefaultStyles then

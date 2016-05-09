@@ -166,7 +166,7 @@ viewInput address model =
           "keydown"
           options
           dec
-          (\k -> Signal.message address <| navigate k)
+          (\code -> Signal.message address <| navigate code)
       , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.value
       , if model.config.useDefaultStyles then
