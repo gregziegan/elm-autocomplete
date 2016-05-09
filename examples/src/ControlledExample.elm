@@ -52,13 +52,22 @@ update action model =
           AtMention.getValue mention
             |> String.length
 
+        startToMentionSlice =
+          String.slice 0 pos model.value
+
+        completedMentionValue =
+          AtMention.getValue updatedMention
+
+        mentionStartToEndSlice =
+          String.slice (pos + currentMentionLength)  (String.length model.value) model.value
+
         newValue =
-          (String.slice 0 pos model.value) ++ (AtMention.getValue updatedMention) ++ (String.slice pos (pos + currentMentionLength - 1) model.value)
+          startToMentionSlice ++ completedMentionValue ++ mentionStartToEndSlice
       in
         if completed then
           { model
             | mentions = Dict.insert pos updatedMention model.mentions
-            , value = Debug.log "newValue" newValue
+            , value = newValue
           }
         else
           { model
