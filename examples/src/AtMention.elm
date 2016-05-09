@@ -16,7 +16,6 @@ people =
 type alias AtMention =
   { autocomplete : Autocomplete
   , value : String
-  , showMenu : Bool
   }
 
 
@@ -28,13 +27,13 @@ createAutocomplete =
         |> Autocomplete.Config.isValueControlled True
   in
     Autocomplete.initWithConfig people config
+      |> Autocomplete.showMenu True
 
 
 init : AtMention
 init =
   { autocomplete = createAutocomplete
   , value = ""
-  , showMenu = False
   }
 
 
@@ -84,12 +83,17 @@ navigateMenu navigation model =
     navAction =
       Autocomplete.navigateMenu navigation model.autocomplete
 
-    ( updatedAutocomplete, completed ) =
+    ( navigatedAuto, completed ) =
       Autocomplete.update navAction model.autocomplete
+
+    updatedAutocomplete =
+      if completed then
+        Autocomplete.showMenu False navigatedAuto
+      else
+        navigatedAuto
   in
     ( { model
         | autocomplete = updatedAutocomplete
-        , showMenu = not completed
         , value = Autocomplete.getCurrentValue updatedAutocomplete
       }
     , completed
@@ -98,7 +102,7 @@ navigateMenu navigation model =
 
 showMenu : Bool -> AtMention -> AtMention
 showMenu bool model =
-  { model | showMenu = bool, autocomplete = Autocomplete.showMenu bool model.autocomplete }
+  { model | autocomplete = Autocomplete.showMenu bool model.autocomplete }
 
 
 setValue : String -> AtMention -> AtMention

@@ -78,12 +78,16 @@ update action model =
           let
             position =
               Maybe.withDefault (String.length value) model.currentMention
+            updateMentions mention pos =
+              ( Dict.insert position mention model.mentions, Just pos )
           in
             case model.currentMention of
               Just pos ->
-                (AtMention.setValue (getNewMentionValue pos)) (getMention pos model.mentions)
-                  |> AtMention.showMenu True
-                  |> (\mention -> ( (Dict.insert position mention model.mentions), Just pos ))
+                if String.endsWith " " value then
+                  ( Dict.remove pos model.mentions, Nothing )
+                else
+                  (AtMention.setValue (getNewMentionValue pos)) (getMention pos model.mentions)
+                    |> (\mention -> updateMentions mention pos )
 
               Nothing ->
                 if String.endsWith "@" value then
@@ -93,8 +97,8 @@ update action model =
       in
         { model
           | value = value
-          , mentions = (fst updateMentions)
-          , currentMention = (snd updateMentions)
+          , mentions = fst updateMentions
+          , currentMention = snd updateMentions
         }
     ToggleMenu bool ->
       let

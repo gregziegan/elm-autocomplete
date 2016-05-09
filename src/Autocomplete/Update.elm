@@ -62,7 +62,6 @@ update action model =
                 model.items
                   |> List.sortWith model.config.compareFn
             , selectedItemIndex = 0
-            , showMenu = True
           }
         , False
         )
@@ -73,7 +72,6 @@ update action model =
                 List.filter (\item -> model.config.filterFn item value) model.items
                   |> List.sortWith model.config.compareFn
             , selectedItemIndex = 0
-            , showMenu = True
           }
         , False
         )
