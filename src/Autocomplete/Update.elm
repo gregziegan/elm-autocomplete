@@ -27,7 +27,7 @@ update action model =
       in
         case selectedItem of
           Just item ->
-            ( { model | value = item, showMenu = False }, True )
+            ( { model | value = item }, True )
 
           Nothing ->
             ( model, True )

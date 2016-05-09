@@ -162,14 +162,24 @@ update action (Autocomplete model) =
       let
         ( updatedModel, completed ) =
           Autocomplete.update act model.autocomplete
+        updatedAutocomplete =
+          Autocomplete { model | autocomplete = updatedModel }
       in
-        ( Autocomplete { model | autocomplete = updatedModel }
-        , Effects.none
-        , completed
-        )
+        if completed && not model.autocomplete.config.isValueControlled then
+           ( showMenu False updatedAutocomplete, Effects.none, completed )
+        else
+          ( updatedAutocomplete, Effects.none, completed )
 
     SetValue value ->
-      updateInputValue value (Autocomplete model)
+      let
+          ( auto, effects, completed ) =
+            updateInputValue value (Autocomplete model)
+      in
+          if not model.autocomplete.config.isValueControlled then
+             ( showMenu True auto, effects, completed )
+          else
+            ( auto, effects, completed )
+
 
     UpdateItems items ->
       let

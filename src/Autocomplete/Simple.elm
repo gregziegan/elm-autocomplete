@@ -96,15 +96,20 @@ update action (Autocomplete model) =
         ( updatedModel, completed ) =
           Autocomplete.update act model
       in
-        ( Autocomplete updatedModel, completed )
+          if completed && not model.config.isValueControlled then
+             ( showMenu False (Autocomplete updatedModel), completed )
+          else
+            ( Autocomplete updatedModel, completed )
 
     SetValue value ->
       let
         ( updatedModel, completed ) =
           Autocomplete.update (Autocomplete.SetValue value) model
       in
-        ( Autocomplete updatedModel, completed )
-
+        if not model.config.isValueControlled then
+           ( showMenu True (Autocomplete updatedModel), completed )
+        else
+          ( Autocomplete updatedModel, completed )
 
 {-| The full Autocomplete view, with menu and input.
     Needs a Signal.Address and Autocomplete (typical of the Elm Architecture).
