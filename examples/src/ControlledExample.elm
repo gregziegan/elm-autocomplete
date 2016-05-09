@@ -14,7 +14,7 @@ import Autocomplete.Simple as Autocomplete
 type alias Model =
   { mentions : Dict Position AtMention
   , value : String
-  , currentMention : Maybe Position
+  , currentMentionPos : Maybe Position
   }
 
 
@@ -22,7 +22,7 @@ init : Model
 init =
   { mentions = Dict.empty
   , value = ""
-  , currentMention = Nothing
+  , currentMentionPos = Nothing
   }
 
 
@@ -86,11 +86,11 @@ update action model =
         updateMentions =
           let
             position =
-              Maybe.withDefault (String.length value) model.currentMention
+              Maybe.withDefault (String.length value) model.currentMentionPos
             updateMentions mention pos =
               ( Dict.insert position mention model.mentions, Just pos )
           in
-            case model.currentMention of
+            case model.currentMentionPos of
               Just pos ->
                 if String.endsWith " " value then
                   ( Dict.remove pos model.mentions, Nothing )
@@ -102,12 +102,12 @@ update action model =
                 if String.endsWith "@" value then
                   ( Dict.insert position AtMention.init model.mentions, Just position )
                 else
-                  ( model.mentions, model.currentMention )
+                  ( model.mentions, model.currentMentionPos )
       in
         { model
           | value = value
           , mentions = fst updateMentions
-          , currentMention = snd updateMentions
+          , currentMentionPos = snd updateMentions
         }
     ToggleMenu bool ->
       let
@@ -117,7 +117,7 @@ update action model =
           updatedMentions pos mentions =
               Dict.insert pos (updatedMention pos mentions) mentions
       in
-        case model.currentMention of
+        case model.currentMentionPos of
           Just mentionPos ->
             { model |
                 mentions  = updatedMentions mentionPos model.mentions
@@ -125,6 +125,7 @@ update action model =
           Nothing ->
             model
 
+getMention : Position -> Dict Position AtMention -> AtMention
 getMention pos mentions =
   Maybe.withDefault AtMention.init (Dict.get pos mentions)
 
@@ -157,7 +158,7 @@ view address model =
           AtMention (AtMention.NavigateMenu Autocomplete.Select) pos mention
 
     navigate code =
-      case model.currentMention of
+      case model.currentMentionPos of
         Just pos ->
           case Dict.get pos model.mentions of
             Just mention ->
@@ -184,7 +185,7 @@ view address model =
           , value model.value
           ]
           []
-      , case model.currentMention of
+      , case model.currentMentionPos of
           Just pos ->
             let
               mention =
