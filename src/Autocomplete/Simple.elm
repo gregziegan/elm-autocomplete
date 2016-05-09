@@ -1,4 +1,4 @@
-module Autocomplete.Simple (Autocomplete, IsComplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete, MenuNavigation(Previous, Next, Select), navigateMenu) where
+module Autocomplete.Simple (Autocomplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete, MenuNavigation(Previous, Next, Select), navigateMenu) where
 
 {-| A customizable Autocomplete component.
 
@@ -24,7 +24,7 @@ main =
 ```
 
 # Definition
-@docs Autocomplete, IsComplete
+@docs Autocomplete
 
 # Initialize
 @docs init, initWithConfig
@@ -43,7 +43,7 @@ main =
 
 -}
 
-import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue)
+import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue, Completed)
 import Autocomplete.DefaultStyles as DefaultStyles
 import Autocomplete.Styling as Styling
 import Autocomplete.Model exposing (Model)
@@ -70,12 +70,6 @@ type Action
   | SetValue String
 
 
-{-| Is the autocomplete completed?
--}
-type alias IsComplete =
-  Bool
-
-
 {-| Creates an Autocomplete from a list of items with a default `String.startsWith` filter
 -}
 init : List String -> Autocomplete
@@ -94,22 +88,22 @@ initWithConfig items config =
 
 {-| The quintessential Elm Architecture reducer.
 -}
-update : Action -> Autocomplete -> ( Autocomplete, IsComplete )
+update : Action -> Autocomplete -> ( Autocomplete, Completed )
 update action (Autocomplete model) =
   case action of
     UpdateAutocomplete act ->
       let
-        ( updatedModel, isComplete ) =
+        ( updatedModel, completed ) =
           Autocomplete.update act model
       in
-        ( Autocomplete updatedModel, isComplete )
+        ( Autocomplete updatedModel, completed )
 
     SetValue value ->
       let
-        ( updatedModel, isComplete ) =
+        ( updatedModel, completed ) =
           Autocomplete.update (Autocomplete.SetValue value) model
       in
-        ( Autocomplete updatedModel, isComplete )
+        ( Autocomplete updatedModel, completed )
 
 
 {-| The full Autocomplete view, with menu and input.

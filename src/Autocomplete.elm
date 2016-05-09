@@ -346,6 +346,7 @@ navigateMenu navigation (Autocomplete model) =
     Select ->
       UpdateAutocomplete Autocomplete.Complete
 
+
 -- HELPERS
 
 

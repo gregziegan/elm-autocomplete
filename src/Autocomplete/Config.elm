@@ -64,7 +64,7 @@ type alias Index =
   Int
 
 
-{-| True if Autocomplete was completed by the current update
+{-| True if an update completed the autocomplete
 -}
 type alias Completed =
   Bool
