@@ -1,4 +1,4 @@
-module Autocomplete.Simple (Autocomplete, init, initWithConfig, Action, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete, MenuNavigation(Previous, Next, Select), navigateMenu) where
+module Autocomplete.Simple exposing (Autocomplete, init, initWithConfig, Msg, update, view, getSelectedItemText, getCurrentValue, showMenu, setValue, isComplete, MenuNavigation(Previous, Next, Select), navigateMenu)
 
 {-| A customizable Autocomplete component.
 
@@ -14,7 +14,6 @@ This selection is modified by keyboard arrow input, mouse clicks, and API consum
 
 Check out how easy it is to plug into `StartApp`:
 ```
-main : Signal Html.Html
 main =
   StartApp.Simple.start
     { model = Autocomplete.init [ "elm", "makes", "coding", "life", "easy" ]
@@ -30,7 +29,7 @@ main =
 @docs init, initWithConfig
 
 # Update
-@docs Action, update
+@docs Msg, update
 
 # Views
 @docs view
@@ -46,14 +45,14 @@ main =
 import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue, Completed)
 import Autocomplete.DefaultStyles as DefaultStyles
 import Autocomplete.Styling as Styling
-import Autocomplete.Model exposing (Model)
+import Autocomplete.Model as Autocomplete exposing (Model)
 import Autocomplete.View exposing (viewMenu)
 import Autocomplete.Update as Autocomplete
 import Html exposing (..)
+import Html.App exposing (map)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
-import Signal exposing (..)
 
 
 {-| The Autocomplete model.
@@ -65,8 +64,8 @@ type Autocomplete
 
 {-| A description of a state change
 -}
-type Action
-  = UpdateAutocomplete Autocomplete.Action
+type Msg
+  = UpdateAutocomplete Autocomplete.Msg
   | SetValue String
 
 
@@ -75,20 +74,20 @@ type Action
 init : List String -> Autocomplete
 init items =
   Autocomplete
-    (Autocomplete.Model.init items)
+    (Autocomplete.init items)
 
 
 {-| Creates an Autocomplete with a custom configuration
 -}
-initWithConfig : List String -> Config.Config -> Autocomplete
+initWithConfig : List String -> Config.Config Autocomplete.Msg -> Autocomplete
 initWithConfig items config =
   Autocomplete
-    (Autocomplete.Model.initWithConfig items config)
+    (Autocomplete.initWithConfig items config)
 
 
 {-| The quintessential Elm Architecture reducer.
 -}
-update : Action -> Autocomplete -> ( Autocomplete, Completed )
+update : Msg -> Autocomplete -> ( Autocomplete, Completed )
 update action (Autocomplete model) =
   case action of
     UpdateAutocomplete act ->
@@ -112,27 +111,26 @@ update action (Autocomplete model) =
           ( Autocomplete updatedModel, completed )
 
 {-| The full Autocomplete view, with menu and input.
-    Needs a Signal.Address and Autocomplete (typical of the Elm Architecture).
 -}
-view : Address Action -> Autocomplete -> Html
-view address (Autocomplete model) =
+view : Autocomplete -> Html Msg
+view  (Autocomplete model) =
   div
-    [ onBlur address (UpdateAutocomplete (Autocomplete.ShowMenu False)) ]
+    [ onBlur  (UpdateAutocomplete (Autocomplete.ShowMenu False)) ]
     [ if model.config.isValueControlled then
         div [] []
       else
-        viewInput address model
+        viewInput  model
     , if not model.showMenu then
         div [] []
       else if List.isEmpty model.matches then
-        model.config.noMatchesDisplay
+        map UpdateAutocomplete model.config.noMatchesDisplay
       else
-        viewMenu (Signal.forwardTo address UpdateAutocomplete) model
+        map  UpdateAutocomplete (viewMenu model)
     ]
 
 
-viewInput : Address Action -> Model -> Html
-viewInput address model =
+viewInput : Model -> Html Msg
+viewInput  model =
   let
     options =
       { preventDefault = True, stopPropagation = False }
@@ -140,37 +138,26 @@ viewInput address model =
     dec =
       (Json.customDecoder
         keyCode
-        (\k ->
-          if List.member k (List.append [ 38, 40 ] model.config.completionKeyCodes) then
-            Ok k
-          else
-            Err "not handling that key"
+        (\code ->
+            if code == 38 then
+              Ok (navigateMenu Previous (Autocomplete model))
+            else if code == 40 then
+              Ok (navigateMenu Next (Autocomplete model))
+            else if List.member code model.config.completionKeyCodes then
+              Ok (navigateMenu Select (Autocomplete model))
+            else
+              Err "not handling that key"
         )
       )
-
-    navigate code =
-      case code of
-        38 ->
-          navigateMenu Previous (Autocomplete model)
-
-        40 ->
-          navigateMenu Next (Autocomplete model)
-
-        _ ->
-          navigateMenu Select (Autocomplete model)
   in
     input
       [ type' "text"
-      , on "input" targetValue (Signal.message address << SetValue)
-      , onWithOptions
-          "keydown"
-          options
-          dec
-          (\code -> Signal.message address <| navigate code)
-      , onFocus address (UpdateAutocomplete (Autocomplete.ShowMenu True))
+      , onInput SetValue
+      , onWithOptions "keydown" options dec
+      , onFocus  (UpdateAutocomplete (Autocomplete.ShowMenu True))
       , value model.value
       , if model.config.useDefaultStyles then
-          DefaultStyles.inputStyle
+          style DefaultStyles.inputStyles
         else
           classList <| model.config.getClasses Styling.Input
       ]
@@ -210,7 +197,7 @@ type MenuNavigation
 {-| When controlling the Autocomplete value, use this function
     to provide an action for updating the menu selection.
 -}
-navigateMenu : MenuNavigation -> Autocomplete -> Action
+navigateMenu : MenuNavigation -> Autocomplete -> Msg
 navigateMenu navigation (Autocomplete model) =
   case navigation of
     Previous ->

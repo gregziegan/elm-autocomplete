@@ -1,14 +1,12 @@
-module Main (..) where
+port module Main exposing (..)
 
-import StartApp
 import Html exposing (..)
+import Html.App as Html exposing (map)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Dict exposing (Dict)
 import Json.Decode as Json
-import Effects exposing (Never, Effects)
 import String
-import Task
 import AtMention exposing (AtMention)
 import Autocomplete.Simple as Autocomplete
 
@@ -24,31 +22,31 @@ type alias CaretPosition =
   , left : Int
   }
 
-init : (Model, Effects Action)
+init : (Model, Cmd Msg)
 init =
   ({ mentions = Dict.empty
   , value = ""
   , currentMentionPos = Nothing
   , caretPos = { top = 0, left = 0 }
-  }, Effects.none)
+  }, Cmd.none)
 
 
 type alias Position =
   Int
 
 
-type Action
+type Msg
   = NoOp
-  | AtMention AtMention.Action Position AtMention
+  | AtMention AtMention.Msg Position AtMention
   | SetValue String
   | ToggleMenu Bool
   | UpdateCaretPosition CaretPosition
 
-update : Action -> Model -> ( Model, Effects Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
   case action of
     NoOp ->
-      ( model, Effects.none)
+      ( model, Cmd.none)
 
     AtMention act pos mention ->
       let
@@ -75,14 +73,14 @@ update action model =
           ({ model
             | mentions = Dict.insert pos updatedMention model.mentions
             , value = newValue
-          }, Effects.none)
+          }, Cmd.none)
         else
           ({ model
             | mentions = Dict.insert pos updatedMention model.mentions
-          }, Effects.none)
+          }, Cmd.none)
 
     SetValue value ->
-       ( updateMentionValue model value, Effects.none )
+       ( updateMentionValue model value, Cmd.none )
 
 
     ToggleMenu bool ->
@@ -97,12 +95,12 @@ update action model =
           Just mentionPos ->
             ({ model |
                 mentions  = updatedMentions mentionPos model.mentions
-            }, Effects.none )
+            }, Cmd.none )
           Nothing ->
-            ( model, Effects.none )
+            ( model, Cmd.none )
 
     UpdateCaretPosition caretPos ->
-      ( { model | caretPos = caretPos }, Effects.none )
+      ( { model | caretPos = caretPos }, Cmd.none )
 
 updateMentionValue : Model -> String -> Model
 updateMentionValue model value =
@@ -154,10 +152,10 @@ getMention : Position -> Dict Position AtMention -> AtMention
 getMention pos mentions =
   Maybe.withDefault AtMention.init (Dict.get pos mentions)
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Msg
+view model =
     div []
-          [ viewEditor address model
+          [ viewEditor model
           , case model.currentMentionPos of
               Just pos ->
                 let
@@ -165,14 +163,14 @@ view address model =
                     Maybe.withDefault AtMention.init (Dict.get pos model.mentions)
                 in
                   div [ style [ ("top", toString model.caretPos.top ++ "px" ), ("left", toString model.caretPos.left ++ "px"), ("position", "absolute") ] ]
-                   [ AtMention.view (Signal.forwardTo address (\act -> AtMention act pos mention)) mention ]
+                   [ map (\act -> AtMention act pos mention) (AtMention.view mention) ]
 
               Nothing ->
                 div [] []
             ]
 
-viewEditor : Signal.Address Action -> Model -> Html
-viewEditor address model =
+viewEditor :  Model -> Html Msg
+viewEditor model =
   let
     options =
       { preventDefault = True, stopPropagation = False }
@@ -180,24 +178,18 @@ viewEditor address model =
     dec =
       (Json.customDecoder
         keyCode
-        (\k ->
-          if List.member k [ 38, 40, 9, 13 ] then
-            Ok k
-          else
-            Err "not handling that key"
-        )
+        navigate
       )
 
     navigateMenu code pos mention =
-      case code of
-        38 ->
-          AtMention (AtMention.NavigateMenu Autocomplete.Previous) pos mention
-
-        40 ->
-          AtMention (AtMention.NavigateMenu Autocomplete.Next) pos mention
-
-        _ ->
-          AtMention (AtMention.NavigateMenu Autocomplete.Select) pos mention
+      if code == 38 then
+          Ok (AtMention (AtMention.NavigateMenu Autocomplete.Previous) pos mention)
+      else if code == 40 then
+          Ok (AtMention (AtMention.NavigateMenu Autocomplete.Next) pos mention)
+      else if List.member code [ 9, 13 ] then
+          Ok (AtMention (AtMention.NavigateMenu Autocomplete.Select) pos mention)
+      else
+          Err "not handling that key"
 
     navigate code =
       case model.currentMentionPos of
@@ -207,10 +199,10 @@ viewEditor address model =
               navigateMenu code pos mention
 
             Nothing ->
-              NoOp
+              Err "not handling that key"
 
         Nothing ->
-          NoOp
+          Err "not handling that key"
 
     toggleMenu code =
       case code of
@@ -219,31 +211,27 @@ viewEditor address model =
         _ ->
           NoOp
   in
-    div [ on "keydown" keyCode (\code -> Signal.message address <| (toggleMenu code)) ]
+    div [ on "keydown" (Json.map toggleMenu keyCode) ]
           [ textarea
-            [ on "input" targetValue (Signal.message address << SetValue)
-            , onWithOptions "keydown" options dec (\code -> Signal.message address <| (navigate code))
+            [ onInput SetValue
+            , onWithOptions "keydown" options dec
             , value model.value
             , class "editor"
             ]
             []
         ]
 
-app : StartApp.App Model
-app =
-  StartApp.start
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  caretPosition UpdateCaretPosition
+
+main : Program Never
+main =
+  Html.program
     { init = init
     , update = update
     , view = view
-    , inputs = [ Signal.map UpdateCaretPosition caretPosition]
+    , subscriptions = subscriptions
     }
 
-main : Signal Html
-main =
-  app.html
-
-port caretPosition : Signal CaretPosition
-
-port tasks : Signal (Task.Task Never ())
-port tasks =
-  app.tasks
+port caretPosition : (CaretPosition -> msg) -> Sub msg

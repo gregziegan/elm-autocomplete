@@ -1,17 +1,15 @@
-module Main (..) where
+module Main exposing (..)
 
-import Effects exposing (Never)
 import Html exposing (..)
+import Html.App as Html exposing (map)
 import Html.Attributes exposing (..)
 import Autocomplete exposing (init, update, view)
 import Autocomplete.Config
-import StartApp
 import Task exposing (Task)
 import Http
 import String
 
-
-fetchMoreItems : String -> Task Effects.Never (List String)
+fetchMoreItems : String -> Task Never (List String)
 fetchMoreItems url =
   Http.url url []
     |> Http.getString
@@ -29,12 +27,14 @@ responseToItems maybeString =
       []
 
 
-getItemsTask : String -> Int -> Task Effects.Never (List String)
+getItemsTask : String -> Int -> Task String (List String)
 getItemsTask value index =
   fetchMoreItems "https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt"
+    |> Task.mapError (\x -> "Connection Failed")
 
 
-app =
+main : Program Never
+main =
   let
     config =
       Autocomplete.Config.defaultConfig
@@ -47,19 +47,9 @@ app =
       in
         ( updatedAutocomplete, effects )
   in
-    StartApp.start
+    Html.program
       { init = init [] getItemsTask
       , update = updateAutocomplete
       , view = view
-      , inputs = []
+      , subscriptions = (\_ -> Sub.none)
       }
-
-
-main : Signal Html.Html
-main =
-  app.html
-
-
-port tasks : Signal (Task.Task Never ())
-port tasks =
-  app.tasks

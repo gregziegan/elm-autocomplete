@@ -1,13 +1,12 @@
-module Main (..) where
+module Main exposing (..)
 
 import Autocomplete.Config
 import Autocomplete.Simple as Autocomplete exposing (Autocomplete)
 import Autocomplete.Styling as Styling
-import StartApp.Simple
 import Html exposing (..)
 import Html.Attributes exposing (style, class)
 import String
-
+import Html.App as Html exposing (map)
 
 getClasses : Styling.View -> Styling.Classes
 getClasses view =
@@ -51,13 +50,13 @@ init =
     }
 
 
-type Action
-  = Autocomplete Autocomplete.Action
+type Msg
+  = Autocomplete Autocomplete.Msg
   | SetValue String
   | ShowMenu Bool
 
 
-update : Action -> Model -> Model
+update : Msg -> Model -> Model
 update action model =
   case action of
     Autocomplete act ->
@@ -82,8 +81,8 @@ update action model =
       { model | showMenu = bool, autocomplete = Autocomplete.showMenu bool model.autocomplete }
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Msg
+view model =
   div
     [ style [ ( "position", "relative" ), ( "font-family", "monospace" ), ( "font-size", "12px" ) ] ]
     [ span
@@ -91,11 +90,11 @@ view address model =
         [ span [ style [ ( "visibility", "none" ) ] ] [ text (Autocomplete.getCurrentValue model.autocomplete) ]
         , span [ style [ ( "color", "gray" ) ] ] [ text model.autocompleteRemaining ]
         ]
-    , Autocomplete.view (Signal.forwardTo address Autocomplete) model.autocomplete
+    , map Autocomplete (Autocomplete.view model.autocomplete)
     ]
 
 
-getItemHtml : String -> Html
+getItemHtml : String -> Html a
 getItemHtml text' =
   div
     [ style [ ( "display", "flex" ), ( "justify-content", "space-between" ) ] ]
@@ -104,9 +103,9 @@ getItemHtml text' =
     ]
 
 
-main : Signal Html.Html
+main : Program Never
 main =
-  StartApp.Simple.start
+  Html.beginnerProgram
     { model = init
     , update = update
     , view = view

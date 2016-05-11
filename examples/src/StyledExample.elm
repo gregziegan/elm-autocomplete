@@ -1,10 +1,9 @@
-module Main (..) where
+module Main exposing (..)
 
 import Autocomplete.Config
 import Autocomplete.Simple as Autocomplete exposing (initWithConfig, update, view)
 import Autocomplete.Styling as Styling
-import StartApp.Simple
-import Html
+import Html.App as Html
 
 
 testData : List String
@@ -36,14 +35,14 @@ getClasses view =
       [ ( "autocomplete-input", True ) ]
 
 
-main : Signal Html.Html
+main : Program Never
 main =
   let
     config =
       Autocomplete.Config.defaultConfig
         |> Autocomplete.Config.setClassesFn getClasses
   in
-    StartApp.Simple.start
+    Html.beginnerProgram
       { model = initWithConfig testData config
       , update = (\act model -> fst (update act model))
       , view = view

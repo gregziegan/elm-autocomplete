@@ -1,4 +1,4 @@
-module Autocomplete.Config (Config, ItemHtmlFn, Text, InputValue, Index, Completed, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay) where
+module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Completed, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay)
 
 {-| Configuration module for the Autocomplete component.
 
@@ -22,28 +22,28 @@ import Char exposing (KeyCode)
 
 {-| The configuration record for an Autocomplete component.
 -}
-type alias Config =
-  Model
+type alias Config msg =
+  Model msg
 
 
-type alias Model =
+type alias Model msg =
   { getClasses : Styling.View -> Styling.Classes
   , useDefaultStyles : Bool
   , completionKeyCodes : List KeyCode
-  , itemHtmlFn : ItemHtmlFn
+  , itemHtmlFn : ItemHtmlFn msg
   , maxListSize : Int
   , filterFn : Text -> InputValue -> Bool
   , compareFn : Text -> Text -> Order
-  , noMatchesDisplay : Html
-  , loadingDisplay : Html
+  , noMatchesDisplay : Html msg
+  , loadingDisplay : Html msg
   , isValueControlled : Bool
   }
 
 
 {-| Given the text of an item, produce some HTML
 -}
-type alias ItemHtmlFn =
-  Text -> Html
+type alias ItemHtmlFn msg =
+  Text -> Html msg
 
 
 {-| The text of an item
@@ -75,63 +75,63 @@ type alias Completed =
 
     The default config provides False.
 -}
-isValueControlled : Bool -> Config -> Config
+isValueControlled : Bool -> Config msg -> Config msg
 isValueControlled bool config =
   { config | isValueControlled = bool }
 
 
 {-| Provide a function that produces an list of classes to style a particular View
 -}
-setClassesFn : (Styling.View -> Styling.Classes) -> Config -> Config
+setClassesFn : (Styling.View -> Styling.Classes) -> Config msg -> Config msg
 setClassesFn getClasses config =
   { config | getClasses = getClasses, useDefaultStyles = False }
 
 
 {-| Provide keycodes for autocompletion. By default, completion happens on tab press.
 -}
-setCompletionKeyCodes : List KeyCode -> Config -> Config
+setCompletionKeyCodes : List KeyCode -> Config msg -> Config msg
 setCompletionKeyCodes keycodes config =
   { config | completionKeyCodes = keycodes }
 
 
 {-| Provide a custom HTML view for an Autocomplete item's text
 -}
-setItemHtml : ItemHtmlFn -> Config -> Config
+setItemHtml : ItemHtmlFn msg -> Config msg -> Config msg
 setItemHtml itemHtmlFn config =
   { config | itemHtmlFn = itemHtmlFn }
 
 
 {-| Provide a maximum list size for the Autocomplete menu
 -}
-setMaxListSize : Int -> Config -> Config
+setMaxListSize : Int -> Config msg -> Config msg
 setMaxListSize maxListSize config =
   { config | maxListSize = maxListSize }
 
 
 {-| Provide a custom filter function used to filter Autocomplete items.
 -}
-setFilterFn : (Text -> InputValue -> Bool) -> Config -> Config
+setFilterFn : (Text -> InputValue -> Bool) -> Config msg -> Config msg
 setFilterFn filterFn config =
   { config | filterFn = filterFn }
 
 
 {-| Provide a custom comparison function to order the Autocomplete matches.
 -}
-setCompareFn : (Text -> Text -> Order) -> Config -> Config
+setCompareFn : (Text -> Text -> Order) -> Config msg -> Config msg
 setCompareFn compareFn config =
   { config | compareFn = compareFn }
 
 
 {-| Provide a custom HTML display for the case that nothing matches.
 -}
-setNoMatchesDisplay : Html -> Config -> Config
+setNoMatchesDisplay : Html msg -> Config msg -> Config msg
 setNoMatchesDisplay noMatchesDisplay config =
   { config | noMatchesDisplay = noMatchesDisplay }
 
 
 {-| Provide a custom loading display for the case when more items are being fetched
 -}
-setLoadingDisplay : Html -> Config -> Config
+setLoadingDisplay : Html msg -> Config msg -> Config msg
 setLoadingDisplay loadingDisplay config =
   { config | loadingDisplay = loadingDisplay }
 
@@ -142,7 +142,7 @@ setLoadingDisplay loadingDisplay config =
 
 {-| A simple Autocomplete configuration
 -}
-defaultConfig : Config
+defaultConfig : Config msg
 defaultConfig =
   { getClasses = (\view -> [])
   , useDefaultStyles = True

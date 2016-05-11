@@ -151,9 +151,7 @@ if (typeof module != 'undefined' && typeof module.exports != 'undefined') {
 </script>
 <script type="text/javascript" src="./build/elm.js"></script>
 <script type="text/javascript">
-  var app = Elm.fullscreen(Elm.Main, {
-    caretPosition: {top: 0, left: 0}
-  });
+  var app = Elm.Main.fullscreen();
 
   document.querySelector('textarea').addEventListener('input', function () {
     var coordinates = getCaretCoordinates(this, this.selectionEnd);

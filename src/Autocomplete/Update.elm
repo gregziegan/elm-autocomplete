@@ -1,22 +1,12 @@
-module Autocomplete.Update (..) where
+module Autocomplete.Update exposing (..)
 
-import Autocomplete.Model exposing (Model)
+import Autocomplete.Model exposing (..)
 import Autocomplete.Config exposing (Completed)
-
-
-{-| A description of a state change
--}
-type Action
-  = Complete
-  | ChangeSelection Int
-  | ShowMenu Bool
-  | UpdateItems (List String)
-  | SetValue String
 
 
 {-| The quintessential Elm Architecture reducer.
 -}
-update : Action -> Model -> ( Model, Completed )
+update : Msg -> Model -> ( Model, Completed )
 update action model =
   case action of
     Complete ->

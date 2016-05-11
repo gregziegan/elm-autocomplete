@@ -1,10 +1,10 @@
-module AtMention (..) where
+module AtMention exposing (..)
 
 import Autocomplete.Config
 import Autocomplete.Simple as Autocomplete exposing (Autocomplete)
 import Autocomplete.Styling as Styling
 import Html exposing (..)
-
+import Html.App exposing (map)
 
 people : List String
 people =
@@ -57,9 +57,9 @@ init =
   }
 
 
-type Action
+type Msg
   = NoOp
-  | Autocomplete Autocomplete.Action
+  | Autocomplete Autocomplete.Msg
   | SetValue String
   | ShowMenu Bool
   | NavigateMenu Autocomplete.MenuNavigation
@@ -69,7 +69,7 @@ type alias Completed =
   Bool
 
 
-update : Action -> AtMention -> ( AtMention, Completed )
+update : Msg -> AtMention -> ( AtMention, Completed )
 update action model =
   case action of
     NoOp ->
@@ -100,11 +100,11 @@ update action model =
 navigateMenu : Autocomplete.MenuNavigation -> AtMention -> ( AtMention, Completed )
 navigateMenu navigation model =
   let
-    navAction =
+    navMsg =
       Autocomplete.navigateMenu navigation model.autocomplete
 
     ( navigatedAuto, completed ) =
-      Autocomplete.update navAction model.autocomplete
+      Autocomplete.update navMsg model.autocomplete
 
     updatedAutocomplete =
       if completed then
@@ -135,6 +135,6 @@ getValue model =
   model.value
 
 
-view : Signal.Address Action -> AtMention -> Html
-view address model =
-  Autocomplete.view (Signal.forwardTo address Autocomplete) model.autocomplete
+view : AtMention -> Html Msg
+view model =
+  map Autocomplete (Autocomplete.view model.autocomplete)

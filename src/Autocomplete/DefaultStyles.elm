@@ -1,12 +1,7 @@
-module Autocomplete.DefaultStyles (..) where
+module Autocomplete.DefaultStyles exposing (..)
 
-import Html exposing (Attribute)
-import Html.Attributes exposing (style)
-
-
-menuStyle : Attribute
-menuStyle =
-  style
+menuStyles : List (String, String)
+menuStyles =
     [ ( "position", "absolute" )
     , ( "left", "5px" )
     , ( "margin-top", "5px" )
@@ -20,9 +15,8 @@ menuStyle =
     ]
 
 
-selectedItemStyle : Attribute
-selectedItemStyle =
-  style
+selectedItemStyles : List (String, String)
+selectedItemStyles =
     [ ( "background", "#3366FF" )
     , ( "color", "white" )
     , ( "display", "block" )
@@ -32,9 +26,8 @@ selectedItemStyle =
     ]
 
 
-listStyle : Attribute
-listStyle =
-  style
+listStyles : List (String, String)
+listStyles =
     [ ( "list-style", "none" )
     , ( "padding", "0" )
     , ( "margin", "auto" )
@@ -43,9 +36,8 @@ listStyle =
     ]
 
 
-itemStyle : Attribute
-itemStyle =
-  style
+itemStyles : List (String, String)
+itemStyles =
     [ ( "display", "block" )
     , ( "padding", "5px 10px" )
     , ( "border-bottom", "1px solid #DDD" )
@@ -53,9 +45,8 @@ itemStyle =
     ]
 
 
-inputStyle : Attribute
-inputStyle =
-  style
+inputStyles : List (String, String)
+inputStyles =
     [ ( "min-width", "120px" )
     , ( "color", "black" )
     , ( "position", "relative" )

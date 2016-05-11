@@ -1,4 +1,4 @@
-module Autocomplete.Styling (View(Menu, List, Item, SelectedItem, Input), Classes) where
+module Autocomplete.Styling exposing (View(Menu, List, Item, SelectedItem, Input), Classes)
 
 {-| Styling module for the Autocomplete component.
 
