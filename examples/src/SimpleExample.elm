@@ -1,10 +1,10 @@
 module Main exposing (..)
 
-import Autocomplete.Simple exposing (Autocomplete, init, update, view)
+import Autocomplete exposing (Autocomplete, init, update, view)
 import Html.App as Html
 
 
-simpleUpdate : Autocomplete.Simple.Msg -> Autocomplete -> Autocomplete
+simpleUpdate : Autocomplete.Msg -> Autocomplete -> Autocomplete
 simpleUpdate action autocomplete =
   fst (update action autocomplete)
 

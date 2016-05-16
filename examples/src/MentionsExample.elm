@@ -8,7 +8,7 @@ import Dict exposing (Dict)
 import Json.Decode as Json
 import String
 import AtMention exposing (AtMention)
-import Autocomplete.Simple as Autocomplete
+import Autocomplete
 
 type alias Model =
   { mentions : Dict Position AtMention
@@ -50,7 +50,7 @@ update action model =
 
     AtMention act pos mention ->
       let
-        ( updatedMention, completed ) =
+        ( updatedMention, status ) =
           AtMention.update act mention
 
         currentMentionLength =
@@ -69,7 +69,7 @@ update action model =
         newValue =
           startToMentionSlice ++ completedMentionValue ++ mentionStartToEndSlice
       in
-        if completed then
+        if status.completed then
           ({ model
             | mentions = Dict.insert pos updatedMention model.mentions
             , value = newValue

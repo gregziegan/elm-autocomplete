@@ -1,9 +1,9 @@
-module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Completed, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay)
+module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Completed, ValueChanged, SelectionChanged, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay)
 
 {-| Configuration module for the Autocomplete component.
 
 # Definition
-@docs Config, ItemHtmlFn, Text, InputValue, Index, Completed
+@docs Config, ItemHtmlFn, Text, InputValue, Index, Completed, ValueChanged, SelectionChanged
 
 # Defaults
 @docs defaultConfig
@@ -67,6 +67,16 @@ type alias Index =
 {-| True if an update completed the autocomplete
 -}
 type alias Completed =
+  Bool
+
+{-| True if an update changed the autocomplete's value
+-}
+type alias ValueChanged =
+  Bool
+
+{-| True if an update changed the autocomplete's selection
+-}
+type alias SelectionChanged =
   Bool
 
 

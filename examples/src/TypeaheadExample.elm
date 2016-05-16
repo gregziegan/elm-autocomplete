@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Autocomplete.Config
-import Autocomplete.Simple as Autocomplete exposing (Autocomplete)
+import Autocomplete exposing (Autocomplete)
 import Autocomplete.Styling as Styling
 import Html exposing (..)
 import Html.Attributes exposing (style, class)
@@ -65,7 +65,7 @@ update action model =
           Autocomplete.update act model.autocomplete
 
         preview =
-          Autocomplete.getSelectedItemText updatedAutocomplete
+          Autocomplete.getSelectedItem updatedAutocomplete
       in
         { model
           | autocompleteRemaining =

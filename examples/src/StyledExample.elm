@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Autocomplete.Config
-import Autocomplete.Simple as Autocomplete exposing (initWithConfig, update, view)
+import Autocomplete exposing (initWithConfig, update, view)
 import Autocomplete.Styling as Styling
 import Html.App as Html
 

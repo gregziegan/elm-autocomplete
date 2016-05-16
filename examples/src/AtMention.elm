@@ -1,7 +1,7 @@
 module AtMention exposing (..)
 
 import Autocomplete.Config
-import Autocomplete.Simple as Autocomplete exposing (Autocomplete)
+import Autocomplete exposing (Autocomplete)
 import Autocomplete.Styling as Styling
 import Html exposing (..)
 import Html.App exposing (map)
@@ -97,17 +97,17 @@ update action model =
       navigateMenu navigation model
 
 
-navigateMenu : Autocomplete.MenuNavigation -> AtMention -> ( AtMention, Completed )
+navigateMenu : Autocomplete.MenuNavigation -> AtMention -> ( AtMention, Autocomplete.Status )
 navigateMenu navigation model =
   let
     navMsg =
       Autocomplete.navigateMenu navigation model.autocomplete
 
-    ( navigatedAuto, completed ) =
+    ( navigatedAuto, status ) =
       Autocomplete.update navMsg model.autocomplete
 
     updatedAutocomplete =
-      if completed then
+      if status.completed then
         Autocomplete.showMenu False navigatedAuto
       else
         navigatedAuto
@@ -116,7 +116,7 @@ navigateMenu navigation model =
         | autocomplete = updatedAutocomplete
         , value = Autocomplete.getCurrentValue updatedAutocomplete
       }
-    , completed
+    , status
     )
 
 
