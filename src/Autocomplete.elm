@@ -1,4 +1,4 @@
-module Autocomplete exposing (Autocomplete, Status, init, initWithConfig, Msg, update, view, getSelectedItem, getCurrentValue, showMenu, setValue, isComplete, setItems, setLoading, MenuNavigation(Previous, Next, Select), navigateMenu)
+module Autocomplete exposing (Autocomplete, Status, init, initWithConfig, Msg, update, view, getSelectedItem, getCurrentValue, showMenu, setValue, isComplete, setItems, setLoading, MenuNavigation(Previous, Next, Select), navigateMenu, defaultStatus)
 
 {-| A customizable Autocomplete component.
 
@@ -37,6 +37,9 @@ main =
 
 # Controlling Behavior
 @docs showMenu, setValue, isComplete, setItems, setLoading, MenuNavigation, navigateMenu
+
+# Defaults
+@docs defaultStatus
 
 -}
 
@@ -396,6 +399,8 @@ getCurrentValue (Autocomplete model) =
 
 -- DEFAULTS
 
+{-| A status record where everything is False
+-}
 defaultStatus : Status
 defaultStatus =
   { completed = False

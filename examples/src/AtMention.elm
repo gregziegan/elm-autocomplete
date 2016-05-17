@@ -58,8 +58,7 @@ init =
 
 
 type Msg
-  = NoOp
-  | Autocomplete Autocomplete.Msg
+  = Autocomplete Autocomplete.Msg
   | SetValue String
   | ShowMenu Bool
   | NavigateMenu Autocomplete.MenuNavigation
@@ -69,29 +68,29 @@ type alias Completed =
   Bool
 
 
-update : Msg -> AtMention -> ( AtMention, Completed )
+update : Msg -> AtMention -> ( AtMention, Autocomplete.Status )
 update action model =
   case action of
-    NoOp ->
-      ( model, False )
-
     Autocomplete act ->
       let
-        ( updatedAutocomplete, completed ) =
+        ( updatedAutocomplete, status ) =
           Autocomplete.update act model.autocomplete
       in
         ( { model
             | autocomplete = updatedAutocomplete
             , value = Autocomplete.getCurrentValue updatedAutocomplete
           }
-        , completed
+        , status
         )
 
     SetValue value ->
-      ( setValue value model, False )
+      let
+        defaultStatus = Autocomplete.defaultStatus
+      in
+      ( setValue value model,  { defaultStatus | valueChanged = True } )
 
     ShowMenu bool ->
-      ( showMenu bool model, False )
+      ( showMenu bool model, Autocomplete.defaultStatus )
 
     NavigateMenu navigation ->
       navigateMenu navigation model
