@@ -64,17 +64,13 @@ type Msg
   | NavigateMenu Autocomplete.MenuNavigation
 
 
-type alias Completed =
-  Bool
-
-
 update : Msg -> AtMention -> ( AtMention, Autocomplete.Status )
-update action model =
-  case action of
-    Autocomplete act ->
+update msg model =
+  case msg of
+    Autocomplete autoMsg ->
       let
         ( updatedAutocomplete, status ) =
-          Autocomplete.update act model.autocomplete
+          Autocomplete.update autoMsg model.autocomplete
       in
         ( { model
             | autocomplete = updatedAutocomplete

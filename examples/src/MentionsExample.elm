@@ -43,15 +43,15 @@ type Msg
   | UpdateCaretPosition CaretPosition
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update action model =
-  case action of
+update msg model =
+  case msg of
     NoOp ->
       ( model, Cmd.none)
 
-    AtMention act pos mention ->
+    AtMention mentionMsg pos mention ->
       let
         ( updatedMention, status ) =
-          AtMention.update act mention
+          AtMention.update mentionMsg mention
 
         currentMentionLength =
           AtMention.getValue mention
@@ -81,7 +81,6 @@ update action model =
 
     SetValue value ->
        ( updateMentionValue model value, Cmd.none )
-
 
     ToggleMenu bool ->
       let

@@ -187,6 +187,7 @@ updateModel msg model =
           }
         , { defaultStatus | valueChanged = True }
         )
+
     SetLoading bool ->
       ( { model | isLoading = bool }, defaultStatus )
 
@@ -279,7 +280,7 @@ viewSelectedItem  model item =
         style DefaultStyles.selectedItemStyles
       else
         classList <| model.config.getClasses Styling.SelectedItem
-    , onClick  Complete
+    , onClick Complete
     ]
     [ model.config.itemHtmlFn item ]
 
@@ -300,9 +301,9 @@ viewList  model =
   let
     getItemView index item =
       if index == model.selectedItemIndex then
-        viewSelectedItem  model item
+        viewSelectedItem model item
       else
-        viewItem  model item index
+        viewItem model item index
   in
     ul
       [ if model.config.useDefaultStyles then
@@ -357,7 +358,7 @@ type MenuNavigation
 
 
 {-| When controlling the Autocomplete value, use this function
-    to provide an action for updating the menu selection.
+    to provide a message for updating the menu selection.
 -}
 navigateMenu : MenuNavigation -> Autocomplete -> Msg
 navigateMenu navigation (Autocomplete model) =

@@ -153,9 +153,12 @@ if (typeof module != 'undefined' && typeof module.exports != 'undefined') {
 <script type="text/javascript">
   var app = Elm.Main.fullscreen();
 
-  document.querySelector('textarea').addEventListener('input', function () {
-    var coordinates = getCaretCoordinates(this, this.selectionEnd);
-    app.ports.caretPosition.send(coordinates);
+
+  document.querySelector('body').addEventListener('input', function (e) {
+    if (e.target && e.target.nodeName === 'TEXTAREA') {
+      var coordinates = getCaretCoordinates(e.target, e.target.selectionEnd);
+      app.ports.caretPosition.send(coordinates);
+    }
   })
 
 </script>
