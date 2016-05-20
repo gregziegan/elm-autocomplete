@@ -1,4 +1,4 @@
-module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Completed, ValueChanged, SelectionChanged, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay)
+module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Completed, ValueChanged, SelectionChanged, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay, setAccessibilityProperties)
 
 {-| Configuration module for the Autocomplete component.
 
@@ -9,7 +9,7 @@ module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index
 @docs defaultConfig
 
 # Modifiers
-@docs isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay
+@docs isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay, setAccessibilityProperties
 
 
 -}
@@ -37,8 +37,10 @@ type alias Model msg =
   , noMatchesDisplay : Html msg
   , loadingDisplay : Html msg
   , isValueControlled : Bool
+  , accessibility : Maybe Accessibility
   }
 
+type alias Accessibility = { owneeID : String }
 
 {-| Given the text of an item, produce some HTML
 -}
@@ -145,7 +147,11 @@ setLoadingDisplay : Html msg -> Config msg -> Config msg
 setLoadingDisplay loadingDisplay config =
   { config | loadingDisplay = loadingDisplay }
 
-
+{-| Provide accessibility properties. Namely an owneeID for ariaOwneeID and to compute ariaActiveDescendantID
+-}
+setAccessibilityProperties : Accessibility -> Config msg -> Config msg
+setAccessibilityProperties accessibility config =
+  { config | accessibility = Just accessibility }
 
 -- DEFAULTS
 
@@ -166,6 +172,7 @@ defaultConfig =
   , noMatchesDisplay = p [] [ text "No Matches" ]
   , loadingDisplay = p [] [ text "..." ]
   , isValueControlled = False
+  , accessibility = Nothing
   }
 
 

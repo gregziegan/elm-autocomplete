@@ -39,6 +39,7 @@ main =
     config =
       Autocomplete.Config.defaultConfig
         |> Autocomplete.Config.setClassesFn getClasses
+        |> Autocomplete.Config.setAccessibilityProperties { owneeID = "styled-example"}
   in
     Html.beginnerProgram
       { model = initWithConfig testData config

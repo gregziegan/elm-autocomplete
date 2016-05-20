@@ -249,6 +249,12 @@ viewInput  model =
     options =
       { preventDefault = True, stopPropagation = False }
 
+    getStrBool bool =
+      if bool then
+        "true"
+      else
+        "false"
+
     dec =
       (Json.customDecoder
         keyCode
@@ -263,8 +269,23 @@ viewInput  model =
               Err "not handling that key"
         )
       )
+
+    accessibilityAttributes =
+      case model.config.accessibility of
+        Just aria ->
+          let
+            descendantID = aria.owneeID ++ "-" ++ (toString model.selectedItemIndex)
+          in
+            [ attribute "ariaActiveDescendantID" descendantID
+            , attribute "ariaOwneeID" aria.owneeID
+            ]
+        Nothing ->
+          [ attribute "ariaActiveDescendantID" ""
+          , attribute "ariaOwneeID" ""
+          ]
   in
     input
+      (List.append
       [ type' "text"
       , onInput SetValue
       , onWithOptions "keydown" options dec
@@ -274,7 +295,11 @@ viewInput  model =
           style DefaultStyles.inputStyles
         else
           classList <| model.config.getClasses Styling.Input
-      ]
+      , attribute "role" "combobox"
+      , attribute "ariaAutoComplete" "list"
+      , attribute "ariaHasPopup" (getStrBool model.showMenu)
+      , attribute "ariaExpanded" (getStrBool model.showMenu)
+      ] accessibilityAttributes)
       []
 
 
