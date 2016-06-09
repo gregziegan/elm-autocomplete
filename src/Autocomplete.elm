@@ -171,7 +171,7 @@ updateModel msg model =
         ( { model | selectedItemIndex = boundedNewIndex }, { defaultStatus | selectionChanged = True } )
 
     ShowMenu bool ->
-      ( { model | showMenu = bool }, defaultStatus )
+      ( { model | showMenu = bool }, {defaultStatus | completed = not bool})
 
     UpdateItems items ->
       ( { model
@@ -263,6 +263,8 @@ viewInput  model =
               Ok (navigateMenu Previous (Autocomplete model))
             else if code == 40 then
               Ok (navigateMenu Next (Autocomplete model))
+            else if code == 27 then
+              Ok (ShowMenu False)
             else if List.member code model.config.completionKeyCodes then
               Ok (navigateMenu Select (Autocomplete model))
             else
@@ -290,6 +292,7 @@ viewInput  model =
       , onInput SetValue
       , onWithOptions "keydown" options dec
       , onFocus (ShowMenu True)
+      , onBlur (ShowMenu False)
       , value model.value
       , if model.config.useDefaultStyles then
           style DefaultStyles.inputStyles
