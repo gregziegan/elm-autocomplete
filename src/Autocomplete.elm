@@ -137,8 +137,12 @@ initWithConfig items config =
 -}
 update : Msg -> Autocomplete-> ( Autocomplete, Status )
 update msg auto =
-  updateAutocomplete msg auto
-    |> toggleMenu
+  case msg of
+    ShowMenu bool ->
+      updateAutocomplete msg auto
+    _ ->
+      updateAutocomplete msg auto
+        |> toggleMenu
 
 updateAutocomplete : Msg -> Autocomplete -> ( Autocomplete, Status )
 updateAutocomplete msg (Autocomplete model) =
@@ -171,7 +175,7 @@ updateModel msg model =
         ( { model | selectedItemIndex = boundedNewIndex }, { defaultStatus | selectionChanged = True } )
 
     ShowMenu bool ->
-      ( { model | showMenu = bool }, {defaultStatus | completed = not bool})
+      ( { model | showMenu = bool }, defaultStatus )
 
     UpdateItems items ->
       ( { model
@@ -292,7 +296,6 @@ viewInput  model =
       , onInput SetValue
       , onWithOptions "keydown" options dec
       , onFocus (ShowMenu True)
-      , onBlur (ShowMenu False)
       , value model.value
       , if model.config.useDefaultStyles then
           style DefaultStyles.inputStyles
