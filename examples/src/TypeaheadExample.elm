@@ -42,6 +42,7 @@ init =
       Autocomplete.Config.defaultConfig
         |> Autocomplete.Config.setClassesFn getClasses
         |> Autocomplete.Config.setItemHtml getItemHtml
+        |> Autocomplete.Config.hideMenuIfEmpty True
   in
     { autocompleteRemaining = ""
     , autocomplete = Autocomplete.initWithConfig [ "elm", "makes", "coding", "life", "easy" ] config

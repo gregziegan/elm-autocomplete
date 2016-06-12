@@ -67,6 +67,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
+import String
 
 
 {-| The Autocomplete model.
@@ -175,7 +176,11 @@ updateModel msg model =
         ( { model | selectedItemIndex = boundedNewIndex }, { defaultStatus | selectionChanged = True } )
 
     ShowMenu bool ->
-      ( { model | showMenu = bool }, defaultStatus )
+      let
+        shouldShowMenu =
+          if model.config.hideMenuIfEmpty && (String.isEmpty model.value) then False else bool
+      in
+        ( { model | showMenu = shouldShowMenu }, defaultStatus )
 
     UpdateItems items ->
       ( { model

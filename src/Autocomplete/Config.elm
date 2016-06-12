@@ -1,4 +1,4 @@
-module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Accessibility, Completed, ValueChanged, SelectionChanged, defaultConfig, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay, setAccessibilityProperties)
+module Autocomplete.Config exposing (Config, ItemHtmlFn, Text, InputValue, Index, Accessibility, Completed, ValueChanged, SelectionChanged, defaultConfig, hideMenuIfEmpty, isValueControlled, setClassesFn, setCompletionKeyCodes, setItemHtml, setMaxListSize, setFilterFn, setCompareFn, setNoMatchesDisplay, setLoadingDisplay, setAccessibilityProperties)
 
 {-| Configuration module for the Autocomplete component.
 
@@ -38,6 +38,7 @@ type alias Model msg =
   , loadingDisplay : Html msg
   , isValueControlled : Bool
   , accessibility : Maybe Accessibility
+  , hideMenuIfEmpty : Bool
   }
 
 {-| Information needed for better screen reader accessibility.
@@ -84,6 +85,14 @@ type alias ValueChanged =
 type alias SelectionChanged =
   Bool
 
+
+{-| Provide True to hide the autocomplete menu if the input field is empty.
+    False to show the autocomplete menu whenever the input field has focus.
+    The default config provides False.
+-}
+hideMenuIfEmpty : Bool -> Config msg -> Config msg
+hideMenuIfEmpty bool config =
+  { config | hideMenuIfEmpty = bool }
 
 {-| Provide True to control the autocomplete value,
     False to let the component control the value via a stylable `input` field.
@@ -175,6 +184,7 @@ defaultConfig =
   , loadingDisplay = p [] [ text "..." ]
   , isValueControlled = False
   , accessibility = Nothing
+  , hideMenuIfEmpty = False
   }
 
 
