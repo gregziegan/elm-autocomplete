@@ -4,4 +4,4 @@ install:
   - elm-package install -y
 before_script:
   - cd tests && elm-make --yes --output test.js CompletionTests.elm
-script: cd tests && node test.js
+script: node test.js
