@@ -12,7 +12,7 @@ simpleUpdate action autocomplete =
 main : Program Never
 main =
     Html.beginnerProgram
-        { model = init [ "", "", "", "", "", " " ]
+        { model = init [ "elm", "makes", "coding", "life", "easy" ]
         , update = simpleUpdate
         , view = view
         }
