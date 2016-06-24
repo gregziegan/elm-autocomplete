@@ -10,9 +10,6 @@ import Json.Decode as Json
 import String
 
 
-{-| The Autocomplete model.
-    It assumes filtering is based upon strings.
--}
 type Autocomplete
     = Autocomplete Model
 
@@ -28,8 +25,6 @@ type alias Model =
     }
 
 
-{-| Information for parent components about the update of the Autocomplete
--}
 type alias Status =
     { completed : Completed
     , valueChanged : ValueChanged
@@ -50,8 +45,6 @@ init items =
         }
 
 
-{-| Creates an Autocomplete with a custom configuration
--}
 initWithConfig : List String -> Config.Config Msg -> Autocomplete
 initWithConfig items config =
     Autocomplete
@@ -65,8 +58,6 @@ initWithConfig items config =
         }
 
 
-{-| A description of a state change
--}
 type Msg
     = Complete
     | ChangeSelection Int
@@ -76,8 +67,6 @@ type Msg
     | SetLoading Bool
 
 
-{-| The quintessential Elm Architecture reducer.
--}
 update : Msg -> Autocomplete -> ( Autocomplete, Status )
 update msg auto =
     case msg of
@@ -181,8 +170,6 @@ makeOpaque ( model, status ) =
     ( Autocomplete model, status )
 
 
-{-| The full Autocomplete view, with menu and input.
--}
 view : Autocomplete -> Html Msg
 view (Autocomplete model) =
     div [ onBlur (ShowMenu False) ]
@@ -328,38 +315,27 @@ showMenu bool auto =
     fst (updateAutocomplete (ShowMenu bool) auto)
 
 
-{-| Set current autocomplete value
--}
 setValue : String -> Autocomplete -> Autocomplete
 setValue value auto =
     fst (updateAutocomplete (SetValue value) auto)
 
 
-{-| Sets the Autocomplete's list of items
--}
 setItems : List String -> Autocomplete -> Autocomplete
 setItems items auto =
     fst (updateAutocomplete (UpdateItems items) auto)
 
 
-{-| Sets whether the Autocomplete shows its loading display or not. Useful for remote updates.
--}
 setLoading : Bool -> Autocomplete -> Autocomplete
 setLoading bool auto =
     fst (update (SetLoading bool) auto)
 
 
-{-| The possible actions to navigate the autocomplete menu
--}
 type MenuNavigation
     = Previous
     | Next
     | Select
 
 
-{-| When controlling the Autocomplete value, use this function
-    to provide a message for updating the menu selection.
--}
 navigateMenu : MenuNavigation -> Autocomplete -> Msg
 navigateMenu navigation (Autocomplete model) =
     case navigation of
@@ -373,8 +349,6 @@ navigateMenu navigation (Autocomplete model) =
             Complete
 
 
-{-| Get the text of the currently selected item
--}
 getSelectedItem : Autocomplete -> Text
 getSelectedItem (Autocomplete model) =
     let
@@ -390,8 +364,6 @@ getSelectedItem (Autocomplete model) =
                 model.value
 
 
-{-| Get the string currently entered by the user in the Autocomplete
--}
 getCurrentValue : Autocomplete -> String
 getCurrentValue (Autocomplete model) =
     model.value
