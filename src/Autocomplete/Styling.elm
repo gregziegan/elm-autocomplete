@@ -62,14 +62,14 @@ main =
 {-| A list of class names and their associated status (added/removed) as a boolean value.
 -}
 type alias Classes =
-  List ( String, Bool )
+    List ( String, Bool )
 
 
 {-| The stylable views of the Autocomplete component.
 -}
 type View
-  = Menu
-  | List
-  | Item
-  | SelectedItem
-  | Input
+    = Menu
+    | List
+    | Item
+    | SelectedItem
+    | Input

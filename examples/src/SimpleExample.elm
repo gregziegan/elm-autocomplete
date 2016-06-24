@@ -6,13 +6,13 @@ import Html.App as Html
 
 simpleUpdate : Autocomplete.Msg -> Autocomplete -> Autocomplete
 simpleUpdate action autocomplete =
-  fst (update action autocomplete)
+    fst (update action autocomplete)
 
 
 main : Program Never
 main =
-  Html.beginnerProgram
-    { model = init [ "elm", "makes", "coding", "life", "easy" ]
-    , update = simpleUpdate
-    , view = view
-    }
+    Html.beginnerProgram
+        { model = init [ "", "", "", "", "", " " ]
+        , update = simpleUpdate
+        , view = view
+        }

@@ -23,67 +23,72 @@ import Char exposing (KeyCode)
 {-| The configuration record for an Autocomplete component.
 -}
 type alias Config msg =
-  Model msg
+    Model msg
 
 
 type alias Model msg =
-  { getClasses : Styling.View -> Styling.Classes
-  , useDefaultStyles : Bool
-  , completionKeyCodes : List KeyCode
-  , itemHtmlFn : ItemHtmlFn msg
-  , maxListSize : Int
-  , filterFn : Text -> InputValue -> Bool
-  , compareFn : Text -> Text -> Order
-  , noMatchesDisplay : Html msg
-  , loadingDisplay : Html msg
-  , isValueControlled : Bool
-  , accessibility : Maybe Accessibility
-  , hideMenuIfEmpty : Bool
-  }
+    { getClasses : Styling.View -> Styling.Classes
+    , useDefaultStyles : Bool
+    , completionKeyCodes : List KeyCode
+    , itemHtmlFn : ItemHtmlFn msg
+    , maxListSize : Int
+    , filterFn : Text -> InputValue -> Bool
+    , compareFn : Text -> Text -> Order
+    , noMatchesDisplay : Html msg
+    , loadingDisplay : Html msg
+    , isValueControlled : Bool
+    , accessibility : Maybe Accessibility
+    , hideMenuIfEmpty : Bool
+    }
+
 
 {-| Information needed for better screen reader accessibility.
     `owneeID` will differentiate multiple instances of the autocomplete.
 -}
-type alias Accessibility = { owneeID : String }
+type alias Accessibility =
+    { owneeID : String }
+
 
 {-| Given the text of an item, produce some HTML
 -}
 type alias ItemHtmlFn msg =
-  Text -> Html msg
+    Text -> Html msg
 
 
 {-| The text of an item
 -}
 type alias Text =
-  String
+    String
 
 
 {-| The value of the input
 -}
 type alias InputValue =
-  String
+    String
 
 
 {-| Positive integer index of selected item in list
 -}
 type alias Index =
-  Int
+    Int
 
 
 {-| True if an update completed the autocomplete
 -}
 type alias Completed =
-  Bool
+    Bool
+
 
 {-| True if an update changed the autocomplete's value
 -}
 type alias ValueChanged =
-  Bool
+    Bool
+
 
 {-| True if an update changed the autocomplete's selection
 -}
 type alias SelectionChanged =
-  Bool
+    Bool
 
 
 {-| Provide True to hide the autocomplete menu if the input field is empty.
@@ -92,7 +97,8 @@ type alias SelectionChanged =
 -}
 hideMenuIfEmpty : Bool -> Config msg -> Config msg
 hideMenuIfEmpty bool config =
-  { config | hideMenuIfEmpty = bool }
+    { config | hideMenuIfEmpty = bool }
+
 
 {-| Provide True to control the autocomplete value,
     False to let the component control the value via a stylable `input` field.
@@ -100,69 +106,72 @@ hideMenuIfEmpty bool config =
 -}
 isValueControlled : Bool -> Config msg -> Config msg
 isValueControlled bool config =
-  { config | isValueControlled = bool }
+    { config | isValueControlled = bool }
 
 
 {-| Provide a function that produces an list of classes to style a particular View
 -}
 setClassesFn : (Styling.View -> Styling.Classes) -> Config msg -> Config msg
 setClassesFn getClasses config =
-  { config | getClasses = getClasses, useDefaultStyles = False }
+    { config | getClasses = getClasses, useDefaultStyles = False }
 
 
 {-| Provide keycodes for autocompletion. By default, completion happens on tab press.
 -}
 setCompletionKeyCodes : List KeyCode -> Config msg -> Config msg
 setCompletionKeyCodes keycodes config =
-  { config | completionKeyCodes = keycodes }
+    { config | completionKeyCodes = keycodes }
 
 
 {-| Provide a custom HTML view for an Autocomplete item's text
 -}
 setItemHtml : ItemHtmlFn msg -> Config msg -> Config msg
 setItemHtml itemHtmlFn config =
-  { config | itemHtmlFn = itemHtmlFn }
+    { config | itemHtmlFn = itemHtmlFn }
 
 
 {-| Provide a maximum list size for the Autocomplete menu
 -}
 setMaxListSize : Int -> Config msg -> Config msg
 setMaxListSize maxListSize config =
-  { config | maxListSize = maxListSize }
+    { config | maxListSize = maxListSize }
 
 
 {-| Provide a custom filter function used to filter Autocomplete items.
 -}
 setFilterFn : (Text -> InputValue -> Bool) -> Config msg -> Config msg
 setFilterFn filterFn config =
-  { config | filterFn = filterFn }
+    { config | filterFn = filterFn }
 
 
 {-| Provide a custom comparison function to order the Autocomplete matches.
 -}
 setCompareFn : (Text -> Text -> Order) -> Config msg -> Config msg
 setCompareFn compareFn config =
-  { config | compareFn = compareFn }
+    { config | compareFn = compareFn }
 
 
 {-| Provide a custom HTML display for the case that nothing matches.
 -}
 setNoMatchesDisplay : Html msg -> Config msg -> Config msg
 setNoMatchesDisplay noMatchesDisplay config =
-  { config | noMatchesDisplay = noMatchesDisplay }
+    { config | noMatchesDisplay = noMatchesDisplay }
 
 
 {-| Provide a custom loading display for the case when more items are being fetched
 -}
 setLoadingDisplay : Html msg -> Config msg -> Config msg
 setLoadingDisplay loadingDisplay config =
-  { config | loadingDisplay = loadingDisplay }
+    { config | loadingDisplay = loadingDisplay }
+
 
 {-| Provide accessibility properties. Namely an owneeID for ariaOwneeID and to compute ariaActiveDescendantID
 -}
 setAccessibilityProperties : Accessibility -> Config msg -> Config msg
 setAccessibilityProperties accessibility config =
-  { config | accessibility = Just accessibility }
+    { config | accessibility = Just accessibility }
+
+
 
 -- DEFAULTS
 
@@ -171,31 +180,31 @@ setAccessibilityProperties accessibility config =
 -}
 defaultConfig : Config msg
 defaultConfig =
-  { getClasses = (\view -> [])
-  , useDefaultStyles = True
-  , completionKeyCodes =
-      [ 9 ]
-      -- defaults to tab
-  , itemHtmlFn = (\item -> text item)
-  , maxListSize = 5
-  , filterFn = (\item value -> String.startsWith value item)
-  , compareFn = normalComparison
-  , noMatchesDisplay = p [] [ text "No Matches" ]
-  , loadingDisplay = p [] [ text "..." ]
-  , isValueControlled = False
-  , accessibility = Nothing
-  , hideMenuIfEmpty = False
-  }
+    { getClasses = (\view -> [])
+    , useDefaultStyles = True
+    , completionKeyCodes =
+        [ 9 ]
+        -- defaults to tab
+    , itemHtmlFn = (\item -> text item)
+    , maxListSize = 5
+    , filterFn = (\item value -> String.startsWith value item)
+    , compareFn = normalComparison
+    , noMatchesDisplay = p [] [ text "No Matches" ]
+    , loadingDisplay = p [] [ text "..." ]
+    , isValueControlled = False
+    , accessibility = Nothing
+    , hideMenuIfEmpty = False
+    }
 
 
 normalComparison : String -> String -> Order
 normalComparison item1 item2 =
-  case compare item1 item2 of
-    LT ->
-      LT
+    case compare item1 item2 of
+        LT ->
+            LT
 
-    EQ ->
-      EQ
+        EQ ->
+            EQ
 
-    GT ->
-      GT
+        GT ->
+            GT

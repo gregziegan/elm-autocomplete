@@ -1,6 +1,7 @@
 module Autocomplete.DefaultStyles exposing (..)
 
-menuStyles : List (String, String)
+
+menuStyles : List ( String, String )
 menuStyles =
     [ ( "position", "absolute" )
     , ( "left", "5px" )
@@ -15,7 +16,7 @@ menuStyles =
     ]
 
 
-selectedItemStyles : List (String, String)
+selectedItemStyles : List ( String, String )
 selectedItemStyles =
     [ ( "background", "#3366FF" )
     , ( "color", "white" )
@@ -26,7 +27,7 @@ selectedItemStyles =
     ]
 
 
-listStyles : List (String, String)
+listStyles : List ( String, String )
 listStyles =
     [ ( "list-style", "none" )
     , ( "padding", "0" )
@@ -36,7 +37,7 @@ listStyles =
     ]
 
 
-itemStyles : List (String, String)
+itemStyles : List ( String, String )
 itemStyles =
     [ ( "display", "block" )
     , ( "padding", "5px 10px" )
@@ -45,7 +46,7 @@ itemStyles =
     ]
 
 
-inputStyles : List (String, String)
+inputStyles : List ( String, String )
 inputStyles =
     [ ( "min-width", "120px" )
     , ( "color", "black" )
