@@ -1,5 +1,7 @@
 # Elm Autocomplete
 
+[![Build Status](https://travis-ci.org/thebritican/elm-autocomplete.svg?branch=master)](https://travis-ci.org/thebritican/elm-autocomplete)
+
 An Autocomplete component in Elm because typing is hard.
 
 Here's a simple example.
