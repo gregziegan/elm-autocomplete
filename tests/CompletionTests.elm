@@ -1,4 +1,4 @@
-module Main exposing (..)
+module CompletionTests exposing (..)
 
 {-| HOW TO RUN THIS EXAMPLE
 
