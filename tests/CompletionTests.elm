@@ -163,4 +163,26 @@ testCompletion =
                             Autocomplete.Autocomplete model ->
                                 Assert.equal expectedMatches model.matches
             ]
+        , describe "given a ShowLoading Msg"
+            [ test "with a True argument"
+                <| \() ->
+                    let
+                        ( autocomplete, _ ) =
+                            Autocomplete.init []
+                                |> Autocomplete.update (Autocomplete.SetLoading True)
+                    in
+                        case autocomplete of
+                            Autocomplete.Autocomplete model ->
+                                Assert.true "isLoading value is set to True" model.isLoading
+            , test "with a False argument"
+                <| \() ->
+                    let
+                        ( autocomplete, _ ) =
+                            Autocomplete.init []
+                                |> Autocomplete.update (Autocomplete.SetLoading False)
+                    in
+                        case autocomplete of
+                            Autocomplete.Autocomplete model ->
+                                Assert.false "isLoading value is set to False" model.isLoading
+            ]
         ]
