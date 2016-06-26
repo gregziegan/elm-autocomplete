@@ -1,4 +1,4 @@
-module Autocomplete.Autocomplete exposing (Autocomplete, Model, Status, Msg(..), MenuNavigation(..), init, initWithConfig, update, updateModel, view, navigateMenu, showMenu, setValue, setItems, setLoading, getSelectedItem, getCurrentValue, defaultStatus)
+module Autocomplete.Autocomplete exposing (Autocomplete(..), Model, Status, Msg(..), MenuNavigation(..), init, initWithConfig, update, updateModel, view, navigateMenu, showMenu, setValue, setItems, setLoading, getSelectedItem, getCurrentValue, defaultStatus)
 
 import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue, Completed, ValueChanged, SelectionChanged)
 import Autocomplete.DefaultStyles as DefaultStyles

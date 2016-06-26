@@ -1,4 +1,4 @@
-module CompletionTests exposing (..)
+module Main exposing (..)
 
 {-| HOW TO RUN THIS EXAMPLE
 
@@ -96,5 +96,27 @@ testCompletion =
                                 |> checkWithinBoundedIndex items index
                     in
                         Assert.equal item desiredItem
+            ]
+        , describe "given a ShowMenu Msg"
+            [ test "with a True argument"
+                <| \() ->
+                    let
+                        ( autocomplete, _ ) =
+                            Autocomplete.init []
+                                |> Autocomplete.update (Autocomplete.ShowMenu True)
+                    in
+                        case autocomplete of
+                            Autocomplete.Autocomplete model ->
+                                Assert.true "showMenu value is set to True" model.showMenu
+            , test "with a False argument"
+                <| \() ->
+                    let
+                        ( autocomplete, _ ) =
+                            Autocomplete.init []
+                                |> Autocomplete.update (Autocomplete.ShowMenu False)
+                    in
+                        case autocomplete of
+                            Autocomplete.Autocomplete model ->
+                                Assert.false "showMenu value is set to False" model.showMenu
             ]
         ]
