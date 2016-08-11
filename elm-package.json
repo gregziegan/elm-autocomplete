@@ -11,6 +11,7 @@
         "Autocomplete.Config",
         "Autocomplete.Styling"
     ],
+    "native-modules": true,
     "dependencies": {
         "elm-lang/core": "4.0.0 <= v < 5.0.0",
         "elm-lang/html": "1.0.0 <= v < 2.0.0"

@@ -1,377 +1,262 @@
-module Autocomplete.Autocomplete exposing (Autocomplete(..), Model, Status, Msg(..), MenuNavigation(..), init, initWithConfig, update, updateModel, view, navigateMenu, showMenu, setValue, setItems, setLoading, getSelectedItem, getCurrentValue, defaultStatus)
+module Autocomplete.Autocomplete
+    exposing
+        ( State
+        , empty
+        , reset
+        , Msg
+        , UpdateConfig
+        , updateConfig
+        , update
+        , view
+        , Config
+        , HtmlDetails
+        , config
+        )
 
-import Autocomplete.Config as Config exposing (Config, Text, Index, InputValue, Completed, ValueChanged, SelectionChanged)
-import Autocomplete.DefaultStyles as DefaultStyles
-import Autocomplete.Styling as Styling
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Char exposing (KeyCode)
+import Html exposing (Html, Attribute)
+import Html.App
+import Html.Events
 import Json.Decode as Json
-import String
+import Native.Tricks
 
 
-type Autocomplete
-    = Autocomplete Model
+trickyMap : Attribute Never -> Attribute Msg
+trickyMap =
+    Native.Tricks.trickyMap
 
 
-type alias Model =
-    { value : InputValue
-    , items : List Text
-    , matches : List Text
-    , selectedItemIndex : Index
-    , showMenu : Bool
-    , isLoading : Bool
-    , config : Config Msg
-    }
+
+-- MODEL
 
 
-type alias Status =
-    { completed : Completed
-    , valueChanged : ValueChanged
-    , selectionChanged : SelectionChanged
-    }
-
-
-init : List String -> Autocomplete
-init items =
-    Autocomplete
-        { value = ""
-        , items = items
-        , matches = items
-        , selectedItemIndex = 0
-        , showMenu = False
-        , config = Config.defaultConfig
-        , isLoading = False
+type State
+    = State
+        { key : Maybe String
+        , mouse : Maybe String
         }
 
 
-initWithConfig : List String -> Config.Config Msg -> Autocomplete
-initWithConfig items config =
-    Autocomplete
-        { value = ""
-        , items = items
-        , matches = items
-        , selectedItemIndex = 0
-        , showMenu = False
-        , isLoading = False
-        , config = config
-        }
+empty : State
+empty =
+    State { key = Nothing, mouse = Nothing }
+
+
+reset : State -> State
+reset (State { key, mouse }) =
+    State { key = Nothing, mouse = mouse }
+
+
+
+-- UPDATE
 
 
 type Msg
-    = Complete
-    | ChangeSelection Int
-    | ShowMenu Bool
-    | UpdateItems (List String)
-    | SetValue String
-    | SetLoading Bool
+    = KeyChange KeyCode String
+    | WentTooLow
+    | WentTooFar
+    | MouseEnter String
+    | MouseLeave String
+    | MouseClick String
+    | NoOp
 
 
-update : Msg -> Autocomplete -> ( Autocomplete, Status )
-update msg auto =
-    case msg of
-        ShowMenu bool ->
-            updateAutocomplete msg auto
-
-        _ ->
-            updateAutocomplete msg auto
-                |> toggleMenu
-
-
-updateAutocomplete : Msg -> Autocomplete -> ( Autocomplete, Status )
-updateAutocomplete msg (Autocomplete model) =
-    updateModel msg model
-        |> makeOpaque
+type UpdateConfig msg
+    = UpdateConfig
+        { onKeyDown : KeyCode -> Bool
+        , onChoose : String -> msg
+        , onKeyChange : KeyCode -> msg
+        , onTooLow : Maybe msg
+        , onTooHigh : Maybe msg
+        , onMouseEnter : Maybe msg
+        , onMouseLeave : Maybe msg
+        , onMouseClick : Maybe msg
+        }
 
 
-updateModel : Msg -> Model -> ( Model, Status )
-updateModel msg model =
-    case msg of
-        Complete ->
-            let
-                selectedItem =
-                    List.drop model.selectedItemIndex model.matches
-                        |> List.head
-            in
-                case selectedItem of
-                    Just item ->
-                        ( { model | value = item }, { defaultStatus | completed = True, valueChanged = True } )
-
-                    Nothing ->
-                        ( model, { defaultStatus | completed = True } )
-
-        ChangeSelection newIndex ->
-            let
-                boundedNewIndex =
-                    Basics.max newIndex 0
-                        |> Basics.min ((List.length model.matches) - 1)
-                        |> Basics.min (model.config.maxListSize - 1)
-            in
-                ( { model | selectedItemIndex = boundedNewIndex }, { defaultStatus | selectionChanged = True } )
-
-        ShowMenu bool ->
-            let
-                shouldShowMenu =
-                    if model.config.hideMenuIfEmpty && (String.isEmpty model.value) then
-                        False
-                    else
-                        bool
-            in
-                ( { model | showMenu = shouldShowMenu }, defaultStatus )
-
-        UpdateItems items ->
-            ( { model
-                | items = items
-                , matches =
-                    List.filter (\item -> model.config.filterFn item model.value) items
-                        |> List.sortWith model.config.compareFn
-              }
-            , defaultStatus
-            )
-
-        SetValue value ->
-            if value == "" then
-                ( { model
-                    | value = value
-                    , matches =
-                        model.items
-                            |> List.sortWith model.config.compareFn
-                    , selectedItemIndex = 0
-                  }
-                , { defaultStatus | valueChanged = True }
-                )
-            else
-                ( { model
-                    | value = value
-                    , matches =
-                        List.filter (\item -> model.config.filterFn item value) model.items
-                            |> List.sortWith model.config.compareFn
-                    , selectedItemIndex = 0
-                  }
-                , { defaultStatus | valueChanged = True }
-                )
-
-        SetLoading bool ->
-            ( { model | isLoading = bool }, defaultStatus )
-
-
-toggleMenu : ( Autocomplete, Status ) -> ( Autocomplete, Status )
-toggleMenu ( Autocomplete model, status ) =
-    if model.config.isValueControlled then
-        ( Autocomplete model, status )
-    else if status.completed then
-        ( showMenu False (Autocomplete model), status )
-    else
-        ( showMenu True (Autocomplete model), status )
-
-
-makeOpaque : ( Model, Status ) -> ( Autocomplete, Status )
-makeOpaque ( model, status ) =
-    ( Autocomplete model, status )
-
-
-view : Autocomplete -> Html Msg
-view (Autocomplete model) =
-    div [ onBlur (ShowMenu False) ]
-        [ if model.config.isValueControlled then
-            div [] []
-          else
-            viewInput model
-        , if not model.showMenu then
-            div [] []
-          else if model.isLoading then
-            model.config.loadingDisplay
-          else if List.isEmpty model.matches then
-            model.config.noMatchesDisplay
-          else
-            viewMenu model
-        ]
-
-
-viewInput : Model -> Html Msg
-viewInput model =
-    let
-        options =
-            { preventDefault = True, stopPropagation = False }
-
-        getStrBool bool =
-            if bool then
-                "true"
-            else
-                "false"
-
-        dec =
-            (Json.customDecoder keyCode
-                (\code ->
-                    if code == 38 then
-                        Ok (navigateMenu Previous (Autocomplete model))
-                    else if code == 40 then
-                        Ok (navigateMenu Next (Autocomplete model))
-                    else if code == 27 then
-                        Ok (ShowMenu False)
-                    else if List.member code model.config.completionKeyCodes then
-                        Ok (navigateMenu Select (Autocomplete model))
-                    else
-                        Err "not handling that key"
-                )
-            )
-
-        accessibilityAttributes =
-            case model.config.accessibility of
-                Just aria ->
-                    let
-                        descendantID =
-                            aria.owneeID ++ "-" ++ (toString model.selectedItemIndex)
-                    in
-                        [ attribute "ariaActiveDescendantID" descendantID
-                        , attribute "ariaOwneeID" aria.owneeID
-                        ]
-
-                Nothing ->
-                    [ attribute "ariaActiveDescendantID" ""
-                    , attribute "ariaOwneeID" ""
-                    ]
-    in
-        input
-            (List.append
-                [ type' "text"
-                , onInput SetValue
-                , onWithOptions "keydown" options dec
-                , onFocus (ShowMenu True)
-                , onBlur (ShowMenu False)
-                , value model.value
-                , if model.config.useDefaultStyles then
-                    style DefaultStyles.inputStyles
-                  else
-                    classList <| model.config.getClasses Styling.Input
-                , attribute "role" "combobox"
-                , attribute "ariaAutoComplete" "list"
-                , attribute "ariaHasPopup" (getStrBool model.showMenu)
-                , attribute "ariaExpanded" (getStrBool model.showMenu)
-                ]
-                accessibilityAttributes
-            )
-            []
-
-
-viewItem : Model -> Text -> Index -> Html Msg
-viewItem model item index =
-    li
-        [ if model.config.useDefaultStyles then
-            style DefaultStyles.itemStyles
-          else
-            classList <| model.config.getClasses Styling.Item
-        , onMouseEnter (ChangeSelection index)
-        ]
-        [ model.config.itemHtmlFn item ]
-
-
-viewSelectedItem : Model -> Text -> Html Msg
-viewSelectedItem model item =
-    li
-        [ if model.config.useDefaultStyles then
-            style DefaultStyles.selectedItemStyles
-          else
-            classList <| model.config.getClasses Styling.SelectedItem
-        , onMouseDown Complete
-        ]
-        [ model.config.itemHtmlFn item ]
-
-
-viewMenu : Model -> Html Msg
-viewMenu model =
-    div
-        [ if model.config.useDefaultStyles then
-            style DefaultStyles.menuStyles
-          else
-            classList <| model.config.getClasses Styling.Menu
-        ]
-        [ viewList model ]
-
-
-viewList : Model -> Html Msg
-viewList model =
-    let
-        getItemView index item =
-            if index == model.selectedItemIndex then
-                viewSelectedItem model item
-            else
-                viewItem model item index
-
-        constrainedMatches =
-            List.take model.config.maxListSize model.matches
-    in
-        ul
-            [ if model.config.useDefaultStyles then
-                style DefaultStyles.listStyles
-              else
-                classList <| model.config.getClasses Styling.List
-            ]
-            (List.indexedMap getItemView constrainedMatches)
-
-
-showMenu : Bool -> Autocomplete -> Autocomplete
-showMenu bool auto =
-    fst (updateAutocomplete (ShowMenu bool) auto)
-
-
-setValue : String -> Autocomplete -> Autocomplete
-setValue value auto =
-    fst (updateAutocomplete (SetValue value) auto)
-
-
-setItems : List String -> Autocomplete -> Autocomplete
-setItems items auto =
-    fst (updateAutocomplete (UpdateItems items) auto)
-
-
-setLoading : Bool -> Autocomplete -> Autocomplete
-setLoading bool auto =
-    fst (update (SetLoading bool) auto)
-
-
-type MenuNavigation
-    = Previous
-    | Next
-    | Select
-
-
-navigateMenu : MenuNavigation -> Autocomplete -> Msg
-navigateMenu navigation (Autocomplete model) =
-    case navigation of
-        Previous ->
-            ChangeSelection (model.selectedItemIndex - 1)
-
-        Next ->
-            ChangeSelection (model.selectedItemIndex + 1)
-
-        Select ->
-            Complete
-
-
-getSelectedItem : Autocomplete -> Text
-getSelectedItem (Autocomplete model) =
-    let
-        maybeSelectedItem =
-            List.drop model.selectedItemIndex model.matches
-                |> List.head
-    in
-        case maybeSelectedItem of
-            Just item ->
-                item
-
-            Nothing ->
-                model.value
-
-
-getCurrentValue : Autocomplete -> String
-getCurrentValue (Autocomplete model) =
-    model.value
-
-
-defaultStatus : Status
-defaultStatus =
-    { completed = False
-    , valueChanged = False
-    , selectionChanged = False
+updateConfig :
+    { onKeyDown : KeyCode -> Bool
+    , onChoose : String -> msg
+    , onKeyChange : KeyCode -> msg
+    , onTooLow : Maybe msg
+    , onTooHigh : Maybe msg
+    , onMouseEnter : Maybe msg
+    , onMouseLeave : Maybe msg
+    , onMouseClick : Maybe msg
     }
+    -> UpdateConfig msg
+updateConfig { onKeyDown, onChoose, onKeyChange, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
+    UpdateConfig
+        { onKeyDown = onKeyDown
+        , onChoose = onChoose
+        , onKeyChange = onKeyChange
+        , onTooLow = onTooLow
+        , onTooHigh = onTooHigh
+        , onMouseEnter = onMouseEnter
+        , onMouseLeave = onMouseLeave
+        , onMouseClick = onMouseClick
+        }
+
+
+update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
+update (UpdateConfig config) msg (State state) =
+    case msg of
+        KeyChange keyCode id ->
+            ( State { key = Just id, mouse = state.mouse }
+            , Just
+                (if config.onKeyDown keyCode then
+                    config.onChoose id
+                 else
+                    config.onKeyChange keyCode
+                )
+            )
+
+        WentTooLow ->
+            ( State { key = Nothing, mouse = state.mouse }
+            , config.onTooLow
+            )
+
+        WentTooFar ->
+            ( State { key = Nothing, mouse = state.mouse }
+            , config.onTooHigh
+            )
+
+        MouseEnter id ->
+            ( State { key = state.key, mouse = Just id }
+            , config.onMouseEnter
+            )
+
+        MouseLeave id ->
+            ( State { key = state.key, mouse = Just id }
+            , config.onMouseLeave
+            )
+
+        MouseClick id ->
+            ( State { key = state.key, mouse = Just id }
+            , config.onMouseClick
+            )
+
+        NoOp ->
+            ( State state, Nothing )
+
+
+hasSelection : State -> Bool
+hasSelection (State { key, mouse }) =
+    (Maybe.map2 (\k m -> True) key mouse) == Just True
+
+
+getPreviousItemId : Config a -> List a -> String -> String
+getPreviousItemId config data id =
+    Maybe.withDefault id <| List.foldr (getPrevious config id) Nothing data
+
+
+getPrevious : Config a -> String -> a -> Maybe String -> Maybe String
+getPrevious (Config { toId }) id datum resultId =
+    if (toId datum) == id then
+        Just id
+    else if (Maybe.withDefault "" resultId) == id then
+        Just (toId datum)
+    else
+        resultId
+
+
+getNextItemId : Config a -> List a -> String -> String
+getNextItemId config data id =
+    Maybe.withDefault id <| List.foldl (getPrevious config id) Nothing data
+
+
+view : Config a -> Int -> State -> List a -> Html Msg
+view (Config config) howManyToShow (State state) data =
+    let
+        dec =
+            (Json.customDecoder Html.Events.keyCode
+                (\code ->
+                    case state.key of
+                        Nothing ->
+                            Err "not handling this"
+
+                        Just id ->
+                            if code == 38 then
+                                Ok (KeyChange code <| getPreviousItemId (Config config) data id)
+                            else if code == 40 then
+                                Ok (KeyChange code <| getNextItemId (Config config) data id)
+                            else
+                                Err "not handling that key"
+                )
+            )
+
+        customUlAttr =
+            List.append (List.map trickyMap config.ul)
+                [ Html.Events.on "keyDown" dec ]
+
+        customLiAttr id attributes =
+            List.append (List.map trickyMap attributes)
+                [ Html.Events.onMouseEnter (MouseEnter id)
+                , Html.Events.onMouseLeave (MouseLeave id)
+                , Html.Events.onClick (MouseClick id)
+                ]
+
+        customListItem datum =
+            ( config.li (hasSelection (State state)) datum, config.toId datum )
+
+        customLi ( listItemData, id ) =
+            Html.li (customLiAttr id listItemData.attributes)
+                (List.map (Html.App.map (\html -> NoOp)) listItemData.children)
+    in
+        Html.ul customUlAttr
+            (List.map (customLi << customListItem) data
+                |> List.drop howManyToShow
+            )
+
+
+type alias HtmlDetails msg =
+    { attributes : List (Attribute msg)
+    , children : List (Html msg)
+    }
+
+
+type Config data
+    = Config
+        { toId : data -> String
+        , ul : List (Attribute Never)
+        , li : Bool -> data -> HtmlDetails Never
+        }
+
+
+{-| Create the `Config` for your `view` function. Everything you need to
+render your columns efficiently and handle selection of columns.
+Say we have a `List Person` that we want to show as a table. The table should
+have a column for name and age. We would create a `Config` like this:
+    import Table
+    type Msg = NewTableState State | ...
+    config : Table.Config Person Msg
+    config =
+      Table.config
+        { toId = .name
+        , toMsg = NewTableState
+        , columns =
+            [ Table.stringColumn "Name" .name
+            , Table.intColumn "Age" .age
+            ]
+        }
+You provide the following information in your table configuration:
+  - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
+  [`Html.Keyed`][keyed] under the hood to make resorts faster.
+  - `columns` &mdash; specify some columns to show.
+  - `toMsg` &mdash; a way send new table states to your app as messages.
+See the [examples][] to get a better feel for this!
+[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
+[examples]: https://github.com/evancz/elm-sortable-table/tree/master/examples
+-}
+config :
+    { toId : data -> String
+    , ul : List (Attribute Never)
+    , li : Bool -> data -> HtmlDetails Never
+    }
+    -> Config data
+config { toId, ul, li } =
+    Config
+        { toId = toId
+        , ul = ul
+        , li = li
+        }
