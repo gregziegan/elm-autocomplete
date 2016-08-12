@@ -10,6 +10,7 @@ module Autocomplete
         , updateConfig
         , update
         , view
+        , viewInput
         , ViewConfig
         , HtmlDetails
         , viewConfig
@@ -25,7 +26,7 @@ module Autocomplete
 @docs Msg, update, UpdateConfig, updateConfig
 
 # View
-@docs view
+@docs view, viewInput
 
 -}
 
@@ -86,7 +87,7 @@ update config msg state =
 
 {-| -}
 updateConfig :
-    { onKeyDown : KeyCode -> Bool
+    { onInput : String -> msg
     , onChoose : String -> msg
     , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
@@ -107,6 +108,17 @@ view config howManyToShow state data =
 
 
 {-| -}
+viewInput : ViewConfig a -> Int -> State -> List a -> String -> Html Msg
+viewInput =
+    --config howManyToShow state data inputValue =
+    Internal.viewInput
+
+
+
+-- config howManyToShow state data inputValue
+
+
+{-| -}
 type alias HtmlDetails msg =
     Internal.HtmlDetails msg
 
@@ -121,6 +133,8 @@ viewConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+    , input : List (Attribute Never)
+    , isChooseKey : KeyCode -> Bool
     }
     -> ViewConfig data
 viewConfig =

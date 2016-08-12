@@ -3,7 +3,6 @@ module Main exposing (..)
 import Autocomplete
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
 import Html.App as Html
 import String
 
@@ -82,19 +81,7 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
-    div []
-        [ h1 [] [ text "U.S. Presidents" ]
-        , input [ placeholder "Search by Name", onInput SetQuery, value model.query ] []
-        , if model.showMenu then
-            viewMenu model
-          else
-            text <| "You chose: " ++ model.query
-        ]
-
-
-viewMenu : Model -> Html Msg
-viewMenu { people, autoState, query, showMenu } =
+view { people, autoState, query, showMenu } =
     let
         lowerQuery =
             String.toLower query
@@ -102,21 +89,33 @@ viewMenu { people, autoState, query, showMenu } =
         acceptablePeople =
             List.filter (String.contains lowerQuery << String.toLower << .name) people
     in
-        div [ class "autocomplete-menu" ]
-            [ Html.map SetAutoState (Autocomplete.view viewConfig 5 autoState acceptablePeople) ]
+        div []
+            [ h1 [] [ text "U.S. Presidents" ]
+            , Html.map SetAutoState (Autocomplete.viewInput viewConfig 5 autoState acceptablePeople query)
+            , if showMenu then
+                viewMenu acceptablePeople autoState
+              else
+                text <| "You chose: " ++ query
+            ]
+
+
+viewMenu : List Person -> Autocomplete.State -> Html Msg
+viewMenu people autoState =
+    div [ class "autocomplete-menu" ]
+        [ Html.map SetAutoState (Autocomplete.view viewConfig 5 autoState people) ]
 
 
 updateConfig : Autocomplete.UpdateConfig Msg
 updateConfig =
     Autocomplete.updateConfig
-        { onKeyDown = \code -> code == 13
-        , onChoose = \id -> (SelectPerson id)
+        { onInput = \string -> SetQuery string
+        , onChoose = \id -> SelectPerson id
         , onKeyChange = \_ -> NoOp
         , onTooLow = Nothing
         , onTooHigh = Nothing
         , onMouseEnter = Nothing
         , onMouseLeave = Nothing
-        , onMouseClick = Just <| \id -> (SelectPerson id)
+        , onMouseClick = Just <| \id -> SelectPerson id
         }
 
 
@@ -126,6 +125,8 @@ viewConfig =
         { toId = .name
         , ul = [ class "autocomplete-list" ]
         , li = myLi
+        , input = [ class "autocomplete-input", placeholder "Search by name" ]
+        , isChooseKey = \code -> code == 13
         }
 
 

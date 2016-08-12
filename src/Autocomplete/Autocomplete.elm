@@ -10,6 +10,7 @@ module Autocomplete.Autocomplete
         , updateConfig
         , update
         , view
+        , viewInput
         , ViewConfig
         , HtmlDetails
         , viewConfig
@@ -17,6 +18,7 @@ module Autocomplete.Autocomplete
 
 import Char exposing (KeyCode)
 import Html exposing (Html, Attribute)
+import Html.Attributes
 import Html.App
 import Html.Events
 import Json.Decode as Json
@@ -63,6 +65,8 @@ reset (State { key, mouse }) =
 
 type Msg
     = KeyChange KeyCode String
+    | Input String
+    | Choose String
     | WentTooLow
     | WentTooFar
     | MouseEnter String
@@ -73,7 +77,7 @@ type Msg
 
 type UpdateConfig msg
     = UpdateConfig
-        { onKeyDown : KeyCode -> Bool
+        { onInput : String -> msg
         , onChoose : String -> msg
         , onKeyChange : KeyCode -> msg
         , onTooLow : Maybe msg
@@ -85,7 +89,7 @@ type UpdateConfig msg
 
 
 updateConfig :
-    { onKeyDown : KeyCode -> Bool
+    { onInput : String -> msg
     , onChoose : String -> msg
     , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
@@ -95,9 +99,9 @@ updateConfig :
     , onMouseClick : Maybe (String -> msg)
     }
     -> UpdateConfig msg
-updateConfig { onKeyDown, onChoose, onKeyChange, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
+updateConfig { onInput, onChoose, onKeyChange, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
     UpdateConfig
-        { onKeyDown = onKeyDown
+        { onInput = onInput
         , onChoose = onChoose
         , onKeyChange = onKeyChange
         , onTooLow = onTooLow
@@ -113,13 +117,16 @@ update (UpdateConfig config) msg (State { key, mouse }) =
     case Debug.log "msg" msg of
         KeyChange keyCode id ->
             ( State { key = Just id, mouse = mouse }
-            , Just
-                (if config.onKeyDown keyCode then
-                    config.onChoose id
-                 else
-                    config.onKeyChange keyCode
-                )
+            , Just <| config.onKeyChange keyCode
             )
+
+        Input value ->
+            ( State { key = Nothing, mouse = mouse }
+            , Just <| config.onInput value
+            )
+
+        Choose id ->
+            ( State { key = key, mouse = mouse }, Just <| config.onChoose id )
 
         WentTooLow ->
             ( State { key = Nothing, mouse = mouse }
@@ -180,7 +187,8 @@ getNextItemId config data id =
     Maybe.withDefault id <| List.foldl (getPrevious config id) Nothing data
 
 
-navigateDecoder config state data =
+navigateDecoder : ViewConfig a -> State -> List a -> Json.Decoder Msg
+navigateDecoder (ViewConfig config) (State state) data =
     let
         decodeKeyCode code =
             case state.key of
@@ -208,6 +216,8 @@ navigateDecoder config state data =
                 Ok (KeyChange code <| getPreviousItemId (ViewConfig config) data id)
             else if code == 40 then
                 Ok (KeyChange code <| getNextItemId (ViewConfig config) data id)
+            else if config.isChooseKey code then
+                Ok (Choose id)
             else
                 Err "not handling that key"
     in
@@ -215,16 +225,38 @@ navigateDecoder config state data =
 
 
 view : ViewConfig a -> Int -> State -> List a -> Html Msg
-view (ViewConfig config) howManyToShow (State state) data =
+view config howManyToShow state data =
+    viewList config howManyToShow state data
+
+
+viewList : ViewConfig a -> Int -> State -> List a -> Html Msg
+viewList (ViewConfig config) howManyToShow state data =
     let
         customUlAttr =
             List.append (List.map trickyMap config.ul)
-                [ Html.Events.on "keyDown" (navigateDecoder config state data) ]
+                [ Html.Events.on "keyDown" (navigateDecoder (ViewConfig config) state data) ]
     in
         Html.ul customUlAttr
-            (List.map (viewItem (ViewConfig config) (State state)) data
+            (List.map (viewItem (ViewConfig config) state) data
                 |> List.take howManyToShow
             )
+
+
+viewInput : ViewConfig a -> Int -> State -> List a -> String -> Html Msg
+viewInput (ViewConfig config) howManyToShow state data inputValue =
+    let
+        options =
+            { preventDefault = True, stopPropagation = False }
+
+        customInputAttr =
+            List.append (List.map trickyMap config.input)
+                [ Html.Events.onWithOptions "keydown" options (navigateDecoder (ViewConfig config) state data)
+                , Html.Events.onInput Input
+                , Html.Attributes.value inputValue
+                ]
+    in
+        Html.div []
+            [ Html.input customInputAttr [] ]
 
 
 viewItem : ViewConfig a -> State -> a -> Html Msg
@@ -269,6 +301,8 @@ type ViewConfig data
         { toId : data -> String
         , ul : List (Attribute Never)
         , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+        , input : List (Attribute Never)
+        , isChooseKey : KeyCode -> Bool
         }
 
 
@@ -301,11 +335,15 @@ viewConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+    , input : List (Attribute Never)
+    , isChooseKey : KeyCode -> Bool
     }
     -> ViewConfig data
-viewConfig { toId, ul, li } =
+viewConfig { toId, ul, li, input, isChooseKey } =
     ViewConfig
         { toId = toId
         , ul = ul
         , li = li
+        , input = input
+        , isChooseKey = isChooseKey
         }
