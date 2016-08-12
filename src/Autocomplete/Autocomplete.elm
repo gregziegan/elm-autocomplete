@@ -205,7 +205,7 @@ view (Config config) howManyToShow (State state) data =
     in
         Html.ul customUlAttr
             (List.map (customLi << customListItem) data
-                |> List.drop howManyToShow
+                |> List.take howManyToShow
             )
 
 

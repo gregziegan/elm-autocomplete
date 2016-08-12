@@ -62,7 +62,16 @@ update msg model =
 
 
 view : Model -> Html Msg
-view { people, autoState, query } =
+view model =
+    div []
+        [ h1 [] [ text "U.S. Presidents" ]
+        , input [ placeholder "Search by Name", onInput SetQuery ] []
+        , viewMenu model
+        ]
+
+
+viewMenu : Model -> Html Msg
+viewMenu { people, autoState, query } =
     let
         lowerQuery =
             String.toLower query
@@ -70,11 +79,8 @@ view { people, autoState, query } =
         acceptablePeople =
             List.filter (String.contains lowerQuery << String.toLower << .name) people
     in
-        div []
-            [ h1 [] [ text "U.S. Presidents" ]
-            , input [ placeholder "Search by Name", onInput SetQuery ] []
-            , Html.map SetAutoState (Autocomplete.view config 5 autoState acceptablePeople)
-            ]
+        div [ class "autocomplete-menu" ]
+            [ Html.map SetAutoState (Autocomplete.view config 5 autoState acceptablePeople) ]
 
 
 updateConfig : Autocomplete.UpdateConfig Msg
@@ -95,7 +101,7 @@ config : Autocomplete.Config Person
 config =
     Autocomplete.config
         { toId = .name
-        , ul = [ style [ ( "width", "500px" ), ( "height", "1000px" ) ] ]
+        , ul = [ class "autocomplete-list" ]
         , li = myLi
         }
 
@@ -103,11 +109,11 @@ config =
 myLi : Bool -> Person -> Autocomplete.HtmlDetails Never
 myLi isSelected person =
     if isSelected then
-        { attributes = [ style [ ( "background-color", "cyan" ) ] ]
+        { attributes = [ class "autocomplete-selected-item" ]
         , children = [ Html.text person.name ]
         }
     else
-        { attributes = []
+        { attributes = [ class "autocomplete-item" ]
         , children = [ Html.text person.name ]
         }
 

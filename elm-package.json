@@ -8,8 +8,6 @@
     ],
     "exposed-modules": [
         "Autocomplete",
-        "Autocomplete.Config",
-        "Autocomplete.Styling"
     ],
     "native-modules": true,
     "dependencies": {
