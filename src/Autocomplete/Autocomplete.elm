@@ -1,6 +1,8 @@
 module Autocomplete.Autocomplete
     exposing
         ( State
+        , KeySelected
+        , MouseSelected
         , empty
         , reset
         , Msg
@@ -8,9 +10,9 @@ module Autocomplete.Autocomplete
         , updateConfig
         , update
         , view
-        , Config
+        , ViewConfig
         , HtmlDetails
-        , config
+        , viewConfig
         )
 
 import Char exposing (KeyCode)
@@ -35,6 +37,14 @@ type State
         { key : Maybe String
         , mouse : Maybe String
         }
+
+
+type alias KeySelected =
+    Bool
+
+
+type alias MouseSelected =
+    Bool
 
 
 empty : State
@@ -68,9 +78,9 @@ type UpdateConfig msg
         , onKeyChange : KeyCode -> msg
         , onTooLow : Maybe msg
         , onTooHigh : Maybe msg
-        , onMouseEnter : Maybe msg
-        , onMouseLeave : Maybe msg
-        , onMouseClick : Maybe msg
+        , onMouseEnter : Maybe (String -> msg)
+        , onMouseLeave : Maybe (String -> msg)
+        , onMouseClick : Maybe (String -> msg)
         }
 
 
@@ -80,9 +90,9 @@ updateConfig :
     , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
-    , onMouseEnter : Maybe msg
-    , onMouseLeave : Maybe msg
-    , onMouseClick : Maybe msg
+    , onMouseEnter : Maybe (String -> msg)
+    , onMouseLeave : Maybe (String -> msg)
+    , onMouseClick : Maybe (String -> msg)
     }
     -> UpdateConfig msg
 updateConfig { onKeyDown, onChoose, onKeyChange, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
@@ -99,10 +109,10 @@ updateConfig { onKeyDown, onChoose, onKeyChange, onTooLow, onTooHigh, onMouseEnt
 
 
 update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
-update (UpdateConfig config) msg (State state) =
-    case msg of
+update (UpdateConfig config) msg (State { key, mouse }) =
+    case Debug.log "msg" msg of
         KeyChange keyCode id ->
-            ( State { key = Just id, mouse = state.mouse }
+            ( State { key = Just id, mouse = mouse }
             , Just
                 (if config.onKeyDown keyCode then
                     config.onChoose id
@@ -112,46 +122,51 @@ update (UpdateConfig config) msg (State state) =
             )
 
         WentTooLow ->
-            ( State { key = Nothing, mouse = state.mouse }
+            ( State { key = Nothing, mouse = mouse }
             , config.onTooLow
             )
 
         WentTooFar ->
-            ( State { key = Nothing, mouse = state.mouse }
+            ( State { key = Nothing, mouse = mouse }
             , config.onTooHigh
             )
 
         MouseEnter id ->
-            ( State { key = state.key, mouse = Just id }
-            , config.onMouseEnter
+            ( State { key = key, mouse = Just id }
+            , callMaybeFn config.onMouseEnter id
             )
 
         MouseLeave id ->
-            ( State { key = state.key, mouse = Just id }
-            , config.onMouseLeave
+            ( State { key = key, mouse = Just id }
+            , callMaybeFn config.onMouseLeave id
             )
 
         MouseClick id ->
-            ( State { key = state.key, mouse = Just id }
-            , config.onMouseClick
+            ( State { key = key, mouse = Just id }
+            , callMaybeFn config.onMouseClick id
             )
 
         NoOp ->
-            ( State state, Nothing )
+            ( State { key = key, mouse = mouse }, Nothing )
 
 
-hasSelection : State -> Bool
-hasSelection (State { key, mouse }) =
-    (Maybe.map2 (\k m -> True) key mouse) == Just True
+callMaybeFn : Maybe (a -> msg) -> a -> Maybe msg
+callMaybeFn maybeFn id =
+    case maybeFn of
+        Nothing ->
+            Nothing
+
+        Just fn ->
+            Just <| fn id
 
 
-getPreviousItemId : Config a -> List a -> String -> String
+getPreviousItemId : ViewConfig a -> List a -> String -> String
 getPreviousItemId config data id =
     Maybe.withDefault id <| List.foldr (getPrevious config id) Nothing data
 
 
-getPrevious : Config a -> String -> a -> Maybe String -> Maybe String
-getPrevious (Config { toId }) id datum resultId =
+getPrevious : ViewConfig a -> String -> a -> Maybe String -> Maybe String
+getPrevious (ViewConfig { toId }) id datum resultId =
     if (toId datum) == id then
         Just id
     else if (Maybe.withDefault "" resultId) == id then
@@ -160,53 +175,87 @@ getPrevious (Config { toId }) id datum resultId =
         resultId
 
 
-getNextItemId : Config a -> List a -> String -> String
+getNextItemId : ViewConfig a -> List a -> String -> String
 getNextItemId config data id =
     Maybe.withDefault id <| List.foldl (getPrevious config id) Nothing data
 
 
-view : Config a -> Int -> State -> List a -> Html Msg
-view (Config config) howManyToShow (State state) data =
+navigateDecoder config state data =
     let
-        dec =
-            (Json.customDecoder Html.Events.keyCode
-                (\code ->
-                    case state.key of
-                        Nothing ->
-                            Err "not handling this"
+        decodeKeyCode code =
+            case state.key of
+                Nothing ->
+                    keyEmptyDecoder code
 
-                        Just id ->
-                            if code == 38 then
-                                Ok (KeyChange code <| getPreviousItemId (Config config) data id)
-                            else if code == 40 then
-                                Ok (KeyChange code <| getNextItemId (Config config) data id)
-                            else
-                                Err "not handling that key"
-                )
-            )
+                Just id ->
+                    arrowKeyDecoder id code
 
+        keyEmptyDecoder code =
+            case List.head data of
+                Nothing ->
+                    Err "no navigation possible"
+
+                Just item ->
+                    if code == 40 then
+                        config.toId item
+                            |> KeyChange code
+                            |> Ok
+                    else
+                        Err "not handling anything else"
+
+        arrowKeyDecoder id code =
+            if code == 38 then
+                Ok (KeyChange code <| getPreviousItemId (ViewConfig config) data id)
+            else if code == 40 then
+                Ok (KeyChange code <| getNextItemId (ViewConfig config) data id)
+            else
+                Err "not handling that key"
+    in
+        Json.customDecoder Html.Events.keyCode decodeKeyCode
+
+
+view : ViewConfig a -> Int -> State -> List a -> Html Msg
+view (ViewConfig config) howManyToShow (State state) data =
+    let
         customUlAttr =
             List.append (List.map trickyMap config.ul)
-                [ Html.Events.on "keyDown" dec ]
+                [ Html.Events.on "keyDown" (navigateDecoder config state data) ]
+    in
+        Html.ul customUlAttr
+            (List.map (viewItem (ViewConfig config) (State state)) data
+                |> List.take howManyToShow
+            )
 
-        customLiAttr id attributes =
-            List.append (List.map trickyMap attributes)
+
+viewItem : ViewConfig a -> State -> a -> Html Msg
+viewItem (ViewConfig { toId, li }) (State { key, mouse }) data =
+    let
+        id =
+            toId data
+
+        listItemData =
+            li (isSelected key) (isSelected mouse) data
+
+        customAttributes =
+            (List.map trickyMap listItemData.attributes)
+
+        customLiAttr =
+            List.append customAttributes
                 [ Html.Events.onMouseEnter (MouseEnter id)
                 , Html.Events.onMouseLeave (MouseLeave id)
                 , Html.Events.onClick (MouseClick id)
                 ]
 
-        customListItem datum =
-            ( config.li (hasSelection (State state)) datum, config.toId datum )
+        isSelected maybeId =
+            case maybeId of
+                Just someId ->
+                    someId == id
 
-        customLi ( listItemData, id ) =
-            Html.li (customLiAttr id listItemData.attributes)
-                (List.map (Html.App.map (\html -> NoOp)) listItemData.children)
+                Nothing ->
+                    False
     in
-        Html.ul customUlAttr
-            (List.map (customLi << customListItem) data
-                |> List.take howManyToShow
-            )
+        Html.li customLiAttr
+            (List.map (Html.App.map (\html -> NoOp)) listItemData.children)
 
 
 type alias HtmlDetails msg =
@@ -215,11 +264,11 @@ type alias HtmlDetails msg =
     }
 
 
-type Config data
-    = Config
+type ViewConfig data
+    = ViewConfig
         { toId : data -> String
         , ul : List (Attribute Never)
-        , li : Bool -> data -> HtmlDetails Never
+        , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
         }
 
 
@@ -248,14 +297,14 @@ See the [examples][] to get a better feel for this!
 [keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
 [examples]: https://github.com/evancz/elm-sortable-table/tree/master/examples
 -}
-config :
+viewConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
-    , li : Bool -> data -> HtmlDetails Never
+    , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     }
-    -> Config data
-config { toId, ul, li } =
-    Config
+    -> ViewConfig data
+viewConfig { toId, ul, li } =
+    ViewConfig
         { toId = toId
         , ul = ul
         , li = li

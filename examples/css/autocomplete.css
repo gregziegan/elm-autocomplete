@@ -11,12 +11,20 @@
     z-index: 11110 !important;
 }
 
-.autocomplete-selected-item {
-    color: #3366FF;
+.autocomplete-key-item {
+    background-color: #3366FF;
     display: block;
     padding: 5px 10px;
     border-bottom: 1px solid #DDD;
     cursor: pointer;
+}
+
+.autocomplete-mouse-item {
+  background-color: #ececec;
+  display: block;
+  padding: 5px 10px;
+  border-bottom: 1px solid #DDD;
+  cursor: pointer;
 }
 
 .autocomplete-list {

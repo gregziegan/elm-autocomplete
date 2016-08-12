@@ -1,6 +1,8 @@
 module Autocomplete
     exposing
         ( State
+        , KeySelected
+        , MouseSelected
         , empty
         , reset
         , Msg
@@ -8,16 +10,16 @@ module Autocomplete
         , updateConfig
         , update
         , view
-        , Config
+        , ViewConfig
         , HtmlDetails
-        , config
+        , viewConfig
         )
 
 {-| A customizable Autocomplete component.
 
 
 # Definition
-@docs State, empty, reset, Config, HtmlDetails, config
+@docs State, KeySelected, MouseSelected, empty, reset, ViewConfig, HtmlDetails, viewConfig
 
 # Update
 @docs Msg, update, UpdateConfig, updateConfig
@@ -37,6 +39,16 @@ import Char exposing (KeyCode)
 -}
 type alias State =
     Internal.State
+
+
+{-| -}
+type alias KeySelected =
+    Internal.KeySelected
+
+
+{-| -}
+type alias MouseSelected =
+    Internal.MouseSelected
 
 
 {-| -}
@@ -79,9 +91,9 @@ updateConfig :
     , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
-    , onMouseEnter : Maybe msg
-    , onMouseLeave : Maybe msg
-    , onMouseClick : Maybe msg
+    , onMouseEnter : Maybe (String -> msg)
+    , onMouseLeave : Maybe (String -> msg)
+    , onMouseClick : Maybe (String -> msg)
     }
     -> UpdateConfig msg
 updateConfig config =
@@ -89,7 +101,7 @@ updateConfig config =
 
 
 {-| -}
-view : Config a -> Int -> State -> List a -> Html Msg
+view : ViewConfig a -> Int -> State -> List a -> Html Msg
 view config howManyToShow state data =
     Internal.view config howManyToShow state data
 
@@ -100,16 +112,16 @@ type alias HtmlDetails msg =
 
 
 {-| -}
-type alias Config a =
-    Internal.Config a
+type alias ViewConfig a =
+    Internal.ViewConfig a
 
 
 {-| -}
-config :
+viewConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
-    , li : Bool -> data -> HtmlDetails Never
+    , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     }
-    -> Config data
-config =
-    Internal.config
+    -> ViewConfig data
+viewConfig =
+    Internal.viewConfig

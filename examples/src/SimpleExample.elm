@@ -65,7 +65,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "U.S. Presidents" ]
-        , input [ placeholder "Search by Name", onInput SetQuery ] []
+        , input [ placeholder "Search by Name", onInput SetQuery, value model.query ] []
         , viewMenu model
         ]
 
@@ -80,36 +80,44 @@ viewMenu { people, autoState, query } =
             List.filter (String.contains lowerQuery << String.toLower << .name) people
     in
         div [ class "autocomplete-menu" ]
-            [ Html.map SetAutoState (Autocomplete.view config 5 autoState acceptablePeople) ]
+            [ Html.map SetAutoState (Autocomplete.view viewConfig 5 autoState acceptablePeople) ]
 
 
 updateConfig : Autocomplete.UpdateConfig Msg
 updateConfig =
     Autocomplete.updateConfig
-        { onKeyDown = \code -> code == 9
+        { onKeyDown = \code -> code == 13
         , onChoose = \id -> (SelectPerson id)
         , onKeyChange = \_ -> NoOp
         , onTooLow = Nothing
         , onTooHigh = Nothing
         , onMouseEnter = Nothing
         , onMouseLeave = Nothing
-        , onMouseClick = Nothing
+        , onMouseClick = Just <| \id -> (SelectPerson id)
         }
 
 
-config : Autocomplete.Config Person
-config =
-    Autocomplete.config
+viewConfig : Autocomplete.ViewConfig Person
+viewConfig =
+    Autocomplete.viewConfig
         { toId = .name
         , ul = [ class "autocomplete-list" ]
         , li = myLi
         }
 
 
-myLi : Bool -> Person -> Autocomplete.HtmlDetails Never
-myLi isSelected person =
-    if isSelected then
-        { attributes = [ class "autocomplete-selected-item" ]
+myLi :
+    Autocomplete.KeySelected
+    -> Autocomplete.MouseSelected
+    -> Person
+    -> Autocomplete.HtmlDetails Never
+myLi keySelected mouseSelected person =
+    if keySelected then
+        { attributes = [ class "autocomplete-key-item" ]
+        , children = [ Html.text person.name ]
+        }
+    else if mouseSelected then
+        { attributes = [ class "autocomplete-mouse-item" ]
         , children = [ Html.text person.name ]
         }
     else
