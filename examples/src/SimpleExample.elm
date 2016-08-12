@@ -21,6 +21,7 @@ type alias Model =
     { people : List Person
     , autoState : Autocomplete.State
     , query : String
+    , showMenu : Bool
     }
 
 
@@ -29,6 +30,7 @@ init =
     { people = presidents
     , autoState = Autocomplete.empty
     , query = ""
+    , showMenu = True
     }
 
 
@@ -43,19 +45,37 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         SetQuery newQuery ->
-            { model | query = newQuery }
+            { model | query = newQuery, showMenu = True }
 
         SetAutoState autoMsg ->
-            { model | autoState = fst <| Autocomplete.update updateConfig autoMsg model.autoState }
+            let
+                ( newState, maybeMsg ) =
+                    Autocomplete.update updateConfig autoMsg model.autoState
+
+                newModel =
+                    { model | autoState = newState }
+            in
+                case maybeMsg of
+                    Nothing ->
+                        newModel
+
+                    Just updateMsg ->
+                        update updateMsg newModel
 
         SelectPerson id ->
-            { model
-                | query =
+            let
+                meh =
                     List.filter (\person -> person.name == id) model.people
-                        |> List.head
-                        |> Maybe.withDefault (Person "" 0 "" "")
-                        |> .name
-            }
+            in
+                { model
+                    | query =
+                        List.filter (\person -> person.name == id) model.people
+                            |> List.head
+                            |> Maybe.withDefault (Person "" 0 "" "")
+                            |> .name
+                    , autoState = Autocomplete.empty
+                    , showMenu = False
+                }
 
         NoOp ->
             model
@@ -66,12 +86,15 @@ view model =
     div []
         [ h1 [] [ text "U.S. Presidents" ]
         , input [ placeholder "Search by Name", onInput SetQuery, value model.query ] []
-        , viewMenu model
+        , if model.showMenu then
+            viewMenu model
+          else
+            text <| "You chose: " ++ model.query
         ]
 
 
 viewMenu : Model -> Html Msg
-viewMenu { people, autoState, query } =
+viewMenu { people, autoState, query, showMenu } =
     let
         lowerQuery =
             String.toLower query
