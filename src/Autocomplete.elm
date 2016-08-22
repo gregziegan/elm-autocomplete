@@ -5,7 +5,7 @@ module Autocomplete
         , MouseSelected
         , empty
         , reset
-        , Msg
+        , Msg(..)
         , UpdateConfig
         , updateConfig
         , update
@@ -32,36 +32,37 @@ module Autocomplete
 
 import Autocomplete.Autocomplete as Internal
 import Html exposing (..)
+import Html.App as Html
 import Char exposing (KeyCode)
 
 
 {-| The Autocomplete model.
     It assumes filtering is based upon strings.
 -}
-type alias State =
-    Internal.State
+type State
+    = State Internal.State
 
 
 {-| -}
 type alias KeySelected =
-    Internal.KeySelected
+    Bool
 
 
 {-| -}
 type alias MouseSelected =
-    Internal.MouseSelected
+    Bool
 
 
 {-| -}
 empty : State
 empty =
-    Internal.empty
+    State Internal.empty
 
 
 {-| -}
 reset : State -> State
-reset state =
-    Internal.reset state
+reset (State state) =
+    State <| Internal.reset state
 
 
 
@@ -69,26 +70,33 @@ reset state =
 
 
 {-| -}
-type alias Msg =
-    Internal.Msg
+type Msg
+    = Msg Internal.Msg
 
 
 {-| Configuration for updates
 -}
-type alias UpdateConfig msg =
-    Internal.UpdateConfig msg
+type UpdateConfig msg
+    = UpdateConfig (Internal.UpdateConfig msg)
 
 
 {-| -}
 update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
-update config msg state =
-    Internal.update config msg state
+update (UpdateConfig config) (Msg msg) (State state) =
+    let
+        ( newState, maybeMsg ) =
+            Internal.update config msg state
+    in
+        ( State newState, maybeMsg )
+
+
+
+-- Internal.update config (Internal msg) state
 
 
 {-| -}
 updateConfig :
     { onChoose : String -> msg
-    , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : Maybe (String -> msg)
@@ -97,18 +105,20 @@ updateConfig :
     }
     -> UpdateConfig msg
 updateConfig config =
-    Internal.updateConfig config
+    UpdateConfig <| Internal.updateConfig config
 
 
+{-| Add this to your `program`s subscriptions to animate the spinner.
+-}
 subscription : List String -> Sub Msg
 subscription ids =
-    Internal.subscription ids
+    Sub.map Msg (Internal.subscription ids)
 
 
 {-| -}
 view : ViewConfig a -> Int -> State -> List a -> Html Msg
-view config howManyToShow state data =
-    Internal.view config howManyToShow state data
+view (ViewConfig config) howManyToShow (State state) data =
+    Html.map Msg <| Internal.view config howManyToShow state data
 
 
 
@@ -117,12 +127,14 @@ view config howManyToShow state data =
 
 {-| -}
 type alias HtmlDetails msg =
-    Internal.HtmlDetails msg
+    { attributes : List (Attribute msg)
+    , children : List (Html msg)
+    }
 
 
 {-| -}
-type alias ViewConfig a =
-    Internal.ViewConfig a
+type ViewConfig a
+    = ViewConfig (Internal.ViewConfig a)
 
 
 {-| -}
@@ -134,5 +146,5 @@ viewConfig :
     , isChooseKey : KeyCode -> Bool
     }
     -> ViewConfig data
-viewConfig =
-    Internal.viewConfig
+viewConfig config =
+    ViewConfig <| Internal.viewConfig config

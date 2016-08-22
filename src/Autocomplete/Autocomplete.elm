@@ -35,11 +35,10 @@ trickyMap =
 -- MODEL
 
 
-type State
-    = State
-        { key : Maybe String
-        , mouse : Maybe String
-        }
+type alias State =
+    { key : Maybe String
+    , mouse : Maybe String
+    }
 
 
 type alias KeySelected =
@@ -52,12 +51,12 @@ type alias MouseSelected =
 
 empty : State
 empty =
-    State { key = Nothing, mouse = Nothing }
+    { key = Nothing, mouse = Nothing }
 
 
 reset : State -> State
-reset (State { key, mouse }) =
-    State { key = Nothing, mouse = mouse }
+reset { key, mouse } =
+    { key = Nothing, mouse = mouse }
 
 
 
@@ -68,11 +67,11 @@ reset (State { key, mouse }) =
 -}
 subscription : List String -> Sub Msg
 subscription ids =
-    Keyboard.presses (KeyChange ids)
+    Keyboard.downs (KeyDown ids)
 
 
 type Msg
-    = KeyChange (List String) KeyCode
+    = KeyDown (List String) KeyCode
     | Choose String
     | WentTooLow
     | WentTooFar
@@ -82,21 +81,18 @@ type Msg
     | NoOp
 
 
-type UpdateConfig msg
-    = UpdateConfig
-        { onChoose : String -> msg
-        , onKeyChange : KeyCode -> msg
-        , onTooLow : Maybe msg
-        , onTooHigh : Maybe msg
-        , onMouseEnter : Maybe (String -> msg)
-        , onMouseLeave : Maybe (String -> msg)
-        , onMouseClick : Maybe (String -> msg)
-        }
+type alias UpdateConfig msg =
+    { onChoose : String -> msg
+    , onTooLow : Maybe msg
+    , onTooHigh : Maybe msg
+    , onMouseEnter : Maybe (String -> msg)
+    , onMouseLeave : Maybe (String -> msg)
+    , onMouseClick : Maybe (String -> msg)
+    }
 
 
 updateConfig :
     { onChoose : String -> msg
-    , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : Maybe (String -> msg)
@@ -104,60 +100,54 @@ updateConfig :
     , onMouseClick : Maybe (String -> msg)
     }
     -> UpdateConfig msg
-updateConfig { onChoose, onKeyChange, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
-    UpdateConfig
-        { onChoose = onChoose
-        , onKeyChange = onKeyChange
-        , onTooLow = onTooLow
-        , onTooHigh = onTooHigh
-        , onMouseEnter = onMouseEnter
-        , onMouseLeave = onMouseLeave
-        , onMouseClick = onMouseClick
-        }
-
-
-
---navigateWithKey keyCode data toId key
+updateConfig { onChoose, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
+    { onChoose = onChoose
+    , onTooLow = onTooLow
+    , onTooHigh = onTooHigh
+    , onMouseEnter = onMouseEnter
+    , onMouseLeave = onMouseLeave
+    , onMouseClick = onMouseClick
+    }
 
 
 update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
-update (UpdateConfig config) msg (State { key, mouse }) =
-    case Debug.log "msg" msg of
-        KeyChange ids keyCode ->
-            ( State { key = navigateWithKey keyCode ids key, mouse = mouse }
-            , Just <| config.onKeyChange keyCode
+update config msg { key, mouse } =
+    case msg of
+        KeyDown ids keyCode ->
+            ( { key = navigateWithKey keyCode ids key, mouse = mouse }
+            , Nothing
             )
 
         Choose id ->
-            ( State { key = key, mouse = mouse }, Just <| config.onChoose id )
+            ( { key = key, mouse = mouse }, Just <| config.onChoose id )
 
         WentTooLow ->
-            ( State { key = Nothing, mouse = mouse }
+            ( { key = Nothing, mouse = mouse }
             , config.onTooLow
             )
 
         WentTooFar ->
-            ( State { key = Nothing, mouse = mouse }
+            ( { key = Nothing, mouse = mouse }
             , config.onTooHigh
             )
 
         MouseEnter id ->
-            ( State { key = key, mouse = Just id }
+            ( { key = key, mouse = Just id }
             , callMaybeFn config.onMouseEnter id
             )
 
         MouseLeave id ->
-            ( State { key = key, mouse = Just id }
+            ( { key = key, mouse = Just id }
             , callMaybeFn config.onMouseLeave id
             )
 
         MouseClick id ->
-            ( State { key = key, mouse = Just id }
+            ( { key = key, mouse = Just id }
             , callMaybeFn config.onMouseClick id
             )
 
         NoOp ->
-            ( State { key = key, mouse = mouse }, Nothing )
+            ( { key = key, mouse = mouse }, Nothing )
 
 
 callMaybeFn : Maybe (a -> msg) -> a -> Maybe msg
@@ -180,7 +170,7 @@ getPrevious id curId resultId =
     if curId == id then
         Just id
     else if (Maybe.withDefault "" resultId) == id then
-        Just <| curId
+        Just curId
     else
         resultId
 
@@ -213,25 +203,37 @@ navigateWithKey code ids maybeId =
             maybeId
 
 
+
+-- case maybeId of
+--     Nothing ->
+--         Nothing
+--
+--     Just id ->
+--         if List.any ((==) id) <| List.take 5 ids then
+--             maybeId
+--         else
+--             List.head ids
+
+
 view : ViewConfig a -> Int -> State -> List a -> Html Msg
 view config howManyToShow state data =
     viewList config howManyToShow state data
 
 
 viewList : ViewConfig a -> Int -> State -> List a -> Html Msg
-viewList (ViewConfig config) howManyToShow state data =
+viewList config howManyToShow state data =
     let
         customUlAttr =
             List.map trickyMap config.ul
     in
         Html.ul customUlAttr
-            (List.map (viewItem (ViewConfig config) state) data
-                |> List.take howManyToShow
+            (List.take howManyToShow data
+                |> List.map (viewItem config state)
             )
 
 
 viewItem : ViewConfig data -> State -> data -> Html Msg
-viewItem (ViewConfig { toId, li }) (State { key, mouse }) data =
+viewItem { toId, li } { key, mouse } data =
     let
         id =
             toId data
@@ -267,14 +269,13 @@ type alias HtmlDetails msg =
     }
 
 
-type ViewConfig data
-    = ViewConfig
-        { toId : data -> String
-        , ul : List (Attribute Never)
-        , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-        , input : List (Attribute Never)
-        , isChooseKey : KeyCode -> Bool
-        }
+type alias ViewConfig data =
+    { toId : data -> String
+    , ul : List (Attribute Never)
+    , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+    , input : List (Attribute Never)
+    , isChooseKey : KeyCode -> Bool
+    }
 
 
 {-| Create the `Config` for your `view` function. Everything you need to
@@ -311,10 +312,9 @@ viewConfig :
     }
     -> ViewConfig data
 viewConfig { toId, ul, li, input, isChooseKey } =
-    ViewConfig
-        { toId = toId
-        , ul = ul
-        , li = li
-        , input = input
-        , isChooseKey = isChooseKey
-        }
+    { toId = toId
+    , ul = ul
+    , li = li
+    , input = input
+    , isChooseKey = isChooseKey
+    }

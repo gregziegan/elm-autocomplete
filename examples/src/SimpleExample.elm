@@ -3,6 +3,7 @@ module Main exposing (..)
 import Autocomplete
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Html.App as Html
 import String
 
@@ -18,8 +19,12 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.map Autocomplete.Msg (Autocomplete.subscription (List.map .name model.data))
+subscriptions { query, people } =
+    let
+        ids =
+            List.map .name (acceptablePeople query people)
+    in
+        Sub.map SetAutoState (Autocomplete.subscription ids)
 
 
 type alias Model =
@@ -87,23 +92,25 @@ update msg model =
             model ! []
 
 
-view : Model -> Html Msg
-view { people, autoState, query, showMenu } =
+acceptablePeople : String -> List Person -> List Person
+acceptablePeople query people =
     let
         lowerQuery =
             String.toLower query
-
-        acceptablePeople =
-            List.filter (String.contains lowerQuery << String.toLower << .name) people
     in
-        div []
-            [ h1 [] [ text "U.S. Presidents" ]
-            , input [ value query ] []
-            , if showMenu then
-                viewMenu acceptablePeople autoState
-              else
-                text <| "You chose: " ++ query
-            ]
+        List.filter (String.contains lowerQuery << String.toLower << .name) people
+
+
+view : Model -> Html Msg
+view { people, autoState, query, showMenu } =
+    div []
+        [ h1 [] [ text "U.S. Presidents" ]
+        , input [ onInput SetQuery, value query ] []
+        , if showMenu then
+            viewMenu (acceptablePeople query people) autoState
+          else
+            text <| "You chose: " ++ query
+        ]
 
 
 viewMenu : List Person -> Autocomplete.State -> Html Msg
@@ -116,7 +123,6 @@ updateConfig : Autocomplete.UpdateConfig Msg
 updateConfig =
     Autocomplete.updateConfig
         { onChoose = \id -> SelectPerson id
-        , onKeyChange = \_ -> NoOp
         , onTooLow = Nothing
         , onTooHigh = Nothing
         , onMouseEnter = Nothing
