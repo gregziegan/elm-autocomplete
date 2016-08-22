@@ -6,6 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as Html
 import String
+import Json.Decode as Json
 
 
 main : Program Never
@@ -96,14 +97,33 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "U.S. Presidents" ]
-        , input [ onInput SetQuery, value model.query ] []
-        , if model.showMenu then
-            viewMenu model
-          else
-            text <| "You chose: " ++ model.query
-        ]
+    let
+        options =
+            { preventDefault = True, stopPropagation = False }
+
+        dec =
+            (Json.customDecoder keyCode
+                (\code ->
+                    if code == 38 || code == 40 then
+                        Ok NoOp
+                    else
+                        Err "not handling that key"
+                )
+            )
+    in
+        div []
+            [ h1 [] [ text "U.S. Presidents" ]
+            , input
+                [ onInput SetQuery
+                , onWithOptions "keydown" options dec
+                , value model.query
+                ]
+                []
+            , if model.showMenu then
+                viewMenu model
+              else
+                text <| "You chose: " ++ model.query
+            ]
 
 
 acceptablePeople : Model -> List Person

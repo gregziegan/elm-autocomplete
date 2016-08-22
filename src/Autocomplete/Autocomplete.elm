@@ -20,6 +20,7 @@ module Autocomplete.Autocomplete
 import Char exposing (KeyCode)
 import Html exposing (Html, Attribute)
 import Html.App
+import Html.Keyed
 import Html.Events
 import Keyboard
 import Native.Tricks
@@ -229,10 +230,13 @@ viewList config howManyToShow state data =
     let
         customUlAttr =
             List.map trickyMap config.ul
+
+        getKeyedItems datum =
+            ( config.toId datum, viewItem config state datum )
     in
-        Html.ul customUlAttr
+        Html.Keyed.ul customUlAttr
             (List.take howManyToShow data
-                |> List.map (viewItem config state)
+                |> List.map getKeyedItems
             )
 
 
