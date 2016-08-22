@@ -83,16 +83,16 @@ type Msg
 
 {-| Configuration for updates
 -}
-type UpdateConfig msg
-    = UpdateConfig (Internal.UpdateConfig msg)
+type UpdateConfig msg data
+    = UpdateConfig (Internal.UpdateConfig msg data)
 
 
 {-| -}
-update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
-update (UpdateConfig config) (Msg msg) (State state) =
+update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
+update (UpdateConfig config) (Msg msg) (State state) data howManyToShow =
     let
         ( newState, maybeMsg ) =
-            Internal.update config msg state
+            Internal.update config msg state data howManyToShow
     in
         ( State newState, maybeMsg )
 
@@ -109,17 +109,18 @@ updateConfig :
     , onMouseEnter : Maybe (String -> msg)
     , onMouseLeave : Maybe (String -> msg)
     , onMouseClick : Maybe (String -> msg)
+    , toId : data -> String
     }
-    -> UpdateConfig msg
+    -> UpdateConfig msg data
 updateConfig config =
     UpdateConfig <| Internal.updateConfig config
 
 
 {-| Add this to your `program`s subscriptions to animate the spinner.
 -}
-subscription : List String -> Sub Msg
-subscription ids =
-    Sub.map Msg (Internal.subscription ids)
+subscription : Sub Msg
+subscription =
+    Sub.map Msg Internal.subscription
 
 
 {-| -}

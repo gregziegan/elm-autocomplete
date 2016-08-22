@@ -19,10 +19,8 @@ module Autocomplete.Autocomplete
 
 import Char exposing (KeyCode)
 import Html exposing (Html, Attribute)
-import Html.Attributes
 import Html.App
 import Html.Events
-import Json.Decode as Json
 import Keyboard
 import Native.Tricks
 
@@ -81,28 +79,29 @@ resetToFirstItem data toId state =
 
 {-| Add this to your `program`s subscriptions to animate the spinner.
 -}
-subscription : List String -> Sub Msg
-subscription ids =
-    Keyboard.downs (KeyDown ids)
+subscription : Sub Msg
+subscription =
+    Keyboard.downs KeyDown
 
 
 type Msg
-    = KeyDown (List String) KeyCode
+    = KeyDown KeyCode
     | WentTooLow
-    | WentTooFar
+    | WentTooHigh
     | MouseEnter String
     | MouseLeave String
     | MouseClick String
     | NoOp
 
 
-type alias UpdateConfig msg =
+type alias UpdateConfig msg data =
     { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : Maybe (String -> msg)
     , onMouseLeave : Maybe (String -> msg)
     , onMouseClick : Maybe (String -> msg)
+    , toId : data -> String
     }
 
 
@@ -113,57 +112,68 @@ updateConfig :
     , onMouseEnter : Maybe (String -> msg)
     , onMouseLeave : Maybe (String -> msg)
     , onMouseClick : Maybe (String -> msg)
+    , toId : data -> String
     }
-    -> UpdateConfig msg
-updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
+    -> UpdateConfig msg data
+updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick, toId } =
     { onKeyDown = onKeyDown
     , onTooLow = onTooLow
     , onTooHigh = onTooHigh
     , onMouseEnter = onMouseEnter
     , onMouseLeave = onMouseLeave
     , onMouseClick = onMouseClick
+    , toId = toId
     }
 
 
-update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
-update config msg { key, mouse } =
+update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
+update config msg state data howManyToShow =
     case msg of
-        KeyDown ids keyCode ->
+        KeyDown keyCode ->
             let
+                boundedList =
+                    List.map config.toId data
+                        |> List.take howManyToShow
+
                 newKey =
-                    navigateWithKey keyCode ids key
+                    navigateWithKey keyCode boundedList state.key
             in
-                ( { key = newKey, mouse = mouse }
-                , config.onKeyDown keyCode newKey
-                )
+                if newKey == state.key && keyCode == 38 then
+                    update config WentTooHigh state data howManyToShow
+                else if newKey == state.key && keyCode == 40 then
+                    update config WentTooLow state data howManyToShow
+                else
+                    ( { state | key = newKey }
+                    , config.onKeyDown keyCode newKey
+                    )
 
         WentTooLow ->
-            ( { key = Nothing, mouse = mouse }
+            ( state
             , config.onTooLow
             )
 
-        WentTooFar ->
-            ( { key = Nothing, mouse = mouse }
+        WentTooHigh ->
+            ( state
             , config.onTooHigh
             )
 
         MouseEnter id ->
-            ( { key = key, mouse = Just id }
+            ( { key = state.key, mouse = Just id }
             , callMaybeFn config.onMouseEnter id
             )
 
         MouseLeave id ->
-            ( { key = key, mouse = Just id }
+            ( { key = state.key, mouse = Just id }
             , callMaybeFn config.onMouseLeave id
             )
 
         MouseClick id ->
-            ( { key = key, mouse = Just id }
+            ( { key = state.key, mouse = Just id }
             , callMaybeFn config.onMouseClick id
             )
 
         NoOp ->
-            ( { key = key, mouse = mouse }, Nothing )
+            ( state, Nothing )
 
 
 callMaybeFn : Maybe (a -> msg) -> a -> Maybe msg
@@ -176,24 +186,30 @@ callMaybeFn maybeFn id =
             Just <| fn id
 
 
-getPreviousItemId : List String -> String -> String
-getPreviousItemId ids curId =
-    Maybe.withDefault curId <| List.foldr (getPrevious curId) Nothing ids
+
+-- getPreviousItemId : List data -> (data -> String) -> String -> String
+
+
+getPreviousItemId ids selectedId =
+    Maybe.withDefault selectedId <| List.foldr (getPrevious selectedId) Nothing ids
 
 
 getPrevious : String -> String -> Maybe String -> Maybe String
-getPrevious id curId resultId =
-    if curId == id then
+getPrevious id selectedId resultId =
+    if selectedId == id then
         Just id
     else if (Maybe.withDefault "" resultId) == id then
-        Just curId
+        Just selectedId
     else
         resultId
 
 
-getNextItemId : List String -> String -> String
-getNextItemId ids curId =
-    Maybe.withDefault curId <| List.foldl (getPrevious curId) Nothing ids
+
+-- getNextItemId : List data -> (data -> String) -> String -> String
+
+
+getNextItemId ids selectedId =
+    Maybe.withDefault selectedId <| List.foldl (getPrevious selectedId) Nothing ids
 
 
 navigateWithKey : Int -> List String -> Maybe String -> Maybe String
@@ -220,6 +236,25 @@ navigateWithKey code ids maybeId =
 
 
 
+-- case code of
+--     38 ->
+--         Maybe.map (getPreviousItemId data toId) maybeId
+--
+--     40 ->
+--         case maybeId of
+--             Nothing ->
+--                 case List.head data of
+--                     Nothing ->
+--                         Nothing
+--
+--                     Just firstItem ->
+--                         Just (toId firstItem)
+--
+--             Just key ->
+--                 Just <| getNextItemId data toId key
+--
+--     _ ->
+--         maybeId
 -- case maybeId of
 --     Nothing ->
 --         Nothing

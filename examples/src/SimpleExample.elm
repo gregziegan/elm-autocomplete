@@ -19,17 +19,14 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions { query, people } =
-    let
-        ids =
-            List.map .name (acceptablePeople query people)
-    in
-        Sub.map SetAutoState (Autocomplete.subscription ids)
+subscriptions model =
+    Sub.map SetAutoState Autocomplete.subscription
 
 
 type alias Model =
     { people : List Person
     , autoState : Autocomplete.State
+    , howManyToShow : Int
     , query : String
     , showMenu : Bool
     }
@@ -39,6 +36,7 @@ init : Model
 init =
     { people = presidents
     , autoState = Autocomplete.empty
+    , howManyToShow = 5
     , query = ""
     , showMenu = True
     }
@@ -61,7 +59,7 @@ update msg model =
         SetAutoState autoMsg ->
             let
                 ( newState, maybeMsg ) =
-                    Autocomplete.update updateConfig autoMsg model.autoState
+                    Autocomplete.update updateConfig autoMsg model.autoState (acceptablePeople model) model.howManyToShow
 
                 newModel =
                     { model | autoState = newState }
@@ -96,8 +94,19 @@ update msg model =
             model ! []
 
 
-acceptablePeople : String -> List Person -> List Person
-acceptablePeople query people =
+view : Model -> Html Msg
+view model =
+    div []
+        [ h1 [] [ text "U.S. Presidents" ]
+        , input [ onInput SetQuery, value model.query ] []
+        , if model.showMenu then
+            viewMenu model
+          else
+            text <| "You chose: " ++ model.query
+        ]
+
+
+acceptablePeople { query, people } =
     let
         lowerQuery =
             String.toLower query
@@ -105,25 +114,13 @@ acceptablePeople query people =
         List.filter (String.contains lowerQuery << String.toLower << .name) people
 
 
-view : Model -> Html Msg
-view { people, autoState, query, showMenu } =
-    div []
-        [ h1 [] [ text "U.S. Presidents" ]
-        , input [ onInput SetQuery, value query ] []
-        , if showMenu then
-            viewMenu (acceptablePeople query people) autoState
-          else
-            text <| "You chose: " ++ query
-        ]
-
-
-viewMenu : List Person -> Autocomplete.State -> Html Msg
-viewMenu people autoState =
+viewMenu : Model -> Html Msg
+viewMenu model =
     div [ class "autocomplete-menu" ]
-        [ Html.map SetAutoState (Autocomplete.view viewConfig 5 autoState people) ]
+        [ Html.map SetAutoState (Autocomplete.view viewConfig model.howManyToShow model.autoState (acceptablePeople model)) ]
 
 
-updateConfig : Autocomplete.UpdateConfig Msg
+updateConfig : Autocomplete.UpdateConfig Msg Person
 updateConfig =
     Autocomplete.updateConfig
         { onKeyDown =
@@ -144,6 +141,7 @@ updateConfig =
         , onMouseEnter = Nothing
         , onMouseLeave = Nothing
         , onMouseClick = Just <| \id -> SelectPerson id
+        , toId = .name
         }
 
 
