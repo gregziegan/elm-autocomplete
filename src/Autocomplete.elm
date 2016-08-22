@@ -6,7 +6,7 @@ module Autocomplete
         , empty
         , reset
         , resetToFirstItem
-        , Msg(..)
+        , Msg
         , UpdateConfig
         , updateConfig
         , update
@@ -106,9 +106,9 @@ updateConfig :
     { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
-    , onMouseEnter : Maybe (String -> msg)
-    , onMouseLeave : Maybe (String -> msg)
-    , onMouseClick : Maybe (String -> msg)
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
     , toId : data -> String
     }
     -> UpdateConfig msg data
@@ -124,7 +124,7 @@ subscription =
 
 
 {-| -}
-view : ViewConfig a -> Int -> State -> List a -> Html Msg
+view : ViewConfig data -> Int -> State -> List data -> Html Msg
 view (ViewConfig config) howManyToShow (State state) data =
     Html.map Msg <| Internal.view config howManyToShow state data
 

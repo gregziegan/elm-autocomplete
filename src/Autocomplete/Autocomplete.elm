@@ -98,9 +98,9 @@ type alias UpdateConfig msg data =
     { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
-    , onMouseEnter : Maybe (String -> msg)
-    , onMouseLeave : Maybe (String -> msg)
-    , onMouseClick : Maybe (String -> msg)
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
     , toId : data -> String
     }
 
@@ -109,9 +109,9 @@ updateConfig :
     { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
-    , onMouseEnter : Maybe (String -> msg)
-    , onMouseLeave : Maybe (String -> msg)
-    , onMouseClick : Maybe (String -> msg)
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
     , toId : data -> String
     }
     -> UpdateConfig msg data
@@ -159,31 +159,21 @@ update config msg state data howManyToShow =
 
         MouseEnter id ->
             ( { key = state.key, mouse = Just id }
-            , callMaybeFn config.onMouseEnter id
+            , config.onMouseEnter id
             )
 
         MouseLeave id ->
             ( { key = state.key, mouse = Just id }
-            , callMaybeFn config.onMouseLeave id
+            , config.onMouseLeave id
             )
 
         MouseClick id ->
             ( { key = state.key, mouse = Just id }
-            , callMaybeFn config.onMouseClick id
+            , config.onMouseClick id
             )
 
         NoOp ->
             ( state, Nothing )
-
-
-callMaybeFn : Maybe (a -> msg) -> a -> Maybe msg
-callMaybeFn maybeFn id =
-    case maybeFn of
-        Nothing ->
-            Nothing
-
-        Just fn ->
-            Just <| fn id
 
 
 getPreviousItemId : List String -> String -> String
@@ -229,12 +219,12 @@ navigateWithKey code ids maybeId =
             maybeId
 
 
-view : ViewConfig a -> Int -> State -> List a -> Html Msg
+view : ViewConfig data -> Int -> State -> List data -> Html Msg
 view config howManyToShow state data =
     viewList config howManyToShow state data
 
 
-viewList : ViewConfig a -> Int -> State -> List a -> Html Msg
+viewList : ViewConfig data -> Int -> State -> List data -> Html Msg
 viewList config howManyToShow state data =
     let
         customUlAttr =

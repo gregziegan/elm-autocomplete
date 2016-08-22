@@ -106,6 +106,7 @@ view model =
         ]
 
 
+acceptablePeople : Model -> List Person
 acceptablePeople { query, people } =
     let
         lowerQuery =
@@ -128,19 +129,14 @@ updateConfig =
                 if code == 38 || code == 40 then
                     Nothing
                 else if code == 13 then
-                    case maybeId of
-                        Nothing ->
-                            Nothing
-
-                        Just id ->
-                            Just <| SelectPerson id
+                    Maybe.map SelectPerson maybeId
                 else
                     Just Reset
         , onTooLow = Nothing
         , onTooHigh = Nothing
-        , onMouseEnter = Nothing
-        , onMouseLeave = Nothing
-        , onMouseClick = Just <| \id -> SelectPerson id
+        , onMouseEnter = \_ -> Nothing
+        , onMouseLeave = \_ -> Nothing
+        , onMouseClick = \id -> Just <| SelectPerson id
         , toId = .name
         }
 
