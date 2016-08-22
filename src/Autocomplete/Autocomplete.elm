@@ -186,10 +186,7 @@ callMaybeFn maybeFn id =
             Just <| fn id
 
 
-
--- getPreviousItemId : List data -> (data -> String) -> String -> String
-
-
+getPreviousItemId : List String -> String -> String
 getPreviousItemId ids selectedId =
     Maybe.withDefault selectedId <| List.foldr (getPrevious selectedId) Nothing ids
 
@@ -204,10 +201,7 @@ getPrevious id selectedId resultId =
         resultId
 
 
-
--- getNextItemId : List data -> (data -> String) -> String -> String
-
-
+getNextItemId : List String -> String -> String
 getNextItemId ids selectedId =
     Maybe.withDefault selectedId <| List.foldl (getPrevious selectedId) Nothing ids
 
@@ -233,37 +227,6 @@ navigateWithKey code ids maybeId =
 
         _ ->
             maybeId
-
-
-
--- case code of
---     38 ->
---         Maybe.map (getPreviousItemId data toId) maybeId
---
---     40 ->
---         case maybeId of
---             Nothing ->
---                 case List.head data of
---                     Nothing ->
---                         Nothing
---
---                     Just firstItem ->
---                         Just (toId firstItem)
---
---             Just key ->
---                 Just <| getNextItemId data toId key
---
---     _ ->
---         maybeId
--- case maybeId of
---     Nothing ->
---         Nothing
---
---     Just id ->
---         if List.any ((==) id) <| List.take 5 ids then
---             maybeId
---         else
---             List.head ids
 
 
 view : ViewConfig a -> Int -> State -> List a -> Html Msg
