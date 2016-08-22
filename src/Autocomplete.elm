@@ -10,10 +10,10 @@ module Autocomplete
         , updateConfig
         , update
         , view
-        , viewInput
         , ViewConfig
         , HtmlDetails
         , viewConfig
+        , subscription
         )
 
 {-| A customizable Autocomplete component.
@@ -23,10 +23,10 @@ module Autocomplete
 @docs State, KeySelected, MouseSelected, empty, reset, ViewConfig, HtmlDetails, viewConfig
 
 # Update
-@docs Msg, update, UpdateConfig, updateConfig
+@docs Msg, update, UpdateConfig, updateConfig, subscription
 
 # View
-@docs view, viewInput
+@docs view
 
 -}
 
@@ -87,8 +87,7 @@ update config msg state =
 
 {-| -}
 updateConfig :
-    { onInput : String -> msg
-    , onChoose : String -> msg
+    { onChoose : String -> msg
     , onKeyChange : KeyCode -> msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
@@ -101,17 +100,15 @@ updateConfig config =
     Internal.updateConfig config
 
 
+subscription : List String -> Sub Msg
+subscription ids =
+    Internal.subscription ids
+
+
 {-| -}
 view : ViewConfig a -> Int -> State -> List a -> Html Msg
 view config howManyToShow state data =
     Internal.view config howManyToShow state data
-
-
-{-| -}
-viewInput : ViewConfig a -> Int -> State -> List a -> String -> Html Msg
-viewInput =
-    --config howManyToShow state data inputValue =
-    Internal.viewInput
 
 
 

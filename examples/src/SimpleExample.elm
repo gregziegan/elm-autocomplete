@@ -9,11 +9,17 @@ import String
 
 main : Program Never
 main =
-    Html.beginnerProgram
-        { model = init
+    Html.program
+        { init = init ! []
         , update = update
         , view = view
+        , subscriptions = subscriptions
         }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.map Autocomplete.Msg (Autocomplete.subscription (List.map .name model.data))
 
 
 type alias Model =
@@ -40,11 +46,11 @@ type Msg
     | NoOp
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetQuery newQuery ->
-            { model | query = newQuery, showMenu = True }
+            { model | query = newQuery, showMenu = True } ! []
 
         SetAutoState autoMsg ->
             let
@@ -56,7 +62,7 @@ update msg model =
             in
                 case maybeMsg of
                     Nothing ->
-                        newModel
+                        newModel ! []
 
                     Just updateMsg ->
                         update updateMsg newModel
@@ -75,9 +81,10 @@ update msg model =
                     , autoState = Autocomplete.empty
                     , showMenu = False
                 }
+                    ! []
 
         NoOp ->
-            model
+            model ! []
 
 
 view : Model -> Html Msg
@@ -91,7 +98,7 @@ view { people, autoState, query, showMenu } =
     in
         div []
             [ h1 [] [ text "U.S. Presidents" ]
-            , Html.map SetAutoState (Autocomplete.viewInput viewConfig 5 autoState acceptablePeople query)
+            , input [ value query ] []
             , if showMenu then
                 viewMenu acceptablePeople autoState
               else
@@ -108,8 +115,7 @@ viewMenu people autoState =
 updateConfig : Autocomplete.UpdateConfig Msg
 updateConfig =
     Autocomplete.updateConfig
-        { onInput = \string -> SetQuery string
-        , onChoose = \id -> SelectPerson id
+        { onChoose = \id -> SelectPerson id
         , onKeyChange = \_ -> NoOp
         , onTooLow = Nothing
         , onTooHigh = Nothing
