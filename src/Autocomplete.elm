@@ -5,6 +5,7 @@ module Autocomplete
         , MouseSelected
         , empty
         , reset
+        , resetToFirstItem
         , Msg(..)
         , UpdateConfig
         , updateConfig
@@ -20,7 +21,7 @@ module Autocomplete
 
 
 # Definition
-@docs State, KeySelected, MouseSelected, empty, reset, ViewConfig, HtmlDetails, viewConfig
+@docs State, KeySelected, MouseSelected, empty, reset, resetToFirstItem, ViewConfig, HtmlDetails, viewConfig
 
 # Update
 @docs Msg, update, UpdateConfig, updateConfig, subscription
@@ -65,6 +66,12 @@ reset (State state) =
     State <| Internal.reset state
 
 
+{-| -}
+resetToFirstItem : List data -> (data -> String) -> State -> State
+resetToFirstItem data toId (State state) =
+    State <| Internal.resetToFirstItem data toId state
+
+
 
 -- UPDATE
 
@@ -96,7 +103,7 @@ update (UpdateConfig config) (Msg msg) (State state) =
 
 {-| -}
 updateConfig :
-    { onChoose : String -> msg
+    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : Maybe (String -> msg)
@@ -143,7 +150,6 @@ viewConfig :
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     , input : List (Attribute Never)
-    , isChooseKey : KeyCode -> Bool
     }
     -> ViewConfig data
 viewConfig config =

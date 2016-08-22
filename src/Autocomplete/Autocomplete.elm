@@ -5,6 +5,7 @@ module Autocomplete.Autocomplete
         , MouseSelected
         , empty
         , reset
+        , resetToFirstItem
         , Msg
         , UpdateConfig
         , updateConfig
@@ -59,6 +60,21 @@ reset { key, mouse } =
     { key = Nothing, mouse = mouse }
 
 
+resetToFirstItem : List data -> (data -> String) -> State -> State
+resetToFirstItem data toId state =
+    let
+        setFirstItem datum newState =
+            { newState | key = Just <| toId datum }
+    in
+        case List.head data of
+            Nothing ->
+                reset state
+
+            Just datum ->
+                reset state
+                    |> setFirstItem datum
+
+
 
 -- UPDATE
 
@@ -72,7 +88,6 @@ subscription ids =
 
 type Msg
     = KeyDown (List String) KeyCode
-    | Choose String
     | WentTooLow
     | WentTooFar
     | MouseEnter String
@@ -82,7 +97,7 @@ type Msg
 
 
 type alias UpdateConfig msg =
-    { onChoose : String -> msg
+    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : Maybe (String -> msg)
@@ -92,7 +107,7 @@ type alias UpdateConfig msg =
 
 
 updateConfig :
-    { onChoose : String -> msg
+    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : Maybe (String -> msg)
@@ -100,8 +115,8 @@ updateConfig :
     , onMouseClick : Maybe (String -> msg)
     }
     -> UpdateConfig msg
-updateConfig { onChoose, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
-    { onChoose = onChoose
+updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick } =
+    { onKeyDown = onKeyDown
     , onTooLow = onTooLow
     , onTooHigh = onTooHigh
     , onMouseEnter = onMouseEnter
@@ -114,12 +129,13 @@ update : UpdateConfig msg -> Msg -> State -> ( State, Maybe msg )
 update config msg { key, mouse } =
     case msg of
         KeyDown ids keyCode ->
-            ( { key = navigateWithKey keyCode ids key, mouse = mouse }
-            , Nothing
-            )
-
-        Choose id ->
-            ( { key = key, mouse = mouse }, Just <| config.onChoose id )
+            let
+                newKey =
+                    navigateWithKey keyCode ids key
+            in
+                ( { key = newKey, mouse = mouse }
+                , config.onKeyDown keyCode newKey
+                )
 
         WentTooLow ->
             ( { key = Nothing, mouse = mouse }
@@ -274,7 +290,6 @@ type alias ViewConfig data =
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     , input : List (Attribute Never)
-    , isChooseKey : KeyCode -> Bool
     }
 
 
@@ -308,13 +323,11 @@ viewConfig :
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     , input : List (Attribute Never)
-    , isChooseKey : KeyCode -> Bool
     }
     -> ViewConfig data
-viewConfig { toId, ul, li, input, isChooseKey } =
+viewConfig { toId, ul, li, input } =
     { toId = toId
     , ul = ul
     , li = li
     , input = input
-    , isChooseKey = isChooseKey
     }

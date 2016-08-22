@@ -47,6 +47,7 @@ init =
 type Msg
     = SetQuery String
     | SetAutoState Autocomplete.Msg
+    | Reset
     | SelectPerson String
     | NoOp
 
@@ -71,6 +72,9 @@ update msg model =
 
                     Just updateMsg ->
                         update updateMsg newModel
+
+        Reset ->
+            { model | autoState = Autocomplete.resetToFirstItem model.people .name model.autoState } ! []
 
         SelectPerson id ->
             let
@@ -122,7 +126,19 @@ viewMenu people autoState =
 updateConfig : Autocomplete.UpdateConfig Msg
 updateConfig =
     Autocomplete.updateConfig
-        { onChoose = \id -> SelectPerson id
+        { onKeyDown =
+            \code maybeId ->
+                if code == 38 || code == 40 then
+                    Nothing
+                else if code == 13 then
+                    case maybeId of
+                        Nothing ->
+                            Nothing
+
+                        Just id ->
+                            Just <| SelectPerson id
+                else
+                    Just Reset
         , onTooLow = Nothing
         , onTooHigh = Nothing
         , onMouseEnter = Nothing
@@ -138,7 +154,6 @@ viewConfig =
         , ul = [ class "autocomplete-list" ]
         , li = myLi
         , input = [ class "autocomplete-input", placeholder "Search by name" ]
-        , isChooseKey = \code -> code == 13
         }
 
 
