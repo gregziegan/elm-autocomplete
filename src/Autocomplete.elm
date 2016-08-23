@@ -11,9 +11,15 @@ module Autocomplete
         , updateConfig
         , update
         , view
+        , viewWithSections
         , ViewConfig
+        , ViewWithSectionsConfig
         , HtmlDetails
         , viewConfig
+        , viewWithSectionsConfig
+        , SectionConfig
+        , SectionNode
+        , sectionConfig
         , subscription
         )
 
@@ -21,13 +27,13 @@ module Autocomplete
 
 
 # Definition
-@docs State, KeySelected, MouseSelected, empty, reset, resetToFirstItem, ViewConfig, HtmlDetails, viewConfig
+@docs State, KeySelected, MouseSelected, empty, reset, resetToFirstItem, ViewConfig, ViewWithSectionsConfig, HtmlDetails, viewConfig
 
 # Update
 @docs Msg, update, UpdateConfig, updateConfig, subscription
 
 # View
-@docs view
+@docs view, viewWithSections, SectionConfig, viewWithSectionsConfig, sectionConfig, SectionNode
 
 -}
 
@@ -97,10 +103,6 @@ update (UpdateConfig config) (Msg msg) (State state) data howManyToShow =
         ( State newState, maybeMsg )
 
 
-
--- Internal.update config (Internal msg) state
-
-
 {-| -}
 updateConfig :
     { onKeyDown : KeyCode -> Maybe String -> Maybe msg
@@ -129,8 +131,10 @@ view (ViewConfig config) howManyToShow (State state) data =
     Html.map Msg <| Internal.view config howManyToShow state data
 
 
-
--- config howManyToShow state data inputValue
+{-| -}
+viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html Msg
+viewWithSections (ViewWithSectionsConfig config) howManyToShow (State state) sections =
+    Html.map Msg <| Internal.viewWithSections config howManyToShow state sections
 
 
 {-| -}
@@ -141,8 +145,8 @@ type alias HtmlDetails msg =
 
 
 {-| -}
-type ViewConfig a
-    = ViewConfig (Internal.ViewConfig a)
+type ViewConfig data
+    = ViewConfig (Internal.ViewConfig data)
 
 
 {-| -}
@@ -155,3 +159,51 @@ viewConfig :
     -> ViewConfig data
 viewConfig config =
     ViewConfig <| Internal.viewConfig config
+
+
+{-| -}
+type ViewWithSectionsConfig data sectionData
+    = ViewWithSectionsConfig (Internal.ViewWithSectionsConfig data sectionData)
+
+
+{-| -}
+viewWithSectionsConfig :
+    { toId : data -> String
+    , ul : List (Attribute Never)
+    , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+    , input : List (Attribute Never)
+    , section : SectionConfig data sectionData
+    }
+    -> ViewWithSectionsConfig data sectionData
+viewWithSectionsConfig config =
+    ViewWithSectionsConfig
+        <| case config.section of
+            SectionConfig section ->
+                Internal.viewWithSectionsConfig { config | section = section }
+
+
+{-| A section of the menu
+-}
+type SectionConfig data sectionData
+    = SectionConfig (Internal.SectionConfig data sectionData)
+
+
+{-| -}
+type alias SectionNode msg =
+    { nodeType : String
+    , attributes : List (Attribute msg)
+    , children : List (Html msg)
+    }
+
+
+{-| Define a section
+-}
+sectionConfig :
+    { toId : sectionData -> String
+    , getData : sectionData -> List data
+    , ul : List (Attribute Never)
+    , li : sectionData -> SectionNode Never
+    }
+    -> SectionConfig data sectionData
+sectionConfig section =
+    SectionConfig <| Internal.sectionConfig section

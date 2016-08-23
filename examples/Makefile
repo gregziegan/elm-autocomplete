@@ -22,6 +22,9 @@ $(ELM_BUILD): elm
 simple:
 	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/SimpleExample.elm
 
+sections:
+	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/SectionsExample.elm
+
 styled:
 	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/StyledExample.elm
 

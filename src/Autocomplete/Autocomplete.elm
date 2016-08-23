@@ -11,9 +11,14 @@ module Autocomplete.Autocomplete
         , updateConfig
         , update
         , view
+        , viewWithSections
         , ViewConfig
+        , ViewWithSectionsConfig
         , HtmlDetails
         , viewConfig
+        , viewWithSectionsConfig
+        , SectionConfig
+        , sectionConfig
         , subscription
         )
 
@@ -225,6 +230,75 @@ view config howManyToShow state data =
     viewList config howManyToShow state data
 
 
+viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html Msg
+viewWithSections config howManyToShow state sections =
+    let
+        getKeyedItems section =
+            ( config.section.toId section, viewSection config state section )
+    in
+        Html.Keyed.ul (List.map trickyMap config.section.ul)
+            (List.map getKeyedItems sections)
+
+
+viewSection : ViewWithSectionsConfig data sectionData -> State -> sectionData -> Html Msg
+viewSection config state section =
+    let
+        sectionNode =
+            config.section.li section
+
+        attributes =
+            List.map trickyMap sectionNode.attributes
+
+        customChildren =
+            List.map (Html.App.map (\html -> NoOp)) sectionNode.children
+
+        getKeyedItems datum =
+            ( config.toId datum, viewData config state datum )
+
+        viewItemList =
+            Html.Keyed.ul (List.map trickyMap config.ul)
+                (config.section.getData section
+                    |> List.map getKeyedItems
+                )
+
+        children =
+            viewItemList :: customChildren
+    in
+        Html.li attributes
+            [ Html.node sectionNode.nodeType attributes children ]
+
+
+viewData : ViewWithSectionsConfig data sectionData -> State -> data -> Html Msg
+viewData { toId, li } { key, mouse } data =
+    let
+        id =
+            toId data
+
+        listItemData =
+            li (isSelected key) (isSelected mouse) data
+
+        customAttributes =
+            (List.map trickyMap listItemData.attributes)
+
+        customLiAttr =
+            List.append customAttributes
+                [ Html.Events.onMouseEnter (MouseEnter id)
+                , Html.Events.onMouseLeave (MouseLeave id)
+                , Html.Events.onClick (MouseClick id)
+                ]
+
+        isSelected maybeId =
+            case maybeId of
+                Just someId ->
+                    someId == id
+
+                Nothing ->
+                    False
+    in
+        Html.li customLiAttr
+            (List.map (Html.App.map (\html -> NoOp)) listItemData.children)
+
+
 viewList : ViewConfig data -> Int -> State -> List data -> Html Msg
 viewList config howManyToShow state data =
     let
@@ -285,6 +359,30 @@ type alias ViewConfig data =
     }
 
 
+type alias ViewWithSectionsConfig data sectionData =
+    { toId : data -> String
+    , ul : List (Attribute Never)
+    , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+    , input : List (Attribute Never)
+    , section : SectionConfig data sectionData
+    }
+
+
+type alias SectionConfig data sectionData =
+    { toId : sectionData -> String
+    , getData : sectionData -> List data
+    , ul : List (Attribute Never)
+    , li : sectionData -> SectionNode Never
+    }
+
+
+type alias SectionNode msg =
+    { nodeType : String
+    , attributes : List (Attribute msg)
+    , children : List (Html msg)
+    }
+
+
 {-| Create the `Config` for your `view` function. Everything you need to
 render your columns efficiently and handle selection of columns.
 Say we have a `List Person` that we want to show as a table. The table should
@@ -322,4 +420,36 @@ viewConfig { toId, ul, li, input } =
     , ul = ul
     , li = li
     , input = input
+    }
+
+
+viewWithSectionsConfig :
+    { toId : data -> String
+    , ul : List (Attribute Never)
+    , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
+    , input : List (Attribute Never)
+    , section : SectionConfig data sectionData
+    }
+    -> ViewWithSectionsConfig data sectionData
+viewWithSectionsConfig { toId, ul, li, input, section } =
+    { toId = toId
+    , ul = ul
+    , li = li
+    , input = input
+    , section = section
+    }
+
+
+sectionConfig :
+    { toId : sectionData -> String
+    , getData : sectionData -> List data
+    , ul : List (Attribute Never)
+    , li : sectionData -> SectionNode Never
+    }
+    -> SectionConfig data sectionData
+sectionConfig { toId, getData, ul, li } =
+    { toId = toId
+    , getData = getData
+    , ul = ul
+    , li = li
     }
