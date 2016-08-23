@@ -35,6 +35,12 @@
     overflow-y: auto;
 }
 
+.autocomplete-list-with-sections {
+  ist-style: none;
+  padding: 0;
+  margin: auto;
+}
+
 .autocomplete-item {
     display: block;
     padding: 5px 10px;
@@ -50,4 +56,29 @@
     font-size: 12px;
     font-family: monospace;
     opacity: 0.5;
+}
+
+.autocomplete-section-list {
+  list-style: none;
+  padding: 0;
+  margin: auto;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.autocomplete-section-item {
+  display: block;
+  padding: 0;
+}
+
+.autocomplete-section-box {
+  display: block;
+  padding: 0;
+  border-top: 1px solid #888888;
+  border-bottom: 1px solid #888888;
+}
+
+.autocomplete-section-text {
+  display: flex;
+  justify-content: center;
 }

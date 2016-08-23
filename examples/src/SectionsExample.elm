@@ -182,7 +182,7 @@ viewConfig : Autocomplete.ViewWithSectionsConfig Person Century
 viewConfig =
     Autocomplete.viewWithSectionsConfig
         { toId = .name
-        , ul = [ class "autocomplete-list" ]
+        , ul = [ class "autocomplete-list-with-sections" ]
         , li = myLi
         , input = [ class "autocomplete-input", placeholder "Search by name" ]
         , section = sectionConfig
@@ -194,8 +194,8 @@ sectionConfig =
     Autocomplete.sectionConfig
         { toId = .title
         , getData = .people
-        , ul = []
-        , li = \section -> { nodeType = "div", attributes = [], children = [] }
+        , ul = [ class "autocomplete-section-list" ]
+        , li = \section -> { nodeType = "div", attributes = [ class "autocomplete-section-item" ], children = [ div [ class "autocomplete-section-box" ] [ strong [ class "autocomplete-section-text" ] [ text section.title ] ] ] }
         }
 
 

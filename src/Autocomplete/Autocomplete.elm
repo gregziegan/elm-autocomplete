@@ -262,7 +262,7 @@ viewSection config state section =
                 )
 
         children =
-            viewItemList :: customChildren
+            List.append customChildren [ viewItemList ]
     in
         Html.li attributes
             [ Html.node sectionNode.nodeType attributes children ]
