@@ -44,7 +44,6 @@ import Char exposing (KeyCode)
 
 
 {-| The Autocomplete model.
-    It assumes filtering is based upon strings.
 -}
 type State
     = State Internal.State

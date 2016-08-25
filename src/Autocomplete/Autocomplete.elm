@@ -6,7 +6,7 @@ module Autocomplete.Autocomplete
         , empty
         , reset
         , resetToFirstItem
-        , Msg
+        , Msg(..)
         , UpdateConfig
         , updateConfig
         , update
