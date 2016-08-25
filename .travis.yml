@@ -1,6 +1,9 @@
 language: node_js
 node_js:
   - "6"
+cache:
+  directories:
+    - tests/elm-stuff/build-artifacts
 install:
   - npm install -g elm elm-test
   - elm-package install -y
