@@ -158,6 +158,7 @@ updateConfig =
         , onMouseLeave = \_ -> Nothing
         , onMouseClick = \id -> Just <| SelectPerson id
         , toId = .name
+        , separateSelections = False
         }
 
 

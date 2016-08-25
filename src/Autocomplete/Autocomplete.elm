@@ -108,6 +108,7 @@ type alias UpdateConfig msg data =
     , onMouseLeave : String -> Maybe msg
     , onMouseClick : String -> Maybe msg
     , toId : data -> String
+    , separateSelections : Bool
     }
 
 
@@ -119,9 +120,10 @@ updateConfig :
     , onMouseLeave : String -> Maybe msg
     , onMouseClick : String -> Maybe msg
     , toId : data -> String
+    , separateSelections : Bool
     }
     -> UpdateConfig msg data
-updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick, toId } =
+updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick, toId, separateSelections } =
     { onKeyDown = onKeyDown
     , onTooLow = onTooLow
     , onTooHigh = onTooHigh
@@ -129,6 +131,7 @@ updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMou
     , onMouseLeave = onMouseLeave
     , onMouseClick = onMouseClick
     , toId = toId
+    , separateSelections = separateSelections
     }
 
 
@@ -148,8 +151,12 @@ update config msg state data howManyToShow =
                     update config WentTooHigh state data howManyToShow
                 else if newKey == state.key && keyCode == 40 then
                     update config WentTooLow state data howManyToShow
-                else
+                else if config.separateSelections then
                     ( { state | key = newKey }
+                    , config.onKeyDown keyCode newKey
+                    )
+                else
+                    ( { key = newKey, mouse = newKey }
                     , config.onKeyDown keyCode newKey
                     )
 
@@ -164,22 +171,30 @@ update config msg state data howManyToShow =
             )
 
         MouseEnter id ->
-            ( { key = state.key, mouse = Just id }
+            ( resetMouseStateWithId config.separateSelections id state
             , config.onMouseEnter id
             )
 
         MouseLeave id ->
-            ( { key = state.key, mouse = Just id }
+            ( resetMouseStateWithId config.separateSelections id state
             , config.onMouseLeave id
             )
 
         MouseClick id ->
-            ( { key = state.key, mouse = Just id }
+            ( resetMouseStateWithId config.separateSelections id state
             , config.onMouseClick id
             )
 
         NoOp ->
             ( state, Nothing )
+
+
+resetMouseStateWithId : Bool -> String -> State -> State
+resetMouseStateWithId separateSelections id state =
+    if separateSelections then
+        { key = state.key, mouse = Just id }
+    else
+        { key = Just id, mouse = Just id }
 
 
 getPreviousItemId : List String -> String -> String

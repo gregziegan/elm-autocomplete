@@ -111,6 +111,7 @@ updateConfig :
     , onMouseLeave : String -> Maybe msg
     , onMouseClick : String -> Maybe msg
     , toId : data -> String
+    , separateSelections : Bool
     }
     -> UpdateConfig msg data
 updateConfig config =

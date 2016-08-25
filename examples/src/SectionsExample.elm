@@ -39,7 +39,7 @@ init =
     { people = presidents
     , peopleByCentury = presidentsByCentury
     , autoState = Autocomplete.empty
-    , howManyToShow = 5
+    , howManyToShow = List.length presidents
     , query = ""
     , showMenu = True
     }
@@ -175,6 +175,7 @@ updateConfig =
         , onMouseLeave = \_ -> Nothing
         , onMouseClick = \id -> Just <| SelectPerson id
         , toId = .name
+        , separateSelections = True
         }
 
 
