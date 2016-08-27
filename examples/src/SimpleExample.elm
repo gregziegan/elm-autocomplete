@@ -144,7 +144,8 @@ viewMenu model =
 updateConfig : Autocomplete.UpdateConfig Msg Person
 updateConfig =
     Autocomplete.updateConfig
-        { onKeyDown =
+        { toId = .name
+        , onKeyDown =
             \code maybeId ->
                 if code == 38 || code == 40 then
                     Nothing
@@ -157,7 +158,6 @@ updateConfig =
         , onMouseEnter = \_ -> Nothing
         , onMouseLeave = \_ -> Nothing
         , onMouseClick = \id -> Just <| SelectPerson id
-        , toId = .name
         , separateSelections = False
         }
 

@@ -102,15 +102,47 @@ update (UpdateConfig config) (Msg msg) (State state) data howManyToShow =
         ( State newState, maybeMsg )
 
 
-{-| -}
+{-| Create the configuration for your `update` function (`UpdateConfig`).
+Say we have a `List Person` that we want to show as a series of options.
+We would create an `UpdateConfig` like this:
+    import Autocomplete
+    updateConfig : Autocomplete.UpdateConfig Msg Person
+    updateConfig =
+        Autocomplete.updateConfig
+            { toId = .name
+            , onKeyDown =
+                \code maybeId ->
+                    if code == 38 || code == 40 then
+                        Nothing
+                    else if code == 13 then
+                        Maybe.map SelectPerson maybeId
+                    else
+                        Just Reset
+            , onTooLow = Nothing
+            , onTooHigh = Nothing
+            , onMouseEnter = \_ -> Nothing
+            , onMouseLeave = \_ -> Nothing
+            , onMouseClick = \id -> Just <| SelectPerson id
+            , separateSelections = False
+            }
+
+You provide the following information in your autocomplete configuration:
+  - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
+  [`Html.Keyed`][keyed] under the hood to make sorting faster.
+  - `ul` &mdash; specify any non-behavioral attributes you'd like for the list menu.
+  - `li` &mdash; specify any non-behavioral attributes and children for a list item: both selection states are provided
+See the [examples][] to get a better feel for this!
+[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
+[examples]: https://github.com/thebritican/elm-autocomplete/tree/master/examples
+-}
 updateConfig :
-    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    { toId : data -> String
+    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : String -> Maybe msg
     , onMouseLeave : String -> Maybe msg
     , onMouseClick : String -> Maybe msg
-    , toId : data -> String
     , separateSelections : Bool
     }
     -> UpdateConfig msg data
@@ -118,7 +150,7 @@ updateConfig config =
     UpdateConfig <| Internal.updateConfig config
 
 
-{-| Add this to your `program`s subscriptions to animate the spinner.
+{-| Add this to your `program`s subscriptions so the the Autocomplete menu will respond to keyboard input.
 -}
 subscription : Sub Msg
 subscription =
@@ -203,7 +235,8 @@ type ViewWithSectionsConfig data sectionData
     = ViewWithSectionsConfig (Internal.ViewWithSectionsConfig data sectionData)
 
 
-{-| -}
+{-| The same configuration as viewConfig, but provide a section configuration as well.
+-}
 viewWithSectionsConfig :
     { toId : data -> String
     , ul : List (Attribute Never)

@@ -113,24 +113,24 @@ type alias UpdateConfig msg data =
 
 
 updateConfig :
-    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    { toId : data -> String
+    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : String -> Maybe msg
     , onMouseLeave : String -> Maybe msg
     , onMouseClick : String -> Maybe msg
-    , toId : data -> String
     , separateSelections : Bool
     }
     -> UpdateConfig msg data
-updateConfig { onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick, toId, separateSelections } =
-    { onKeyDown = onKeyDown
+updateConfig { toId, onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave, onMouseClick, separateSelections } =
+    { toId = toId
+    , onKeyDown = onKeyDown
     , onTooLow = onTooLow
     , onTooHigh = onTooHigh
     , onMouseEnter = onMouseEnter
     , onMouseLeave = onMouseLeave
     , onMouseClick = onMouseClick
-    , toId = toId
     , separateSelections = separateSelections
     }
 
