@@ -23,17 +23,39 @@ module Autocomplete
         , subscription
         )
 
-{-| A customizable Autocomplete component.
+{-|
+ This library helps you create an autocomplete menu.
+ Your data is stored separately; keep it in whatever shape makes the most sense for your application.
+ Autocomplete has a lot of uses: form input, mentions, search, ... I have given the
+ users of this library a large amount of customizability.
 
-
-# Definition
-@docs State, KeySelected, MouseSelected, empty, reset, resetToFirstItem, ViewConfig, ViewWithSectionsConfig, HtmlDetails, viewConfig
-
-# Update
-@docs Msg, update, UpdateConfig, updateConfig, subscription
+ I recommend looking at the [examples](https://github.com/thebritican/elm-autocomplete/tree/master/examples) before diving into the API or source code
 
 # View
-@docs view, viewWithSections, SectionConfig, viewWithSectionsConfig, sectionConfig, SectionNode
+@docs view
+
+# Update
+@docs update, subscription
+
+# Configuration
+@docs viewConfig, updateConfig
+
+# State
+@docs State, empty, reset, resetToFirstItem, KeySelected, MouseSelected
+
+# Definitions
+@docs Msg, ViewConfig, UpdateConfig, HtmlDetails
+
+# Sections
+
+# View
+@docs viewWithSections
+
+# Configuration
+@docs sectionConfig, viewWithSectionsConfig
+
+# Definitions
+@docs SectionNode, SectionConfig, ViewWithSectionsConfig
 
 -}
 
@@ -185,9 +207,9 @@ type ViewConfig data
 Say we have a `List Person` that we want to show as a series of options.
 We would create a `ViewConfig` like this:
     import Autocomplete
-    config : Table.Config Person Msg
+    config : Autocomplete.Config Person Msg
     config =
-      Table.viewConfig
+      Autocomplete.viewConfig
         { toId = .name
         , ul = [ class "autocomplete-list" ]
         , li = customizedLi
