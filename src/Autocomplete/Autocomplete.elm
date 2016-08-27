@@ -370,7 +370,6 @@ type alias ViewConfig data =
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-    , input : List (Attribute Never)
     }
 
 
@@ -378,7 +377,6 @@ type alias ViewWithSectionsConfig data sectionData =
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-    , input : List (Attribute Never)
     , section : SectionConfig data sectionData
     }
 
@@ -398,43 +396,16 @@ type alias SectionNode msg =
     }
 
 
-{-| Create the `Config` for your `view` function. Everything you need to
-render your columns efficiently and handle selection of columns.
-Say we have a `List Person` that we want to show as a table. The table should
-have a column for name and age. We would create a `Config` like this:
-    import Table
-    type Msg = NewTableState State | ...
-    config : Table.Config Person Msg
-    config =
-      Table.config
-        { toId = .name
-        , toMsg = NewTableState
-        , columns =
-            [ Table.stringColumn "Name" .name
-            , Table.intColumn "Age" .age
-            ]
-        }
-You provide the following information in your table configuration:
-  - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
-  [`Html.Keyed`][keyed] under the hood to make resorts faster.
-  - `columns` &mdash; specify some columns to show.
-  - `toMsg` &mdash; a way send new table states to your app as messages.
-See the [examples][] to get a better feel for this!
-[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
-[examples]: https://github.com/evancz/elm-sortable-table/tree/master/examples
--}
 viewConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-    , input : List (Attribute Never)
     }
     -> ViewConfig data
-viewConfig { toId, ul, li, input } =
+viewConfig { toId, ul, li } =
     { toId = toId
     , ul = ul
     , li = li
-    , input = input
     }
 
 
@@ -442,15 +413,13 @@ viewWithSectionsConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-    , input : List (Attribute Never)
     , section : SectionConfig data sectionData
     }
     -> ViewWithSectionsConfig data sectionData
-viewWithSectionsConfig { toId, ul, li, input, section } =
+viewWithSectionsConfig { toId, ul, li, section } =
     { toId = toId
     , ul = ul
     , li = li
-    , input = input
     , section = section
     }
 

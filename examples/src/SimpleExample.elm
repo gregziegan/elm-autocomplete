@@ -167,17 +167,16 @@ viewConfig =
     Autocomplete.viewConfig
         { toId = .name
         , ul = [ class "autocomplete-list" ]
-        , li = myLi
-        , input = [ class "autocomplete-input", placeholder "Search by name" ]
+        , li = customizedLi
         }
 
 
-myLi :
+customizedLi :
     Autocomplete.KeySelected
     -> Autocomplete.MouseSelected
     -> Person
     -> Autocomplete.HtmlDetails Never
-myLi keySelected mouseSelected person =
+customizedLi keySelected mouseSelected person =
     if keySelected then
         { attributes = [ class "autocomplete-key-item" ]
         , children = [ Html.text person.name ]

@@ -78,20 +78,16 @@ update msg model =
             { model | autoState = Autocomplete.reset model.autoState } ! []
 
         SelectPerson id ->
-            let
-                meh =
+            { model
+                | query =
                     List.filter (\person -> person.name == id) model.people
-            in
-                { model
-                    | query =
-                        List.filter (\person -> person.name == id) model.people
-                            |> List.head
-                            |> Maybe.withDefault (Person "" 0 "" "")
-                            |> .name
-                    , autoState = Autocomplete.empty
-                    , showMenu = False
-                }
-                    ! []
+                        |> List.head
+                        |> Maybe.withDefault (Person "" 0 "" "")
+                        |> .name
+                , autoState = Autocomplete.empty
+                , showMenu = False
+            }
+                ! []
 
         NoOp ->
             model ! []
@@ -118,6 +114,7 @@ view model =
             , input
                 [ onInput SetQuery
                 , onWithOptions "keydown" options dec
+                , class "autocomplete-input"
                 , value model.query
                 ]
                 []
@@ -185,7 +182,6 @@ viewConfig =
         { toId = .name
         , ul = [ class "autocomplete-list-with-sections" ]
         , li = myLi
-        , input = [ class "autocomplete-input", placeholder "Search by name" ]
         , section = sectionConfig
         }
 
@@ -196,7 +192,16 @@ sectionConfig =
         { toId = .title
         , getData = .people
         , ul = [ class "autocomplete-section-list" ]
-        , li = \section -> { nodeType = "div", attributes = [ class "autocomplete-section-item" ], children = [ div [ class "autocomplete-section-box" ] [ strong [ class "autocomplete-section-text" ] [ text section.title ] ] ] }
+        , li =
+            \section ->
+                { nodeType = "div"
+                , attributes = [ class "autocomplete-section-item" ]
+                , children =
+                    [ div [ class "autocomplete-section-box" ]
+                        [ strong [ class "autocomplete-section-text" ] [ text section.title ]
+                        ]
+                    ]
+                }
         }
 
 

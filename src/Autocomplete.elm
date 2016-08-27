@@ -149,12 +149,49 @@ type ViewConfig data
     = ViewConfig (Internal.ViewConfig data)
 
 
-{-| -}
+{-| Create the configuration for your `view` function (`ViewConfig`).
+Say we have a `List Person` that we want to show as a series of options.
+We would create a `ViewConfig` like this:
+    import Autocomplete
+    config : Table.Config Person Msg
+    config =
+      Table.viewConfig
+        { toId = .name
+        , ul = [ class "autocomplete-list" ]
+        , li = customizedLi
+        }
+
+    customizedLi :
+        Autocomplete.KeySelected
+        -> Autocomplete.MouseSelected
+        -> Person
+        -> Autocomplete.HtmlDetails Never
+    customizedLi keySelected mouseSelected person =
+        if keySelected then
+            { attributes = [ class "autocomplete-key-item" ]
+            , children = [ Html.text person.name ]
+            }
+        else if mouseSelected then
+            { attributes = [ class "autocomplete-mouse-item" ]
+            , children = [ Html.text person.name ]
+            }
+        else
+            { attributes = [ class "autocomplete-item" ]
+            , children = [ Html.text person.name ]
+            }
+You provide the following information in your autocomplete configuration:
+  - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
+  [`Html.Keyed`][keyed] under the hood to make sorting faster.
+  - `ul` &mdash; specify any non-behavioral attributes you'd like for the list menu.
+  - `li` &mdash; specify any non-behavioral attributes and children for a list item: both selection states are provided
+See the [examples][] to get a better feel for this!
+[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
+[examples]: https://github.com/thebritican/elm-autocomplete/tree/master/examples
+-}
 viewConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-    , input : List (Attribute Never)
     }
     -> ViewConfig data
 viewConfig config =
@@ -171,7 +208,6 @@ viewWithSectionsConfig :
     { toId : data -> String
     , ul : List (Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
-    , input : List (Attribute Never)
     , section : SectionConfig data sectionData
     }
     -> ViewWithSectionsConfig data sectionData
@@ -196,7 +232,45 @@ type alias SectionNode msg =
     }
 
 
-{-| Define a section
+{-| Create the `SectionConfig` for your `view` function.
+Say we have a `List Century` that we want to show as a series of sections.
+We would create a `SectionConfig` like this:
+
+    type alias Century =
+      { title : String
+      , people : List Person
+      }
+
+    import Autocomplete
+    sectionConfig : Autocomplete.SectionConfig Person Century
+    sectionConfig =
+        Autocomplete.sectionConfig
+            { toId = .title
+            , getData = .people
+            , ul = [ class "autocomplete-section-list" ]
+            , li =
+                \section ->
+                    { nodeType = "div"
+                    , attributes = [ class "autocomplete-section-item" ]
+                    , children =
+                        [ div [ class "autocomplete-section-box" ]
+                            [ strong [ class "autocomplete-section-text" ] [ text section.title ]
+                            ]
+                        ]
+                    }
+            }
+
+
+
+You provide the following information in your autocomplete configuration:
+  - `toId` &mdash; turn a `Century` into a unique ID. This lets us use
+  [`Html.Keyed`][keyed] under the hood to make sorting faster.
+  - `getData` &mdash; extract the data from `Century`, in this case: `List Person`
+  - `ul` &mdash; specify any non-behavioral attributes you'd like for the section list.
+  - `li` &mdash; specify any non-behavioral attributes and children for a section
+See the [examples][] to get a better feel for this!
+[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
+[examples]: https://github.com/thebritican/elm-autocomplete/tree/master/examples
 -}
 sectionConfig :
     { toId : sectionData -> String
