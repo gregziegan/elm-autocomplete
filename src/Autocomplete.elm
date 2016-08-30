@@ -27,8 +27,9 @@ module Autocomplete
 {-|
  This library helps you create an autocomplete menu.
  Your data is stored separately; keep it in whatever shape makes the most sense for your application.
- Autocomplete has a lot of uses: form input, mentions, search, ... I have given the
- users of this library a large amount of customizability.
+ An autocomplete has a lot of uses: form input, mentions, search, ...
+
+ I have (hopefully!) given the users of this library a large amount of customizability.
 
  I recommend looking at the [examples](https://github.com/thebritican/elm-autocomplete/tree/master/examples) before diving into the API or source code
 
@@ -66,7 +67,7 @@ import Html.App as Html
 import Char exposing (KeyCode)
 
 
-{-| The Autocomplete model.
+{-| Tracks keyboard and mouse selection within the menu.
 -}
 type State
     = State Internal.State
@@ -84,7 +85,7 @@ type alias MouseSelected =
     Bool
 
 
-{-| State with nothing selected
+{-| A State with nothing selected.
 -}
 empty : State
 empty =
@@ -99,14 +100,14 @@ reset (State state) =
     State <| Internal.reset state
 
 
-{-| Like `reset` but defaults to a keyboard selection of the first item
+{-| Like `reset` but defaults to a keyboard selection of the first item.
 -}
 resetToFirstItem : List data -> (data -> String) -> State -> State
 resetToFirstItem data toId (State state) =
     State <| Internal.resetToFirstItem data toId state
 
 
-{-| Like `reset` but defaults to a keyboard selection of the last item
+{-| Like `reset` but defaults to a keyboard selection of the last item.
 -}
 resetToLastItem : List data -> (data -> String) -> State -> State
 resetToLastItem data toId (State state) =
@@ -117,7 +118,7 @@ resetToLastItem data toId (State state) =
 -- UPDATE
 
 
-{-| A message type for the Autocomplete to update.
+{-| A message type for the autocomplete to update.
 -}
 type Msg
     = Msg Internal.Msg
@@ -129,7 +130,7 @@ type UpdateConfig msg data
     = UpdateConfig (Internal.UpdateConfig msg data)
 
 
-{-| Use this function to update the Autocomplete's state.
+{-| Use this function to update the autocomplete's state.
 Provide the same data as your view.
 -}
 update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
@@ -166,13 +167,9 @@ We would create an `UpdateConfig` like this:
             }
 
 You provide the following information in your autocomplete configuration:
-  - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
-  [`Html.Keyed`][keyed] under the hood to make sorting faster.
+  - `toId` &mdash; turn a `Person` into a unique ID.
   - `ul` &mdash; specify any non-behavioral attributes you'd like for the list menu.
-  - `li` &mdash; specify any non-behavioral attributes and children for a list item: both selection states are provided
-See the [examples][] to get a better feel for this!
-[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
-[examples]: https://github.com/thebritican/elm-autocomplete/tree/master/examples
+  - `li` &mdash; specify any non-behavioral attributes and children for a list item: both selection states are provided.
 -}
 updateConfig :
     { toId : data -> String
@@ -189,7 +186,7 @@ updateConfig config =
     UpdateConfig <| Internal.updateConfig config
 
 
-{-| Add this to your `program`s subscriptions so the the Autocomplete menu will respond to keyboard input.
+{-| Add this to your `program`s subscriptions so the the autocomplete menu will respond to keyboard input.
 -}
 subscription : Sub Msg
 subscription =
@@ -197,26 +194,26 @@ subscription =
 
 
 {-|
-Take a list of data and turn it into an Autocomplete menu.
-The ViewConfig argument is the configuration for the Autocomplete view.
+Take a list of data and turn it into an autocomplete menu.
+The ViewConfig argument is the configuration for the autocomplete view.
 ViewConfig describes the HTML we want to show for each item and the list.
 The State argument describes what is selected via mouse and keyboard.
 
 Note: The State and List data should live in your Model.
-The ViewConfig for the Autocomplete belongs in your view code.
+The ViewConfig for the autocomplete belongs in your view code.
 ViewConfig should not exist in your model.
-Describe any potential Autocomplete configurations statically.
-This pattern has been inspired by [Elm Sortable Table](http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest)
+Describe any potential autocomplete configurations statically.
+This pattern has been inspired by [Elm Sortable Table](http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest).
 -}
 view : ViewConfig data -> Int -> State -> List data -> Html Msg
 view (ViewConfig config) howManyToShow (State state) data =
     Html.map Msg <| Internal.view config howManyToShow state data
 
 
-{-| Presents an Autocomplete menu with sections.
+{-| Presents an autocomplete menu with sections.
 You can follow the same instructions as described for `view`, providing a more advanced configuration and different data shape.
-`ViewWithSectionsConfig` sets up your Autocomplete to handle sectioned data.
-The sectioned data becomes the new data argument for `viewWithSections`
+`ViewWithSectionsConfig` sets up your autocomplete to handle sectioned data.
+The sectioned data becomes the new data argument for `viewWithSections`.
 -}
 viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html Msg
 viewWithSections (ViewWithSectionsConfig config) howManyToShow (State state) sections =
@@ -233,9 +230,9 @@ type alias HtmlDetails msg =
 
 
 {-|
-Configuration for your Autocomplete, describing your menu and its items.
+Configuration for your autocomplete, describing your menu and its items.
 
-Note: Your ViewConfig should never be held in your model. It should only appear in view code.
+*Note:* Your ViewConfig should never be held in your model. It should only appear in view code.
 -}
 type ViewConfig data
     = ViewConfig (Internal.ViewConfig data)
@@ -275,8 +272,8 @@ You provide the following information in your autocomplete configuration:
   - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
   [`Html.Keyed`][keyed] under the hood to make sorting faster.
   - `ul` &mdash; specify any non-behavioral attributes you'd like for the list menu.
-  - `li` &mdash; specify any non-behavioral attributes and children for a list item: both selection states are provided
-See the [examples][] to get a better feel for this!
+  - `li` &mdash; specify any non-behavioral attributes and children for a list item: both selection states are provided.
+See the [examples][] to get a better understanding!
 [keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
 [examples]: https://github.com/thebritican/elm-autocomplete/tree/master/examples
 -}
@@ -291,7 +288,7 @@ viewConfig config =
 
 
 {-|
-Configuration for your Autocomplete, describing your menu, its sections, and its items.
+Configuration for your autocomplete, describing your menu, its sections, and its items.
 
 *Note:* This should never live in your model.
 -}
@@ -322,7 +319,7 @@ type SectionConfig data sectionData
     = SectionConfig (Internal.SectionConfig data sectionData)
 
 
-{-| Describe everything about a Section HTML node
+{-| Describe everything about a Section HTML node.
 -}
 type alias SectionNode msg =
     { nodeType : String
@@ -362,14 +359,10 @@ We would create a `SectionConfig` like this:
 
 
 You provide the following information in your autocomplete configuration:
-  - `toId` &mdash; turn a `Century` into a unique ID. This lets us use
-  [`Html.Keyed`][keyed] under the hood to make sorting faster.
-  - `getData` &mdash; extract the data from `Century`, in this case: `List Person`
+  - `toId` &mdash; turn a `Century` into a unique ID.
+  - `getData` &mdash; extract the data from `Century`, in this case: `List Person`.
   - `ul` &mdash; specify any non-behavioral attributes you'd like for the section list.
-  - `li` &mdash; specify any non-behavioral attributes and children for a section
-See the [examples][] to get a better feel for this!
-[keyed]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html-Keyed
-[examples]: https://github.com/thebritican/elm-autocomplete/tree/master/examples
+  - `li` &mdash; specify any non-behavioral attributes and children for a section.
 -}
 sectionConfig :
     { toId : sectionData -> String
