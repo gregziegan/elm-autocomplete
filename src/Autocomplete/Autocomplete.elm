@@ -6,6 +6,7 @@ module Autocomplete.Autocomplete
         , empty
         , reset
         , resetToFirstItem
+        , resetToLastItem
         , Msg(..)
         , UpdateConfig
         , updateConfig
@@ -77,6 +78,11 @@ resetToFirstItem data toId state =
             Just datum ->
                 reset state
                     |> setFirstItem datum
+
+
+resetToLastItem : List data -> (data -> String) -> State -> State
+resetToLastItem data toId state =
+    resetToFirstItem (List.reverse data) toId state
 
 
 

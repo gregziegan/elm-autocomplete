@@ -71,39 +71,53 @@ type State
     = State Internal.State
 
 
-{-| -}
+{-| True if the element has been selected via keyboard navigation.
+-}
 type alias KeySelected =
     Bool
 
 
-{-| -}
+{-| True if the element has been selected via mouse hover.
+-}
 type alias MouseSelected =
     Bool
 
 
-{-| -}
+{-| State with nothing selected
+-}
 empty : State
 empty =
     State Internal.empty
 
 
-{-| -}
+{-| Reset the keyboard navigation but leave the mouse state alone.
+Convenient when the two selections are represented separately.
+-}
 reset : State -> State
 reset (State state) =
     State <| Internal.reset state
 
 
-{-| -}
+{-| Like `reset` but defaults to a keyboard selection of the first item
+-}
 resetToFirstItem : List data -> (data -> String) -> State -> State
 resetToFirstItem data toId (State state) =
     State <| Internal.resetToFirstItem data toId state
+
+
+{-| Like `reset` but defaults to a keyboard selection of the last item
+-}
+resetToLastItem : List data -> (data -> String) -> State -> State
+resetToLastItem data toId (State state) =
+    State <| Internal.resetToLastItem data toId state
 
 
 
 -- UPDATE
 
 
-{-| -}
+{-| A message type for the Autocomplete to update.
+-}
 type Msg
     = Msg Internal.Msg
 
@@ -114,7 +128,9 @@ type UpdateConfig msg data
     = UpdateConfig (Internal.UpdateConfig msg data)
 
 
-{-| -}
+{-| Use this function to update the Autocomplete's state.
+Provide the same data as your view.
+-}
 update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
 update (UpdateConfig config) (Msg msg) (State state) data howManyToShow =
     let
@@ -179,26 +195,47 @@ subscription =
     Sub.map Msg Internal.subscription
 
 
-{-| -}
+{-|
+Take a list of data and turn it into an Autocomplete menu.
+The ViewConfig argument is the configuration for the Autocomplete view.
+ViewConfig describes the HTML we want to show for each item and the list.
+The State argument describes what is selected via mouse and keyboard.
+
+Note: The State and List data should live in your Model.
+The ViewConfig for the Autocomplete belongs in your view code.
+ViewConfig should not exist in your model.
+Describe any potential Autocomplete configurations statically.
+This pattern has been inspired by [Elm Sortable Table](http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest)
+-}
 view : ViewConfig data -> Int -> State -> List data -> Html Msg
 view (ViewConfig config) howManyToShow (State state) data =
     Html.map Msg <| Internal.view config howManyToShow state data
 
 
-{-| -}
+{-| Presents an Autocomplete menu with sections.
+You can follow the same instructions as described for `view`, providing a more advanced configuration and different data shape.
+`ViewWithSectionsConfig` sets up your Autocomplete to handle sectioned data.
+The sectioned data becomes the new data argument for `viewWithSections`
+-}
 viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html Msg
 viewWithSections (ViewWithSectionsConfig config) howManyToShow (State state) sections =
     Html.map Msg <| Internal.viewWithSections config howManyToShow state sections
 
 
-{-| -}
+{-|
+HTML lists require `li` tags as children, so we allow you to specify everything about `li` HTML node except the nodeType.
+-}
 type alias HtmlDetails msg =
     { attributes : List (Attribute msg)
     , children : List (Html msg)
     }
 
 
-{-| -}
+{-|
+Configuration for your Autocomplete, describing your menu and its items.
+
+Note: Your ViewConfig should never be held in your model. It should only appear in view code.
+-}
 type ViewConfig data
     = ViewConfig (Internal.ViewConfig data)
 
@@ -252,7 +289,11 @@ viewConfig config =
     ViewConfig <| Internal.viewConfig config
 
 
-{-| -}
+{-|
+Configuration for your Autocomplete, describing your menu, its sections, and its items.
+
+*Note:* This should never live in your model.
+-}
 type ViewWithSectionsConfig data sectionData
     = ViewWithSectionsConfig (Internal.ViewWithSectionsConfig data sectionData)
 
@@ -273,13 +314,15 @@ viewWithSectionsConfig config =
                 Internal.viewWithSectionsConfig { config | section = section }
 
 
-{-| A section of the menu
+{-| The configuration for a section of the menu.
+*Note:* This should not live in your model.
 -}
 type SectionConfig data sectionData
     = SectionConfig (Internal.SectionConfig data sectionData)
 
 
-{-| -}
+{-| Describe everything about a Section HTML node
+-}
 type alias SectionNode msg =
     { nodeType : String
     , attributes : List (Attribute msg)
