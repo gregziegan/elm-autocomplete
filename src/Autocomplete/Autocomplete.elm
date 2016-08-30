@@ -1,26 +1,27 @@
 module Autocomplete.Autocomplete
     exposing
-        ( State
-        , KeySelected
-        , MouseSelected
+        ( view
+        , update
+        , subscription
+        , viewConfig
+        , updateConfig
+        , State
         , empty
         , reset
         , resetToFirstItem
         , resetToLastItem
-        , Msg(..)
-        , UpdateConfig
-        , updateConfig
-        , update
-        , view
-        , viewWithSections
+        , KeySelected
+        , MouseSelected
+        , Msg
         , ViewConfig
-        , ViewWithSectionsConfig
+        , UpdateConfig
         , HtmlDetails
-        , viewConfig
-        , viewWithSectionsConfig
-        , SectionConfig
+        , viewWithSections
         , sectionConfig
-        , subscription
+        , viewWithSectionsConfig
+        , SectionNode
+        , SectionConfig
+        , ViewWithSectionsConfig
         )
 
 import Char exposing (KeyCode)

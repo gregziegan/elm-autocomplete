@@ -1,26 +1,27 @@
 module Autocomplete
     exposing
-        ( State
-        , KeySelected
-        , MouseSelected
+        ( view
+        , update
+        , subscription
+        , viewConfig
+        , updateConfig
+        , State
         , empty
         , reset
         , resetToFirstItem
+        , resetToLastItem
+        , KeySelected
+        , MouseSelected
         , Msg
-        , UpdateConfig
-        , updateConfig
-        , update
-        , view
-        , viewWithSections
         , ViewConfig
-        , ViewWithSectionsConfig
+        , UpdateConfig
         , HtmlDetails
-        , viewConfig
-        , viewWithSectionsConfig
-        , SectionConfig
-        , SectionNode
+        , viewWithSections
         , sectionConfig
-        , subscription
+        , viewWithSectionsConfig
+        , SectionNode
+        , SectionConfig
+        , ViewWithSectionsConfig
         )
 
 {-|
@@ -41,7 +42,7 @@ module Autocomplete
 @docs viewConfig, updateConfig
 
 # State
-@docs State, empty, reset, resetToFirstItem, KeySelected, MouseSelected
+@docs State, empty, reset, resetToFirstItem, resetToLastItem, KeySelected, MouseSelected
 
 # Definitions
 @docs Msg, ViewConfig, UpdateConfig, HtmlDetails
