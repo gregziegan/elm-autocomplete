@@ -27,7 +27,7 @@ module Autocomplete
 {-|
  This library helps you create an autocomplete menu.
  Your data is stored separately; keep it in whatever shape makes the most sense for your application.
- An autocomplete has a lot of uses: form input, mentions, search, ...
+ An autocomplete has a lot of uses: form input, mentions, search, etc.
 
  I have (hopefully!) given the users of this library a large amount of customizability.
 
@@ -49,6 +49,11 @@ module Autocomplete
 @docs Msg, ViewConfig, UpdateConfig, HtmlDetails
 
 # Sections
+Sections require a separate view and configuration since another type of data must be
+provided: sections.
+
+**Note:** Section data can have any shape: your static configuration will
+just tell the autocomplete how to grab an ID for a section and its related data.
 
 # View
 @docs viewWithSections
@@ -130,7 +135,7 @@ type UpdateConfig msg data
     = UpdateConfig (Internal.UpdateConfig msg data)
 
 
-{-| Use this function to update the autocomplete's state.
+{-| Use this function to update the autocomplete's `State`.
 Provide the same data as your view.
 -}
 update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
@@ -144,7 +149,8 @@ update (UpdateConfig config) (Msg msg) (State state) data howManyToShow =
 
 {-| Create the configuration for your `update` function (`UpdateConfig`).
 Say we have a `List Person` that we want to show as a series of options.
-We would create an `UpdateConfig` like this:
+We would create an `UpdateConfig` like so:
+
     import Autocomplete
     updateConfig : Autocomplete.UpdateConfig Msg Person
     updateConfig =
@@ -186,7 +192,7 @@ updateConfig config =
     UpdateConfig <| Internal.updateConfig config
 
 
-{-| Add this to your `program`s subscriptions so the the autocomplete menu will respond to keyboard input.
+{-| Add this to your `program`'s subscriptions so the the autocomplete menu will respond to keyboard input.
 -}
 subscription : Sub Msg
 subscription =
@@ -194,14 +200,14 @@ subscription =
 
 
 {-|
-Take a list of data and turn it into an autocomplete menu.
-The ViewConfig argument is the configuration for the autocomplete view.
-ViewConfig describes the HTML we want to show for each item and the list.
-The State argument describes what is selected via mouse and keyboard.
+Take a list of `data` and turn it into an autocomplete menu.
+The `ViewConfig` argument is the configuration for the autocomplete view.
+`ViewConfig` describes the HTML we want to show for each item and the list.
+The `State` argument describes what is selected via mouse and keyboard.
 
-Note: The State and List data should live in your Model.
-The ViewConfig for the autocomplete belongs in your view code.
-ViewConfig should not exist in your model.
+**Note:** The `State` and `List data` should live in your Model.
+The `ViewConfig` for the autocomplete belongs in your view code.
+`ViewConfig` should not exist in your model.
 Describe any potential autocomplete configurations statically.
 This pattern has been inspired by [Elm Sortable Table](http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest).
 -}
@@ -232,7 +238,7 @@ type alias HtmlDetails msg =
 {-|
 Configuration for your autocomplete, describing your menu and its items.
 
-*Note:* Your ViewConfig should never be held in your model. It should only appear in view code.
+**Note:** Your `ViewConfig` should never be held in your model. It should only appear in view code.
 -}
 type ViewConfig data
     = ViewConfig (Internal.ViewConfig data)
@@ -240,7 +246,8 @@ type ViewConfig data
 
 {-| Create the configuration for your `view` function (`ViewConfig`).
 Say we have a `List Person` that we want to show as a series of options.
-We would create a `ViewConfig` like this:
+We would create a `ViewConfig` like so:
+
     import Autocomplete
     config : Autocomplete.Config Person Msg
     config =
@@ -290,7 +297,7 @@ viewConfig config =
 {-|
 Configuration for your autocomplete, describing your menu, its sections, and its items.
 
-*Note:* This should never live in your model.
+**Note:** This should never live in your model.
 -}
 type ViewWithSectionsConfig data sectionData
     = ViewWithSectionsConfig (Internal.ViewWithSectionsConfig data sectionData)
@@ -313,7 +320,8 @@ viewWithSectionsConfig config =
 
 
 {-| The configuration for a section of the menu.
-*Note:* This should not live in your model.
+
+**Note:** This should not live in your model.
 -}
 type SectionConfig data sectionData
     = SectionConfig (Internal.SectionConfig data sectionData)
@@ -330,7 +338,7 @@ type alias SectionNode msg =
 
 {-| Create the `SectionConfig` for your `view` function.
 Say we have a `List Century` that we want to show as a series of sections.
-We would create a `SectionConfig` like this:
+We would create a `SectionConfig` like so:
 
     type alias Century =
       { title : String
