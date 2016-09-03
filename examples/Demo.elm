@@ -4,29 +4,43 @@ import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import AccessibleExample
+import SectionsExample
 
 
+main : Program Never
 main =
     Html.program
         { init = init ! []
         , update = update
         , view = view
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Sub.map AccessibleExample (AccessibleExample.subscriptions model.accessibleAutocomplete)
+        , Sub.map SectionsExample (SectionsExample.subscriptions model.sectionsAutocomplete)
+        ]
 
 
 type alias Model =
     { accessibleAutocomplete : AccessibleExample.Model
+    , sectionsAutocomplete : SectionsExample.Model
     }
 
 
 init : Model
 init =
-    { accessibleAutocomplete = AccessibleExample.init }
+    { accessibleAutocomplete = AccessibleExample.init
+    , sectionsAutocomplete = SectionsExample.init
+    }
 
 
 type Msg
     = AccessibleExample AccessibleExample.Msg
+    | SectionsExample SectionsExample.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -34,6 +48,9 @@ update msg model =
     case msg of
         AccessibleExample autoMsg ->
             { model | accessibleAutocomplete = fst <| AccessibleExample.update autoMsg model.accessibleAutocomplete } ! []
+
+        SectionsExample autoMsg ->
+            { model | sectionsAutocomplete = fst <| SectionsExample.update autoMsg model.sectionsAutocomplete } ! []
 
 
 view : Model -> Html Msg
@@ -72,6 +89,7 @@ viewHeader model =
         ]
 
 
+viewLogo : Html Msg
 viewLogo =
     div [ class "logo" ]
         [ div [ class "green-part" ]
@@ -87,5 +105,8 @@ viewLogo =
 
 viewExamples : Model -> Html Msg
 viewExamples model =
-    div []
-        [ Html.map AccessibleExample (AccessibleExample.view model.accessibleAutocomplete) ]
+    div [ class "examples" ]
+        [ h1 [] [ text "Examples" ]
+        , Html.map AccessibleExample (AccessibleExample.view model.accessibleAutocomplete)
+        , Html.map SectionsExample (SectionsExample.view model.sectionsAutocomplete)
+        ]

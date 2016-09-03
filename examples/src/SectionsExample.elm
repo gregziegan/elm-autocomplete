@@ -1,4 +1,4 @@
-module Main exposing (..)
+module SectionsExample exposing (..)
 
 import Autocomplete
 import Html exposing (..)
@@ -41,7 +41,7 @@ init =
     , autoState = Autocomplete.empty
     , howManyToShow = List.length presidents
     , query = ""
-    , showMenu = True
+    , showMenu = False
     }
 
 
@@ -110,8 +110,7 @@ view model =
             )
     in
         div []
-            [ h1 [] [ text "U.S. Presidents" ]
-            , input
+            [ input
                 [ onInput SetQuery
                 , onWithOptions "keydown" options dec
                 , class "autocomplete-input"
@@ -121,7 +120,7 @@ view model =
             , if model.showMenu then
                 viewMenu model
               else
-                text <| "You chose: " ++ model.query
+                div [] []
             ]
 
 

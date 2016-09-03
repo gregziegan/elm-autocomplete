@@ -234,13 +234,13 @@ view model =
     in
         div []
             (List.append
-                [ h1 [] [ text "U.S. Presidents" ]
-                , input
+                [ input
                     (activeDescendant
                         [ onInput SetQuery
                         , onWithOptions "keydown" options dec
                         , value query
                         , id "president-input"
+                        , class "autocomplete-input"
                         , autocomplete False
                         , attribute "aria-owns" "list-of-presidents"
                         , attribute "aria-expanded" <| String.toLower <| toString model.showMenu

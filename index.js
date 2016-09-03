@@ -9671,14 +9671,6 @@ var _thebritican$elm_autocomplete$AccessibleExample$view = function (model) {
 			_elm_lang$core$Native_List.fromArray(
 				[
 					A2(
-					_elm_lang$html$Html$h1,
-					_elm_lang$core$Native_List.fromArray(
-						[]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('U.S. Presidents')
-						])),
-					A2(
 					_elm_lang$html$Html$input,
 					activeDescendant(
 						_elm_lang$core$Native_List.fromArray(
@@ -9687,6 +9679,7 @@ var _thebritican$elm_autocomplete$AccessibleExample$view = function (model) {
 								A3(_elm_lang$html$Html_Events$onWithOptions, 'keydown', options, dec),
 								_elm_lang$html$Html_Attributes$value(query),
 								_elm_lang$html$Html_Attributes$id('president-input'),
+								_elm_lang$html$Html_Attributes$class('autocomplete-input'),
 								_elm_lang$html$Html_Attributes$autocomplete(false),
 								A2(_elm_lang$html$Html_Attributes$attribute, 'aria-owns', 'list-of-presidents'),
 								A2(
@@ -9718,6 +9711,455 @@ var _thebritican$elm_autocomplete$AccessibleExample$main = {
 			update: _thebritican$elm_autocomplete$AccessibleExample$update,
 			view: _thebritican$elm_autocomplete$AccessibleExample$view,
 			subscriptions: _thebritican$elm_autocomplete$AccessibleExample$subscriptions
+		})
+};
+
+var _thebritican$elm_autocomplete$SectionsExample$myLi = F3(
+	function (keySelected, mouseSelected, person) {
+		return keySelected ? {
+			attributes: _elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$class('autocomplete-key-item')
+				]),
+			children: _elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text(person.name)
+				])
+		} : (mouseSelected ? {
+			attributes: _elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$class('autocomplete-mouse-item')
+				]),
+			children: _elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text(person.name)
+				])
+		} : {
+			attributes: _elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$class('autocomplete-item')
+				]),
+			children: _elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text(person.name)
+				])
+		});
+	});
+var _thebritican$elm_autocomplete$SectionsExample$sectionConfig = _thebritican$elm_autocomplete$Autocomplete$sectionConfig(
+	{
+		toId: function (_) {
+			return _.title;
+		},
+		getData: function (_) {
+			return _.people;
+		},
+		ul: _elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('autocomplete-section-list')
+			]),
+		li: function (section) {
+			return {
+				nodeType: 'div',
+				attributes: _elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('autocomplete-section-item')
+					]),
+				children: _elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('autocomplete-section-box')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$strong,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$class('autocomplete-section-text')
+									]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html$text(section.title)
+									]))
+							]))
+					])
+			};
+		}
+	});
+var _thebritican$elm_autocomplete$SectionsExample$viewConfig = _thebritican$elm_autocomplete$Autocomplete$viewWithSectionsConfig(
+	{
+		toId: function (_) {
+			return _.name;
+		},
+		ul: _elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('autocomplete-list-with-sections')
+			]),
+		li: _thebritican$elm_autocomplete$SectionsExample$myLi,
+		section: _thebritican$elm_autocomplete$SectionsExample$sectionConfig
+	});
+var _thebritican$elm_autocomplete$SectionsExample$acceptablePeople = function (_p0) {
+	var _p1 = _p0;
+	var lowerQuery = _elm_lang$core$String$toLower(_p1.query);
+	return A2(
+		_elm_lang$core$List$filter,
+		function (_p2) {
+			return A2(
+				_elm_lang$core$String$contains,
+				lowerQuery,
+				_elm_lang$core$String$toLower(
+					function (_) {
+						return _.name;
+					}(_p2)));
+		},
+		_p1.people);
+};
+var _thebritican$elm_autocomplete$SectionsExample$acceptablePeopleByCentury = function (_p3) {
+	var _p4 = _p3;
+	var filteredCentury = F2(
+		function (century, people) {
+			return _elm_lang$core$Native_Utils.update(
+				century,
+				{people: people});
+		});
+	var lowerQuery = _elm_lang$core$String$toLower(_p4.query);
+	var filterPeople = function (century) {
+		return A2(
+			filteredCentury,
+			century,
+			A2(
+				_elm_lang$core$List$filter,
+				function (_p5) {
+					return A2(
+						_elm_lang$core$String$contains,
+						lowerQuery,
+						_elm_lang$core$String$toLower(
+							function (_) {
+								return _.name;
+							}(_p5)));
+				},
+				century.people));
+	};
+	return A2(_elm_lang$core$List$map, filterPeople, _p4.peopleByCentury);
+};
+var _thebritican$elm_autocomplete$SectionsExample$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {people: a, peopleByCentury: b, autoState: c, howManyToShow: d, query: e, showMenu: f};
+	});
+var _thebritican$elm_autocomplete$SectionsExample$Century = F2(
+	function (a, b) {
+		return {title: a, people: b};
+	});
+var _thebritican$elm_autocomplete$SectionsExample$Person = F4(
+	function (a, b, c, d) {
+		return {name: a, year: b, city: c, state: d};
+	});
+var _thebritican$elm_autocomplete$SectionsExample$presidentsByCentury = _elm_lang$core$Native_List.fromArray(
+	[
+		{
+		title: '1700s',
+		people: _elm_lang$core$Native_List.fromArray(
+			[
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'George Washington', 1732, 'Westmoreland County', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John Adams', 1735, 'Braintree', 'Massachusetts'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Thomas Jefferson', 1743, 'Shadwell', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James Madison', 1751, 'Port Conway', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James Monroe', 1758, 'Monroe Hall', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Andrew Jackson', 1767, 'Waxhaws Region', 'South/North Carolina'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John Quincy Adams', 1767, 'Braintree', 'Massachusetts'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'William Henry Harrison', 1773, 'Charles City County', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Martin Van Buren', 1782, 'Kinderhook', 'New York'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Zachary Taylor', 1784, 'Barboursville', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John Tyler', 1790, 'Charles City County', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James Buchanan', 1791, 'Cove Gap', 'Pennsylvania'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James K. Polk', 1795, 'Pineville', 'North Carolina')
+			])
+	},
+		{
+		title: '1800s',
+		people: _elm_lang$core$Native_List.fromArray(
+			[
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Millard Fillmore', 1800, 'Summerhill', 'New York'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Franklin Pierce', 1804, 'Hillsborough', 'New Hampshire'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Andrew Johnson', 1808, 'Raleigh', 'North Carolina'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Abraham Lincoln', 1809, 'Sinking spring', 'Kentucky'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Ulysses S. Grant', 1822, 'Point Pleasant', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Rutherford B. Hayes', 1822, 'Delaware', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Chester A. Arthur', 1829, 'Fairfield', 'Vermont'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James A. Garfield', 1831, 'Moreland Hills', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Benjamin Harrison', 1833, 'North Bend', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Grover Cleveland', 1837, 'Caldwell', 'New Jersey'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'William McKinley', 1843, 'Niles', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Woodrow Wilson', 1856, 'Staunton', 'Virginia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'William Howard Taft', 1857, 'Cincinnati', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Theodore Roosevelt', 1858, 'New York City', 'New York'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Warren G. Harding', 1865, 'Blooming Grove', 'Ohio'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Calvin Coolidge', 1872, 'Plymouth', 'Vermont'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Herbert Hoover', 1874, 'West Branch', 'Iowa'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Franklin D. Roosevelt', 1882, 'Hyde Park', 'New York'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Harry S. Truman', 1884, 'Lamar', 'Missouri'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Dwight D. Eisenhower', 1890, 'Denison', 'Texas')
+			])
+	},
+		{
+		title: '1900s',
+		people: _elm_lang$core$Native_List.fromArray(
+			[
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Lyndon B. Johnson', 1908, 'Stonewall', 'Texas'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Ronald Reagan', 1911, 'Tampico', 'Illinois'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Richard M. Nixon', 1913, 'Yorba Linda', 'California'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Gerald R. Ford', 1913, 'Omaha', 'Nebraska'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John F. Kennedy', 1917, 'Brookline', 'Massachusetts'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'George H. W. Bush', 1924, 'Milton', 'Massachusetts'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Jimmy Carter', 1924, 'Plains', 'Georgia'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'George W. Bush', 1946, 'New Haven', 'Connecticut'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Bill Clinton', 1946, 'Hope', 'Arkansas'),
+				A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Barack Obama', 1961, 'Honolulu', 'Hawaii')
+			])
+	}
+	]);
+var _thebritican$elm_autocomplete$SectionsExample$presidents = _elm_lang$core$Native_List.fromArray(
+	[
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'George Washington', 1732, 'Westmoreland County', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John Adams', 1735, 'Braintree', 'Massachusetts'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Thomas Jefferson', 1743, 'Shadwell', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James Madison', 1751, 'Port Conway', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James Monroe', 1758, 'Monroe Hall', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Andrew Jackson', 1767, 'Waxhaws Region', 'South/North Carolina'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John Quincy Adams', 1767, 'Braintree', 'Massachusetts'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'William Henry Harrison', 1773, 'Charles City County', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Martin Van Buren', 1782, 'Kinderhook', 'New York'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Zachary Taylor', 1784, 'Barboursville', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John Tyler', 1790, 'Charles City County', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James Buchanan', 1791, 'Cove Gap', 'Pennsylvania'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James K. Polk', 1795, 'Pineville', 'North Carolina'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Millard Fillmore', 1800, 'Summerhill', 'New York'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Franklin Pierce', 1804, 'Hillsborough', 'New Hampshire'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Andrew Johnson', 1808, 'Raleigh', 'North Carolina'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Abraham Lincoln', 1809, 'Sinking spring', 'Kentucky'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Ulysses S. Grant', 1822, 'Point Pleasant', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Rutherford B. Hayes', 1822, 'Delaware', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Chester A. Arthur', 1829, 'Fairfield', 'Vermont'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'James A. Garfield', 1831, 'Moreland Hills', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Benjamin Harrison', 1833, 'North Bend', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Grover Cleveland', 1837, 'Caldwell', 'New Jersey'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'William McKinley', 1843, 'Niles', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Woodrow Wilson', 1856, 'Staunton', 'Virginia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'William Howard Taft', 1857, 'Cincinnati', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Theodore Roosevelt', 1858, 'New York City', 'New York'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Warren G. Harding', 1865, 'Blooming Grove', 'Ohio'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Calvin Coolidge', 1872, 'Plymouth', 'Vermont'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Herbert Hoover', 1874, 'West Branch', 'Iowa'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Franklin D. Roosevelt', 1882, 'Hyde Park', 'New York'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Harry S. Truman', 1884, 'Lamar', 'Missouri'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Dwight D. Eisenhower', 1890, 'Denison', 'Texas'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Lyndon B. Johnson', 1908, 'Stonewall', 'Texas'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Ronald Reagan', 1911, 'Tampico', 'Illinois'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Richard M. Nixon', 1913, 'Yorba Linda', 'California'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Gerald R. Ford', 1913, 'Omaha', 'Nebraska'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'John F. Kennedy', 1917, 'Brookline', 'Massachusetts'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'George H. W. Bush', 1924, 'Milton', 'Massachusetts'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Jimmy Carter', 1924, 'Plains', 'Georgia'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'George W. Bush', 1946, 'New Haven', 'Connecticut'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Bill Clinton', 1946, 'Hope', 'Arkansas'),
+		A4(_thebritican$elm_autocomplete$SectionsExample$Person, 'Barack Obama', 1961, 'Honolulu', 'Hawaii')
+	]);
+var _thebritican$elm_autocomplete$SectionsExample$init = {
+	people: _thebritican$elm_autocomplete$SectionsExample$presidents,
+	peopleByCentury: _thebritican$elm_autocomplete$SectionsExample$presidentsByCentury,
+	autoState: _thebritican$elm_autocomplete$Autocomplete$empty,
+	howManyToShow: _elm_lang$core$List$length(_thebritican$elm_autocomplete$SectionsExample$presidents),
+	query: '',
+	showMenu: false
+};
+var _thebritican$elm_autocomplete$SectionsExample$NoOp = {ctor: 'NoOp'};
+var _thebritican$elm_autocomplete$SectionsExample$SelectPerson = function (a) {
+	return {ctor: 'SelectPerson', _0: a};
+};
+var _thebritican$elm_autocomplete$SectionsExample$Reset = {ctor: 'Reset'};
+var _thebritican$elm_autocomplete$SectionsExample$updateConfig = _thebritican$elm_autocomplete$Autocomplete$updateConfig(
+	{
+		onKeyDown: F2(
+			function (code, maybeId) {
+				return (_elm_lang$core$Native_Utils.eq(code, 38) || _elm_lang$core$Native_Utils.eq(code, 40)) ? _elm_lang$core$Maybe$Nothing : (_elm_lang$core$Native_Utils.eq(code, 13) ? A2(_elm_lang$core$Maybe$map, _thebritican$elm_autocomplete$SectionsExample$SelectPerson, maybeId) : _elm_lang$core$Maybe$Just(_thebritican$elm_autocomplete$SectionsExample$Reset));
+			}),
+		onTooLow: _elm_lang$core$Maybe$Nothing,
+		onTooHigh: _elm_lang$core$Maybe$Nothing,
+		onMouseEnter: function (_p6) {
+			return _elm_lang$core$Maybe$Nothing;
+		},
+		onMouseLeave: function (_p7) {
+			return _elm_lang$core$Maybe$Nothing;
+		},
+		onMouseClick: function (id) {
+			return _elm_lang$core$Maybe$Just(
+				_thebritican$elm_autocomplete$SectionsExample$SelectPerson(id));
+		},
+		toId: function (_) {
+			return _.name;
+		},
+		separateSelections: true
+	});
+var _thebritican$elm_autocomplete$SectionsExample$update = F2(
+	function (msg, model) {
+		update:
+		while (true) {
+			var _p8 = msg;
+			switch (_p8.ctor) {
+				case 'SetQuery':
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						_elm_lang$core$Native_Utils.update(
+							model,
+							{query: _p8._0, showMenu: true}),
+						_elm_lang$core$Native_List.fromArray(
+							[]));
+				case 'SetAutoState':
+					var _p9 = A5(
+						_thebritican$elm_autocomplete$Autocomplete$update,
+						_thebritican$elm_autocomplete$SectionsExample$updateConfig,
+						_p8._0,
+						model.autoState,
+						_thebritican$elm_autocomplete$SectionsExample$acceptablePeople(model),
+						model.howManyToShow);
+					var newState = _p9._0;
+					var maybeMsg = _p9._1;
+					var newModel = _elm_lang$core$Native_Utils.update(
+						model,
+						{autoState: newState});
+					var _p10 = maybeMsg;
+					if (_p10.ctor === 'Nothing') {
+						return A2(
+							_elm_lang$core$Platform_Cmd_ops['!'],
+							newModel,
+							_elm_lang$core$Native_List.fromArray(
+								[]));
+					} else {
+						var _v4 = _p10._0,
+							_v5 = newModel;
+						msg = _v4;
+						model = _v5;
+						continue update;
+					}
+				case 'Reset':
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						_elm_lang$core$Native_Utils.update(
+							model,
+							{
+								autoState: A2(_thebritican$elm_autocomplete$Autocomplete$reset, _thebritican$elm_autocomplete$SectionsExample$updateConfig, model.autoState)
+							}),
+						_elm_lang$core$Native_List.fromArray(
+							[]));
+				case 'SelectPerson':
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						_elm_lang$core$Native_Utils.update(
+							model,
+							{
+								query: function (_) {
+									return _.name;
+								}(
+									A2(
+										_elm_lang$core$Maybe$withDefault,
+										A4(_thebritican$elm_autocomplete$SectionsExample$Person, '', 0, '', ''),
+										_elm_lang$core$List$head(
+											A2(
+												_elm_lang$core$List$filter,
+												function (person) {
+													return _elm_lang$core$Native_Utils.eq(person.name, _p8._0);
+												},
+												model.people)))),
+								autoState: _thebritican$elm_autocomplete$Autocomplete$empty,
+								showMenu: false
+							}),
+						_elm_lang$core$Native_List.fromArray(
+							[]));
+				default:
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						model,
+						_elm_lang$core$Native_List.fromArray(
+							[]));
+			}
+		}
+	});
+var _thebritican$elm_autocomplete$SectionsExample$SetAutoState = function (a) {
+	return {ctor: 'SetAutoState', _0: a};
+};
+var _thebritican$elm_autocomplete$SectionsExample$subscriptions = function (model) {
+	return A2(_elm_lang$core$Platform_Sub$map, _thebritican$elm_autocomplete$SectionsExample$SetAutoState, _thebritican$elm_autocomplete$Autocomplete$subscription);
+};
+var _thebritican$elm_autocomplete$SectionsExample$viewMenu = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('autocomplete-menu')
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html_App$map,
+				_thebritican$elm_autocomplete$SectionsExample$SetAutoState,
+				A4(
+					_thebritican$elm_autocomplete$Autocomplete$viewWithSections,
+					_thebritican$elm_autocomplete$SectionsExample$viewConfig,
+					model.howManyToShow,
+					model.autoState,
+					_thebritican$elm_autocomplete$SectionsExample$acceptablePeopleByCentury(model)))
+			]));
+};
+var _thebritican$elm_autocomplete$SectionsExample$SetQuery = function (a) {
+	return {ctor: 'SetQuery', _0: a};
+};
+var _thebritican$elm_autocomplete$SectionsExample$view = function (model) {
+	var dec = A2(
+		_elm_lang$core$Json_Decode$customDecoder,
+		_elm_lang$html$Html_Events$keyCode,
+		function (code) {
+			return (_elm_lang$core$Native_Utils.eq(code, 38) || _elm_lang$core$Native_Utils.eq(code, 40)) ? _elm_lang$core$Result$Ok(_thebritican$elm_autocomplete$SectionsExample$NoOp) : _elm_lang$core$Result$Err('not handling that key');
+		});
+	var options = {preventDefault: true, stopPropagation: false};
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$input,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Events$onInput(_thebritican$elm_autocomplete$SectionsExample$SetQuery),
+						A3(_elm_lang$html$Html_Events$onWithOptions, 'keydown', options, dec),
+						_elm_lang$html$Html_Attributes$class('autocomplete-input'),
+						_elm_lang$html$Html_Attributes$value(model.query)
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[])),
+				model.showMenu ? _thebritican$elm_autocomplete$SectionsExample$viewMenu(model) : A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[]))
+			]));
+};
+var _thebritican$elm_autocomplete$SectionsExample$main = {
+	main: _elm_lang$html$Html_App$program(
+		{
+			init: A2(
+				_elm_lang$core$Platform_Cmd_ops['!'],
+				_thebritican$elm_autocomplete$SectionsExample$init,
+				_elm_lang$core$Native_List.fromArray(
+					[])),
+			update: _thebritican$elm_autocomplete$SectionsExample$update,
+			view: _thebritican$elm_autocomplete$SectionsExample$view,
+			subscriptions: _thebritican$elm_autocomplete$SectionsExample$subscriptions
 		})
 };
 
@@ -9817,35 +10259,80 @@ var _thebritican$elm_autocomplete$Main$viewElmLink = A2(
 var _thebritican$elm_autocomplete$Main$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
-		return A2(
-			_elm_lang$core$Platform_Cmd_ops['!'],
-			_elm_lang$core$Native_Utils.update(
-				model,
-				{
-					accessibleAutocomplete: _elm_lang$core$Basics$fst(
-						A2(_thebritican$elm_autocomplete$AccessibleExample$update, _p0._0, model.accessibleAutocomplete))
-				}),
-			_elm_lang$core$Native_List.fromArray(
-				[]));
+		if (_p0.ctor === 'AccessibleExample') {
+			return A2(
+				_elm_lang$core$Platform_Cmd_ops['!'],
+				_elm_lang$core$Native_Utils.update(
+					model,
+					{
+						accessibleAutocomplete: _elm_lang$core$Basics$fst(
+							A2(_thebritican$elm_autocomplete$AccessibleExample$update, _p0._0, model.accessibleAutocomplete))
+					}),
+				_elm_lang$core$Native_List.fromArray(
+					[]));
+		} else {
+			return A2(
+				_elm_lang$core$Platform_Cmd_ops['!'],
+				_elm_lang$core$Native_Utils.update(
+					model,
+					{
+						sectionsAutocomplete: _elm_lang$core$Basics$fst(
+							A2(_thebritican$elm_autocomplete$SectionsExample$update, _p0._0, model.sectionsAutocomplete))
+					}),
+				_elm_lang$core$Native_List.fromArray(
+					[]));
+		}
 	});
-var _thebritican$elm_autocomplete$Main$init = {accessibleAutocomplete: _thebritican$elm_autocomplete$AccessibleExample$init};
-var _thebritican$elm_autocomplete$Main$Model = function (a) {
-	return {accessibleAutocomplete: a};
+var _thebritican$elm_autocomplete$Main$init = {accessibleAutocomplete: _thebritican$elm_autocomplete$AccessibleExample$init, sectionsAutocomplete: _thebritican$elm_autocomplete$SectionsExample$init};
+var _thebritican$elm_autocomplete$Main$Model = F2(
+	function (a, b) {
+		return {accessibleAutocomplete: a, sectionsAutocomplete: b};
+	});
+var _thebritican$elm_autocomplete$Main$SectionsExample = function (a) {
+	return {ctor: 'SectionsExample', _0: a};
 };
 var _thebritican$elm_autocomplete$Main$AccessibleExample = function (a) {
 	return {ctor: 'AccessibleExample', _0: a};
+};
+var _thebritican$elm_autocomplete$Main$subscriptions = function (model) {
+	return _elm_lang$core$Platform_Sub$batch(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$core$Platform_Sub$map,
+				_thebritican$elm_autocomplete$Main$AccessibleExample,
+				_thebritican$elm_autocomplete$AccessibleExample$subscriptions(model.accessibleAutocomplete)),
+				A2(
+				_elm_lang$core$Platform_Sub$map,
+				_thebritican$elm_autocomplete$Main$SectionsExample,
+				_thebritican$elm_autocomplete$SectionsExample$subscriptions(model.sectionsAutocomplete))
+			]));
 };
 var _thebritican$elm_autocomplete$Main$viewExamples = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
-			[]),
+			[
+				_elm_lang$html$Html_Attributes$class('examples')
+			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A2(
+				_elm_lang$html$Html$h1,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text('Examples')
+					])),
+				A2(
 				_elm_lang$html$Html_App$map,
 				_thebritican$elm_autocomplete$Main$AccessibleExample,
-				_thebritican$elm_autocomplete$AccessibleExample$view(model.accessibleAutocomplete))
+				_thebritican$elm_autocomplete$AccessibleExample$view(model.accessibleAutocomplete)),
+				A2(
+				_elm_lang$html$Html_App$map,
+				_thebritican$elm_autocomplete$Main$SectionsExample,
+				_thebritican$elm_autocomplete$SectionsExample$view(model.sectionsAutocomplete))
 			]));
 };
 var _thebritican$elm_autocomplete$Main$viewApp = function (model) {
@@ -9884,9 +10371,7 @@ var _thebritican$elm_autocomplete$Main$main = {
 					[])),
 			update: _thebritican$elm_autocomplete$Main$update,
 			view: _thebritican$elm_autocomplete$Main$view,
-			subscriptions: function (_p1) {
-				return _elm_lang$core$Platform_Sub$none;
-			}
+			subscriptions: _thebritican$elm_autocomplete$Main$subscriptions
 		})
 };
 
