@@ -161,8 +161,8 @@ updateConfig { toId, onKeyDown, onTooLow, onTooHigh, onMouseEnter, onMouseLeave,
     }
 
 
-update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
-update config msg state data howManyToShow =
+update : UpdateConfig msg data -> Msg -> Int -> State -> List data -> ( State, Maybe msg )
+update config msg howManyToShow state data =
     case msg of
         KeyDown keyCode ->
             let
@@ -174,9 +174,9 @@ update config msg state data howManyToShow =
                     navigateWithKey keyCode boundedList state.key
             in
                 if newKey == state.key && keyCode == 38 then
-                    update config WentTooHigh state data howManyToShow
+                    update config WentTooHigh howManyToShow state data
                 else if newKey == state.key && keyCode == 40 then
-                    update config WentTooLow state data howManyToShow
+                    update config WentTooLow howManyToShow state data
                 else if config.separateSelections then
                     ( { state | key = newKey }
                     , config.onKeyDown keyCode newKey

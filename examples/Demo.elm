@@ -77,15 +77,23 @@ viewApp model =
     div [ class "app" ]
         [ viewHeader model
         , viewExamples model
+        , viewFooter
         ]
 
 
 viewHeader : Model -> Html Msg
 viewHeader model =
-    div [ class "header" ]
+    div [ class "section header" ]
         [ h1 [ class "header-text" ] [ text "Elm Autocomplete" ]
         , viewLogo
         , p [ class "header-description" ] [ text "A reusable, navigable menu for all your text input needs." ]
+        , a
+            [ class "try-it-link"
+            , href "https://github.com/thebritican/elm-autocomplete#installation"
+            , target "_blank"
+            , rel "noopenner noreferrer"
+            ]
+            [ text "Try it out!" ]
         ]
 
 
@@ -105,8 +113,55 @@ viewLogo =
 
 viewExamples : Model -> Html Msg
 viewExamples model =
-    div [ class "examples" ]
+    div [ class "section examples" ]
         [ h1 [] [ text "Examples" ]
-        , Html.map AccessibleExample (AccessibleExample.view model.accessibleAutocomplete)
-        , Html.map SectionsExample (SectionsExample.view model.sectionsAutocomplete)
+        , viewSimpleExample model.accessibleAutocomplete
+        , viewSectionsExample model.sectionsAutocomplete
         ]
+
+
+viewSimpleExample : AccessibleExample.Model -> Html Msg
+viewSimpleExample autocomplete =
+    div [ class "example" ]
+        [ div [ class "example-info" ]
+            [ h2 [] [ text "Simple" ]
+            , p [] [ text "A list of presidents" ]
+            ]
+        , Html.map AccessibleExample (AccessibleExample.view autocomplete)
+        ]
+
+
+viewSectionsExample : SectionsExample.Model -> Html Msg
+viewSectionsExample autocomplete =
+    div [ class "example" ]
+        [ div [ class "example-info" ]
+            [ h2 [] [ text "Sections" ]
+            , p [] [ text "Presidents sectioned by century" ]
+            ]
+        , Html.map SectionsExample (SectionsExample.view autocomplete)
+        ]
+
+
+viewFooter : Html Msg
+viewFooter =
+    div [ class "section footer" ]
+        [ p []
+            [ text "Page design inspired by "
+            , footerLink "http://react-autosuggest.js.org/" "React Autosuggest"
+            ]
+        , p []
+            [ text "Created by "
+            , footerLink "https://twitter.com/gregziegan" "Greg Ziegan"
+            ]
+        ]
+
+
+footerLink : String -> String -> Html Msg
+footerLink url text' =
+    a
+        [ href url
+        , class "footer-link"
+        , target "_blank"
+        , rel "noopenner noreferrer"
+        ]
+        [ text text' ]

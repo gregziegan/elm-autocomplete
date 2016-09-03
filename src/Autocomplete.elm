@@ -138,11 +138,11 @@ type UpdateConfig msg data
 {-| Use this function to update the autocomplete's `State`.
 Provide the same data as your view.
 -}
-update : UpdateConfig msg data -> Msg -> State -> List data -> Int -> ( State, Maybe msg )
-update (UpdateConfig config) (Msg msg) (State state) data howManyToShow =
+update : UpdateConfig msg data -> Msg -> Int -> State -> List data -> ( State, Maybe msg )
+update (UpdateConfig config) (Msg msg) howManyToShow (State state) data =
     let
         ( newState, maybeMsg ) =
-            Internal.update config msg state data howManyToShow
+            Internal.update config msg howManyToShow state data
     in
         ( State newState, maybeMsg )
 
@@ -249,8 +249,8 @@ Say we have a `List Person` that we want to show as a series of options.
 We would create a `ViewConfig` like so:
 
     import Autocomplete
-    config : Autocomplete.Config Person Msg
-    config =
+    viewConfig : Autocomplete.Config Person Msg
+    viewConfig =
       Autocomplete.viewConfig
         { toId = .name
         , ul = [ class "autocomplete-list" ]

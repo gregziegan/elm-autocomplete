@@ -99,7 +99,7 @@ update msg model =
         SetAutoState autoMsg ->
             let
                 ( newState, maybeMsg ) =
-                    Autocomplete.update updateConfig autoMsg model.autoState (acceptablePeople model.query model.people) model.howManyToShow
+                    Autocomplete.update updateConfig autoMsg model.howManyToShow model.autoState (acceptablePeople model.query model.people)
 
                 newModel =
                     { model | autoState = newState }
@@ -175,6 +175,7 @@ view model =
             )
 
 
+viewEditor : Model -> Html Msg
 viewEditor model =
     textarea
         [ onInput SetValue

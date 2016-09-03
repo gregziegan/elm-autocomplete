@@ -62,7 +62,7 @@ update msg model =
         SetAutoState autoMsg ->
             let
                 ( newState, maybeMsg ) =
-                    Autocomplete.update updateConfig autoMsg model.autoState (acceptablePeople model) model.howManyToShow
+                    Autocomplete.update updateConfig autoMsg model.howManyToShow model.autoState (acceptablePeople model)
 
                 newModel =
                     { model | autoState = newState }

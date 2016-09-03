@@ -9034,7 +9034,7 @@ var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$view = F4(
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$WentTooHigh = {ctor: 'WentTooHigh'};
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$WentTooLow = {ctor: 'WentTooLow'};
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$update = F5(
-	function (config, msg, state, data, howManyToShow) {
+	function (config, msg, howManyToShow, state, data) {
 		update:
 		while (true) {
 			var _p26 = msg;
@@ -9049,27 +9049,27 @@ var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$update = F5(
 					if (_elm_lang$core$Native_Utils.eq(newKey, state.key) && _elm_lang$core$Native_Utils.eq(_p27, 38)) {
 						var _v15 = config,
 							_v16 = _thebritican$elm_autocomplete$Autocomplete_Autocomplete$WentTooHigh,
-							_v17 = state,
-							_v18 = data,
-							_v19 = howManyToShow;
+							_v17 = howManyToShow,
+							_v18 = state,
+							_v19 = data;
 						config = _v15;
 						msg = _v16;
-						state = _v17;
-						data = _v18;
-						howManyToShow = _v19;
+						howManyToShow = _v17;
+						state = _v18;
+						data = _v19;
 						continue update;
 					} else {
 						if (_elm_lang$core$Native_Utils.eq(newKey, state.key) && _elm_lang$core$Native_Utils.eq(_p27, 40)) {
 							var _v20 = config,
 								_v21 = _thebritican$elm_autocomplete$Autocomplete_Autocomplete$WentTooLow,
-								_v22 = state,
-								_v23 = data,
-								_v24 = howManyToShow;
+								_v22 = howManyToShow,
+								_v23 = state,
+								_v24 = data;
 							config = _v20;
 							msg = _v21;
-							state = _v22;
-							data = _v23;
-							howManyToShow = _v24;
+							howManyToShow = _v22;
+							state = _v23;
+							data = _v24;
 							continue update;
 						} else {
 							if (config.separateSelections) {
@@ -9158,11 +9158,11 @@ var _thebritican$elm_autocomplete$Autocomplete$resetToLastItem = F4(
 			A4(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToLastItem, data, _p10._0, howManyToShow, _p11._0));
 	});
 var _thebritican$elm_autocomplete$Autocomplete$update = F5(
-	function (_p14, _p13, _p12, data, howManyToShow) {
+	function (_p14, _p13, howManyToShow, _p12, data) {
 		var _p15 = _p14;
 		var _p16 = _p13;
 		var _p17 = _p12;
-		var _p18 = A5(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$update, _p15._0, _p16._0, _p17._0, data, howManyToShow);
+		var _p18 = A5(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$update, _p15._0, _p16._0, howManyToShow, _p17._0, data);
 		var newState = _p18._0;
 		var maybeMsg = _p18._1;
 		return {
@@ -9453,9 +9453,9 @@ var _thebritican$elm_autocomplete$AccessibleExample$update = F2(
 						_thebritican$elm_autocomplete$Autocomplete$update,
 						_thebritican$elm_autocomplete$AccessibleExample$updateConfig,
 						_p2._0,
+						model.howManyToShow,
 						model.autoState,
-						A2(_thebritican$elm_autocomplete$AccessibleExample$acceptablePeople, model.query, model.people),
-						model.howManyToShow);
+						A2(_thebritican$elm_autocomplete$AccessibleExample$acceptablePeople, model.query, model.people));
 					var newState = _p5._0;
 					var maybeMsg = _p5._1;
 					var newModel = _elm_lang$core$Native_Utils.update(
@@ -10022,9 +10022,9 @@ var _thebritican$elm_autocomplete$SectionsExample$update = F2(
 						_thebritican$elm_autocomplete$Autocomplete$update,
 						_thebritican$elm_autocomplete$SectionsExample$updateConfig,
 						_p8._0,
+						model.howManyToShow,
 						model.autoState,
-						_thebritican$elm_autocomplete$SectionsExample$acceptablePeople(model),
-						model.howManyToShow);
+						_thebritican$elm_autocomplete$SectionsExample$acceptablePeople(model));
 					var newState = _p9._0;
 					var maybeMsg = _p9._1;
 					var newModel = _elm_lang$core$Native_Utils.update(
@@ -10163,6 +10163,49 @@ var _thebritican$elm_autocomplete$SectionsExample$main = {
 		})
 };
 
+var _thebritican$elm_autocomplete$Main$footerLink = F2(
+	function (url, text$) {
+		return A2(
+			_elm_lang$html$Html$a,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$href(url),
+					_elm_lang$html$Html_Attributes$class('footer-link'),
+					_elm_lang$html$Html_Attributes$target('_blank'),
+					_elm_lang$html$Html_Attributes$rel('noopenner noreferrer')
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text(text$)
+				]));
+	});
+var _thebritican$elm_autocomplete$Main$viewFooter = A2(
+	_elm_lang$html$Html$div,
+	_elm_lang$core$Native_List.fromArray(
+		[
+			_elm_lang$html$Html_Attributes$class('section footer')
+		]),
+	_elm_lang$core$Native_List.fromArray(
+		[
+			A2(
+			_elm_lang$html$Html$p,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text('Page design inspired by '),
+					A2(_thebritican$elm_autocomplete$Main$footerLink, 'http://react-autosuggest.js.org/', 'React Autosuggest')
+				])),
+			A2(
+			_elm_lang$html$Html$p,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text('Created by '),
+					A2(_thebritican$elm_autocomplete$Main$footerLink, 'https://twitter.com/gregziegan', 'Greg Ziegan')
+				]))
+		]));
 var _thebritican$elm_autocomplete$Main$viewLogo = A2(
 	_elm_lang$html$Html$div,
 	_elm_lang$core$Native_List.fromArray(
@@ -10209,7 +10252,7 @@ var _thebritican$elm_autocomplete$Main$viewHeader = function (model) {
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_elm_lang$html$Html_Attributes$class('header')
+				_elm_lang$html$Html_Attributes$class('section header')
 			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -10233,6 +10276,19 @@ var _thebritican$elm_autocomplete$Main$viewHeader = function (model) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html$text('A reusable, navigable menu for all your text input needs.')
+					])),
+				A2(
+				_elm_lang$html$Html$a,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('try-it-link'),
+						_elm_lang$html$Html_Attributes$href('https://github.com/thebritican/elm-autocomplete#installation'),
+						_elm_lang$html$Html_Attributes$target('_blank'),
+						_elm_lang$html$Html_Attributes$rel('noopenner noreferrer')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text('Try it out!')
 					]))
 			]));
 };
@@ -10291,6 +10347,46 @@ var _thebritican$elm_autocomplete$Main$Model = F2(
 var _thebritican$elm_autocomplete$Main$SectionsExample = function (a) {
 	return {ctor: 'SectionsExample', _0: a};
 };
+var _thebritican$elm_autocomplete$Main$viewSectionsExample = function (autocomplete) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('example')
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('example-info')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$h2,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('Sections')
+							])),
+						A2(
+						_elm_lang$html$Html$p,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('Presidents sectioned by century')
+							]))
+					])),
+				A2(
+				_elm_lang$html$Html_App$map,
+				_thebritican$elm_autocomplete$Main$SectionsExample,
+				_thebritican$elm_autocomplete$SectionsExample$view(autocomplete))
+			]));
+};
 var _thebritican$elm_autocomplete$Main$AccessibleExample = function (a) {
 	return {ctor: 'AccessibleExample', _0: a};
 };
@@ -10308,12 +10404,52 @@ var _thebritican$elm_autocomplete$Main$subscriptions = function (model) {
 				_thebritican$elm_autocomplete$SectionsExample$subscriptions(model.sectionsAutocomplete))
 			]));
 };
+var _thebritican$elm_autocomplete$Main$viewSimpleExample = function (autocomplete) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('example')
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('example-info')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$h2,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('Simple')
+							])),
+						A2(
+						_elm_lang$html$Html$p,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('A list of presidents')
+							]))
+					])),
+				A2(
+				_elm_lang$html$Html_App$map,
+				_thebritican$elm_autocomplete$Main$AccessibleExample,
+				_thebritican$elm_autocomplete$AccessibleExample$view(autocomplete))
+			]));
+};
 var _thebritican$elm_autocomplete$Main$viewExamples = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_elm_lang$html$Html_Attributes$class('examples')
+				_elm_lang$html$Html_Attributes$class('section examples')
 			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -10325,14 +10461,8 @@ var _thebritican$elm_autocomplete$Main$viewExamples = function (model) {
 					[
 						_elm_lang$html$Html$text('Examples')
 					])),
-				A2(
-				_elm_lang$html$Html_App$map,
-				_thebritican$elm_autocomplete$Main$AccessibleExample,
-				_thebritican$elm_autocomplete$AccessibleExample$view(model.accessibleAutocomplete)),
-				A2(
-				_elm_lang$html$Html_App$map,
-				_thebritican$elm_autocomplete$Main$SectionsExample,
-				_thebritican$elm_autocomplete$SectionsExample$view(model.sectionsAutocomplete))
+				_thebritican$elm_autocomplete$Main$viewSimpleExample(model.accessibleAutocomplete),
+				_thebritican$elm_autocomplete$Main$viewSectionsExample(model.sectionsAutocomplete)
 			]));
 };
 var _thebritican$elm_autocomplete$Main$viewApp = function (model) {
@@ -10345,7 +10475,8 @@ var _thebritican$elm_autocomplete$Main$viewApp = function (model) {
 		_elm_lang$core$Native_List.fromArray(
 			[
 				_thebritican$elm_autocomplete$Main$viewHeader(model),
-				_thebritican$elm_autocomplete$Main$viewExamples(model)
+				_thebritican$elm_autocomplete$Main$viewExamples(model),
+				_thebritican$elm_autocomplete$Main$viewFooter
 			]));
 };
 var _thebritican$elm_autocomplete$Main$view = function (model) {
