@@ -57,12 +57,13 @@ type Msg
     | SelectPersonKeyboard String
     | SelectPersonMouse String
     | PreviewPerson String
+    | OnFocus
     | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case Debug.log "simple" msg of
         SetQuery newQuery ->
             let
                 showMenu =
@@ -155,6 +156,9 @@ update msg model =
         PreviewPerson id ->
             { model | selectedPerson = Just <| getPersonAtId model.people id } ! []
 
+        OnFocus ->
+            model ! []
+
         NoOp ->
             model ! []
 
@@ -237,6 +241,7 @@ view model =
                 [ input
                     (activeDescendant
                         [ onInput SetQuery
+                        , onFocus OnFocus
                         , onWithOptions "keydown" options dec
                         , value query
                         , id "president-input"

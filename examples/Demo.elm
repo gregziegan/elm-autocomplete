@@ -21,22 +21,35 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ Sub.map AccessibleExample (AccessibleExample.subscriptions model.accessibleAutocomplete)
-        , Sub.map SectionsExample (SectionsExample.subscriptions model.sectionsAutocomplete)
-        ]
+    case model.currentFocus of
+        Simple ->
+            Sub.map AccessibleExample (AccessibleExample.subscriptions model.accessibleAutocomplete)
+
+        Sections ->
+            Sub.map SectionsExample (SectionsExample.subscriptions model.sectionsAutocomplete)
+
+        None ->
+            Sub.none
 
 
 type alias Model =
     { accessibleAutocomplete : AccessibleExample.Model
     , sectionsAutocomplete : SectionsExample.Model
+    , currentFocus : Focused
     }
+
+
+type Focused
+    = Simple
+    | Sections
+    | None
 
 
 init : Model
 init =
     { accessibleAutocomplete = AccessibleExample.init
     , sectionsAutocomplete = SectionsExample.init
+    , currentFocus = None
     }
 
 
@@ -47,12 +60,36 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        AccessibleExample autoMsg ->
-            { model | accessibleAutocomplete = fst <| AccessibleExample.update autoMsg model.accessibleAutocomplete } ! []
+    let
+        newModel =
+            case Debug.log "msg" msg of
+                AccessibleExample autoMsg ->
+                    let
+                        toggleFocus autoMsg model =
+                            case autoMsg of
+                                AccessibleExample.OnFocus ->
+                                    { model | currentFocus = Simple }
 
-        SectionsExample autoMsg ->
-            { model | sectionsAutocomplete = fst <| SectionsExample.update autoMsg model.sectionsAutocomplete } ! []
+                                _ ->
+                                    model
+                    in
+                        { model | accessibleAutocomplete = fst <| AccessibleExample.update autoMsg model.accessibleAutocomplete }
+                            |> toggleFocus autoMsg
+
+                SectionsExample autoMsg ->
+                    let
+                        toggleFocus autoMsg model =
+                            case autoMsg of
+                                SectionsExample.OnFocus ->
+                                    { model | currentFocus = Sections }
+
+                                _ ->
+                                    model
+                    in
+                        { model | sectionsAutocomplete = fst <| SectionsExample.update autoMsg model.sectionsAutocomplete }
+                            |> toggleFocus autoMsg
+    in
+        ( newModel, Cmd.none )
 
 
 view : Model -> Html Msg

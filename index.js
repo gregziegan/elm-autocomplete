@@ -9736,6 +9736,7 @@ var _thebritican$elm_autocomplete$AccessibleExample$presidents = _elm_lang$core$
 	]);
 var _thebritican$elm_autocomplete$AccessibleExample$init = {people: _thebritican$elm_autocomplete$AccessibleExample$presidents, autoState: _thebritican$elm_autocomplete$Autocomplete$empty, howManyToShow: 5, query: '', selectedPerson: _elm_lang$core$Maybe$Nothing, showMenu: false};
 var _thebritican$elm_autocomplete$AccessibleExample$NoOp = {ctor: 'NoOp'};
+var _thebritican$elm_autocomplete$AccessibleExample$OnFocus = {ctor: 'OnFocus'};
 var _thebritican$elm_autocomplete$AccessibleExample$PreviewPerson = function (a) {
 	return {ctor: 'PreviewPerson', _0: a};
 };
@@ -9780,7 +9781,7 @@ var _thebritican$elm_autocomplete$AccessibleExample$update = F2(
 	function (msg, model) {
 		update:
 		while (true) {
-			var _p2 = msg;
+			var _p2 = A2(_elm_lang$core$Debug$log, 'simple', msg);
 			switch (_p2.ctor) {
 				case 'SetQuery':
 					var _p4 = _p2._0;
@@ -9940,6 +9941,12 @@ var _thebritican$elm_autocomplete$AccessibleExample$update = F2(
 							}),
 						_elm_lang$core$Native_List.fromArray(
 							[]));
+				case 'OnFocus':
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						model,
+						_elm_lang$core$Native_List.fromArray(
+							[]));
 				default:
 					return A2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
@@ -10024,6 +10031,7 @@ var _thebritican$elm_autocomplete$AccessibleExample$view = function (model) {
 						_elm_lang$core$Native_List.fromArray(
 							[
 								_elm_lang$html$Html_Events$onInput(_thebritican$elm_autocomplete$AccessibleExample$SetQuery),
+								_elm_lang$html$Html_Events$onFocus(_thebritican$elm_autocomplete$AccessibleExample$OnFocus),
 								A3(_elm_lang$html$Html_Events$onWithOptions, 'keydown', options, dec),
 								_elm_lang$html$Html_Attributes$value(query),
 								_elm_lang$html$Html_Attributes$id('president-input'),
@@ -10324,6 +10332,7 @@ var _thebritican$elm_autocomplete$SectionsExample$init = {
 	showMenu: false
 };
 var _thebritican$elm_autocomplete$SectionsExample$NoOp = {ctor: 'NoOp'};
+var _thebritican$elm_autocomplete$SectionsExample$OnFocus = {ctor: 'OnFocus'};
 var _thebritican$elm_autocomplete$SectionsExample$SelectPerson = function (a) {
 	return {ctor: 'SelectPerson', _0: a};
 };
@@ -10426,6 +10435,12 @@ var _thebritican$elm_autocomplete$SectionsExample$update = F2(
 							}),
 						_elm_lang$core$Native_List.fromArray(
 							[]));
+				case 'OnFocus':
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						model,
+						_elm_lang$core$Native_List.fromArray(
+							[]));
 				default:
 					return A2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
@@ -10483,6 +10498,7 @@ var _thebritican$elm_autocomplete$SectionsExample$view = function (model) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html_Events$onInput(_thebritican$elm_autocomplete$SectionsExample$SetQuery),
+						_elm_lang$html$Html_Events$onFocus(_thebritican$elm_autocomplete$SectionsExample$OnFocus),
 						A3(_elm_lang$html$Html_Events$onWithOptions, 'keydown', options, dec),
 						_elm_lang$html$Html_Attributes$class('autocomplete-input'),
 						_elm_lang$html$Html_Attributes$value(model.query)
@@ -10713,37 +10729,65 @@ var _thebritican$elm_autocomplete$Main$viewElmLink = A2(
 			_elm_lang$core$Native_List.fromArray(
 				[]))
 		]));
+var _thebritican$elm_autocomplete$Main$Model = F3(
+	function (a, b, c) {
+		return {accessibleAutocomplete: a, sectionsAutocomplete: b, currentFocus: c};
+	});
+var _thebritican$elm_autocomplete$Main$None = {ctor: 'None'};
+var _thebritican$elm_autocomplete$Main$init = {accessibleAutocomplete: _thebritican$elm_autocomplete$AccessibleExample$init, sectionsAutocomplete: _thebritican$elm_autocomplete$SectionsExample$init, currentFocus: _thebritican$elm_autocomplete$Main$None};
+var _thebritican$elm_autocomplete$Main$Sections = {ctor: 'Sections'};
+var _thebritican$elm_autocomplete$Main$Simple = {ctor: 'Simple'};
 var _thebritican$elm_autocomplete$Main$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		if (_p0.ctor === 'AccessibleExample') {
-			return A2(
-				_elm_lang$core$Platform_Cmd_ops['!'],
-				_elm_lang$core$Native_Utils.update(
-					model,
-					{
-						accessibleAutocomplete: _elm_lang$core$Basics$fst(
-							A2(_thebritican$elm_autocomplete$AccessibleExample$update, _p0._0, model.accessibleAutocomplete))
-					}),
-				_elm_lang$core$Native_List.fromArray(
-					[]));
-		} else {
-			return A2(
-				_elm_lang$core$Platform_Cmd_ops['!'],
-				_elm_lang$core$Native_Utils.update(
-					model,
-					{
-						sectionsAutocomplete: _elm_lang$core$Basics$fst(
-							A2(_thebritican$elm_autocomplete$SectionsExample$update, _p0._0, model.sectionsAutocomplete))
-					}),
-				_elm_lang$core$Native_List.fromArray(
-					[]));
-		}
-	});
-var _thebritican$elm_autocomplete$Main$init = {accessibleAutocomplete: _thebritican$elm_autocomplete$AccessibleExample$init, sectionsAutocomplete: _thebritican$elm_autocomplete$SectionsExample$init};
-var _thebritican$elm_autocomplete$Main$Model = F2(
-	function (a, b) {
-		return {accessibleAutocomplete: a, sectionsAutocomplete: b};
+		var newModel = function () {
+			var _p0 = A2(_elm_lang$core$Debug$log, 'msg', msg);
+			if (_p0.ctor === 'AccessibleExample') {
+				var _p2 = _p0._0;
+				var toggleFocus = F2(
+					function (autoMsg, model) {
+						var _p1 = autoMsg;
+						if (_p1.ctor === 'OnFocus') {
+							return _elm_lang$core$Native_Utils.update(
+								model,
+								{currentFocus: _thebritican$elm_autocomplete$Main$Simple});
+						} else {
+							return model;
+						}
+					});
+				return A2(
+					toggleFocus,
+					_p2,
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							accessibleAutocomplete: _elm_lang$core$Basics$fst(
+								A2(_thebritican$elm_autocomplete$AccessibleExample$update, _p2, model.accessibleAutocomplete))
+						}));
+			} else {
+				var _p4 = _p0._0;
+				var toggleFocus = F2(
+					function (autoMsg, model) {
+						var _p3 = autoMsg;
+						if (_p3.ctor === 'OnFocus') {
+							return _elm_lang$core$Native_Utils.update(
+								model,
+								{currentFocus: _thebritican$elm_autocomplete$Main$Sections});
+						} else {
+							return model;
+						}
+					});
+				return A2(
+					toggleFocus,
+					_p4,
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							sectionsAutocomplete: _elm_lang$core$Basics$fst(
+								A2(_thebritican$elm_autocomplete$SectionsExample$update, _p4, model.sectionsAutocomplete))
+						}));
+			}
+		}();
+		return {ctor: '_Tuple2', _0: newModel, _1: _elm_lang$core$Platform_Cmd$none};
 	});
 var _thebritican$elm_autocomplete$Main$SectionsExample = function (a) {
 	return {ctor: 'SectionsExample', _0: a};
@@ -10801,18 +10845,21 @@ var _thebritican$elm_autocomplete$Main$AccessibleExample = function (a) {
 	return {ctor: 'AccessibleExample', _0: a};
 };
 var _thebritican$elm_autocomplete$Main$subscriptions = function (model) {
-	return _elm_lang$core$Platform_Sub$batch(
-		_elm_lang$core$Native_List.fromArray(
-			[
-				A2(
+	var _p5 = model.currentFocus;
+	switch (_p5.ctor) {
+		case 'Simple':
+			return A2(
 				_elm_lang$core$Platform_Sub$map,
 				_thebritican$elm_autocomplete$Main$AccessibleExample,
-				_thebritican$elm_autocomplete$AccessibleExample$subscriptions(model.accessibleAutocomplete)),
-				A2(
+				_thebritican$elm_autocomplete$AccessibleExample$subscriptions(model.accessibleAutocomplete));
+		case 'Sections':
+			return A2(
 				_elm_lang$core$Platform_Sub$map,
 				_thebritican$elm_autocomplete$Main$SectionsExample,
-				_thebritican$elm_autocomplete$SectionsExample$subscriptions(model.sectionsAutocomplete))
-			]));
+				_thebritican$elm_autocomplete$SectionsExample$subscriptions(model.sectionsAutocomplete));
+		default:
+			return _elm_lang$core$Platform_Sub$none;
+	}
 };
 var _thebritican$elm_autocomplete$Main$viewSimpleExample = function (autocomplete) {
 	return A2(

@@ -50,12 +50,13 @@ type Msg
     | SetAutoState Autocomplete.Msg
     | Reset
     | SelectPerson String
+    | OnFocus
     | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case Debug.log "sections" msg of
         SetQuery newQuery ->
             { model | query = newQuery, showMenu = True } ! []
 
@@ -89,6 +90,9 @@ update msg model =
             }
                 ! []
 
+        OnFocus ->
+            model ! []
+
         NoOp ->
             model ! []
 
@@ -112,6 +116,7 @@ view model =
         div []
             [ input
                 [ onInput SetQuery
+                , onFocus OnFocus
                 , onWithOptions "keydown" options dec
                 , class "autocomplete-input"
                 , value model.query
