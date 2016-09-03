@@ -101,7 +101,7 @@ viewApp model =
 viewHeader : Model -> Html Msg
 viewHeader model =
     div [ class "section header" ]
-        [ h1 [ class "header-text" ] [ text "Elm Autocomplete" ]
+        [ h1 [ class "section-title" ] [ text "Elm Autocomplete" ]
         , viewLogo
         , p [ class "header-description" ] [ text "A reusable, navigable menu for all your text input needs." ]
         , a
@@ -131,7 +131,7 @@ viewLogo =
 viewExamples : Model -> Html Msg
 viewExamples model =
     div [ class "section examples" ]
-        [ h1 [] [ text "Examples" ]
+        [ h1 [ class "section-title" ] [ text "Examples" ]
         , viewSimpleExample model.accessibleAutocomplete
         , viewSectionsExample model.sectionsAutocomplete
         ]

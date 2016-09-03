@@ -10608,7 +10608,7 @@ var _thebritican$elm_autocomplete$Main$viewHeader = function (model) {
 				_elm_lang$html$Html$h1,
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$html$Html_Attributes$class('header-text')
+						_elm_lang$html$Html_Attributes$class('section-title')
 					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
@@ -10857,7 +10857,9 @@ var _thebritican$elm_autocomplete$Main$viewExamples = function (model) {
 				A2(
 				_elm_lang$html$Html$h1,
 				_elm_lang$core$Native_List.fromArray(
-					[]),
+					[
+						_elm_lang$html$Html_Attributes$class('section-title')
+					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html$text('Examples')
