@@ -1,4 +1,4 @@
-module Main exposing (..)
+module AccessibleExample exposing (..)
 
 import Autocomplete
 import Html exposing (..)

@@ -1,0 +1,93 @@
+.logo:hover .green-part {
+  -webkit-transform: rotate(45deg) translate(79px, -65.5px);
+          transform: rotate(45deg) translate(79px, -65.5px);
+}
+.logo:hover .green-part:after {
+  -webkit-transform: rotate(-90deg) translate(0px, -66px) skewY(45deg);
+          transform: rotate(-90deg) translate(0px, -66px) skewY(45deg);
+}
+.logo:hover .yellow.triangle {
+  -webkit-transform: translate(79px, 31px) rotate(90deg) scale(0.47);
+          transform: translate(79px, 31px) rotate(90deg) scale(0.47);
+}
+.logo:hover .yellow.triangle:after {
+  -webkit-transform: translate(-160px, 40px) rotate(-90deg);
+          transform: translate(-160px, 40px) rotate(-90deg);
+}
+.logo:hover .blue.triangle {
+  -webkit-transform: translate(32px, 32px) rotate(180deg);
+          transform: translate(32px, 32px) rotate(180deg);
+}
+.logo:hover .blue.triangle:after {
+  -webkit-transform: rotate(45deg) scale(0.7) translate(-89px, 126px);
+          transform: rotate(45deg) scale(0.7) translate(-89px, 126px);
+}
+.logo:hover .gray.triangle {
+  -webkit-transform: rotate(-90deg);
+          transform: rotate(-90deg);
+}
+
+.logo * {
+  margin-left: -40px;
+  margin-top: -40px;
+  position: absolute;
+  box-sizing: border-box;
+  -webkit-transition: all 0.5s linear;
+  transition: all 0.5s linear;
+}
+
+.triangle, .triangle:after {
+  width: 0;
+  height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-top: 60px solid #FFF;
+}
+
+.green-part {
+  -webkit-transform: rotate(0deg) translate(56px, -13px);
+          transform: rotate(0deg) translate(56px, -13px);
+}
+.green-part, .green-part:after {
+  width: 41px;
+  height: 41px;
+  background-color: #92d961;
+}
+.green-part:after {
+  content: "";
+  display: block;
+  -webkit-transform: rotate(-90deg) translate(0px, -65px) skewY(45deg);
+          transform: rotate(-90deg) translate(0px, -65px) skewY(45deg);
+}
+
+.yellow.triangle {
+  border-top-color: #ffb03a;
+  -webkit-transform: translate(49px, -12px) rotate(45deg) scale(0.47);
+          transform: translate(49px, -12px) rotate(45deg) scale(0.47);
+}
+.yellow.triangle:after {
+  content: "";
+  display: block;
+  border-top-color: #ffb03a;
+  -webkit-transform: translate(-157px, 38px) rotate(-90deg);
+          transform: translate(-157px, 38px) rotate(-90deg);
+}
+
+.blue.triangle {
+  border-top-color: #50c3d4;
+  -webkit-transform: translate(81px, 30px) rotate(180deg);
+          transform: translate(81px, 30px) rotate(180deg);
+}
+.blue.triangle:after {
+  content: "";
+  display: block;
+  border-top-color: #50c3d4;
+  -webkit-transform: rotate(180deg) scale(0.7) translate(-164px, 12px);
+          transform: rotate(180deg) scale(0.7) translate(-164px, 12px);
+}
+
+.gray.triangle {
+  border-top-color: #6a7789;
+  -webkit-transform: rotate(0deg) translate(18px, 30px);
+          transform: rotate(0deg) translate(18px, 30px);
+}

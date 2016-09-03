@@ -1,0 +1,49 @@
+.elm-link {
+  position: absolute;
+  left: 1em;
+  margin-top: 1em;
+}
+
+.elm-link-image {
+  width: 28px;
+}
+
+body {
+  background-color: #60B5CC;
+  height: 100vh;
+  overflow: scroll;
+  color: white;
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  padding: 100px 0;
+  background-color: rgb(18, 22, 32);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 400px;
+}
+
+.header-text {
+  font-weight: 300;
+  font-size: 50px;
+}
+
+.header-description {
+  font-size: 20px;
+}
