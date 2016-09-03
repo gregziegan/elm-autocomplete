@@ -144,7 +144,9 @@ viewSimpleExample autocomplete =
             [ h2 [] [ text "Simple" ]
             , p [] [ text "A list of presidents" ]
             ]
-        , Html.map AccessibleExample (AccessibleExample.view autocomplete)
+        , div [ class "example-autocomplete" ]
+            [ Html.map AccessibleExample (AccessibleExample.view autocomplete)
+            ]
         ]
 
 
@@ -155,7 +157,7 @@ viewSectionsExample autocomplete =
             [ h2 [] [ text "Sections" ]
             , p [] [ text "Presidents sectioned by century" ]
             ]
-        , Html.map SectionsExample (SectionsExample.view autocomplete)
+        , div [ class "example-autocomplete" ] [ Html.map SectionsExample (SectionsExample.view autocomplete) ]
         ]
 
 

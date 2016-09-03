@@ -60,7 +60,7 @@ body {
 .example {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   width: 680px;
   height: 150px;
 }
@@ -69,6 +69,13 @@ body {
   display: flex;
   flex-direction: column;
   width: 300px;
+}
+
+.example-autocomplete {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  width: 200px;
 }
 
 .section {

@@ -10783,9 +10783,18 @@ var _thebritican$elm_autocomplete$Main$viewSectionsExample = function (autocompl
 							]))
 					])),
 				A2(
-				_elm_lang$html$Html_App$map,
-				_thebritican$elm_autocomplete$Main$SectionsExample,
-				_thebritican$elm_autocomplete$SectionsExample$view(autocomplete))
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('example-autocomplete')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html_App$map,
+						_thebritican$elm_autocomplete$Main$SectionsExample,
+						_thebritican$elm_autocomplete$SectionsExample$view(autocomplete))
+					]))
 			]));
 };
 var _thebritican$elm_autocomplete$Main$AccessibleExample = function (a) {
@@ -10840,9 +10849,18 @@ var _thebritican$elm_autocomplete$Main$viewSimpleExample = function (autocomplet
 							]))
 					])),
 				A2(
-				_elm_lang$html$Html_App$map,
-				_thebritican$elm_autocomplete$Main$AccessibleExample,
-				_thebritican$elm_autocomplete$AccessibleExample$view(autocomplete))
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('example-autocomplete')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html_App$map,
+						_thebritican$elm_autocomplete$Main$AccessibleExample,
+						_thebritican$elm_autocomplete$AccessibleExample$view(autocomplete))
+					]))
 			]));
 };
 var _thebritican$elm_autocomplete$Main$viewExamples = function (model) {

@@ -50,9 +50,9 @@
     min-width: 120px;
     color: black;
     font-size: 12px;
-    opacity: 0.5;
     padding: 4px;
     border-radius: 4px;
+    background-color: white;
 }
 
 .autocomplete-section-list {
