@@ -71,6 +71,10 @@ body {
   width: 300px;
 }
 
+.example-title {
+  font-weight: 300;
+}
+
 .example-autocomplete {
   display: flex;
   flex-direction: column;
@@ -91,7 +95,7 @@ body {
 
 .footer {
   background-color: #92d961;
-  height: 200px;
+  height: 120px;
 }
 
 .footer-link {

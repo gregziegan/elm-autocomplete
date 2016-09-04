@@ -9144,7 +9144,7 @@ var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$reset = F2(
 		return _p11.separateSelections ? {key: _elm_lang$core$Maybe$Nothing, mouse: _p12.mouse} : _thebritican$elm_autocomplete$Autocomplete_Autocomplete$empty;
 	});
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirst = F3(
-	function (data, config, state) {
+	function (config, data, state) {
 		var _p13 = config;
 		var toId = _p13.toId;
 		var separateSelections = _p13.separateSelections;
@@ -9169,18 +9169,18 @@ var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirst = F3(
 		}
 	});
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirstItem = F4(
-	function (data, config, howManyToShow, state) {
+	function (config, data, howManyToShow, state) {
 		return A3(
 			_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirst,
-			A2(_elm_lang$core$List$take, howManyToShow, data),
 			config,
+			A2(_elm_lang$core$List$take, howManyToShow, data),
 			state);
 	});
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToLastItem = F4(
-	function (data, config, howManyToShow, state) {
+	function (config, data, howManyToShow, state) {
 		var reversedData = _elm_lang$core$List$reverse(
 			A2(_elm_lang$core$List$take, howManyToShow, data));
-		return A3(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirst, reversedData, config, state);
+		return A3(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirst, config, reversedData, state);
 	});
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$trickyMap = _thebritican$elm_autocomplete$Native_Tricks.trickyMap;
 var _thebritican$elm_autocomplete$Autocomplete_Autocomplete$State = F2(
@@ -9492,18 +9492,18 @@ var _thebritican$elm_autocomplete$Autocomplete$reset = F2(
 			A2(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$reset, _p2._0, _p3._0));
 	});
 var _thebritican$elm_autocomplete$Autocomplete$resetToFirstItem = F4(
-	function (data, _p5, howManyToShow, _p4) {
+	function (_p5, data, howManyToShow, _p4) {
 		var _p6 = _p5;
 		var _p7 = _p4;
 		return _thebritican$elm_autocomplete$Autocomplete$State(
-			A4(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirstItem, data, _p6._0, howManyToShow, _p7._0));
+			A4(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToFirstItem, _p6._0, data, howManyToShow, _p7._0));
 	});
 var _thebritican$elm_autocomplete$Autocomplete$resetToLastItem = F4(
-	function (data, _p9, howManyToShow, _p8) {
+	function (_p9, data, howManyToShow, _p8) {
 		var _p10 = _p9;
 		var _p11 = _p8;
 		return _thebritican$elm_autocomplete$Autocomplete$State(
-			A4(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToLastItem, data, _p10._0, howManyToShow, _p11._0));
+			A4(_thebritican$elm_autocomplete$Autocomplete_Autocomplete$resetToLastItem, _p10._0, data, howManyToShow, _p11._0));
 	});
 var _thebritican$elm_autocomplete$Autocomplete$update = F5(
 	function (_p14, _p13, howManyToShow, _p12, data) {
@@ -9863,8 +9863,8 @@ var _thebritican$elm_autocomplete$AccessibleExample$update = F2(
 								{
 									autoState: A4(
 										_thebritican$elm_autocomplete$Autocomplete$resetToLastItem,
-										A2(_thebritican$elm_autocomplete$AccessibleExample$acceptablePeople, model.query, model.people),
 										_thebritican$elm_autocomplete$AccessibleExample$updateConfig,
+										A2(_thebritican$elm_autocomplete$AccessibleExample$acceptablePeople, model.query, model.people),
 										model.howManyToShow,
 										model.autoState),
 									selectedPerson: _elm_lang$core$List$head(
@@ -9882,8 +9882,8 @@ var _thebritican$elm_autocomplete$AccessibleExample$update = F2(
 								{
 									autoState: A4(
 										_thebritican$elm_autocomplete$Autocomplete$resetToFirstItem,
-										A2(_thebritican$elm_autocomplete$AccessibleExample$acceptablePeople, model.query, model.people),
 										_thebritican$elm_autocomplete$AccessibleExample$updateConfig,
+										A2(_thebritican$elm_autocomplete$AccessibleExample$acceptablePeople, model.query, model.people),
 										model.howManyToShow,
 										model.autoState),
 									selectedPerson: _elm_lang$core$List$head(
@@ -10339,12 +10339,15 @@ var _thebritican$elm_autocomplete$SectionsExample$SelectPerson = function (a) {
 var _thebritican$elm_autocomplete$SectionsExample$Reset = {ctor: 'Reset'};
 var _thebritican$elm_autocomplete$SectionsExample$updateConfig = _thebritican$elm_autocomplete$Autocomplete$updateConfig(
 	{
+		toId: function (_) {
+			return _.name;
+		},
 		onKeyDown: F2(
 			function (code, maybeId) {
 				return (_elm_lang$core$Native_Utils.eq(code, 38) || _elm_lang$core$Native_Utils.eq(code, 40)) ? _elm_lang$core$Maybe$Nothing : (_elm_lang$core$Native_Utils.eq(code, 13) ? A2(_elm_lang$core$Maybe$map, _thebritican$elm_autocomplete$SectionsExample$SelectPerson, maybeId) : _elm_lang$core$Maybe$Just(_thebritican$elm_autocomplete$SectionsExample$Reset));
 			}),
-		onTooLow: _elm_lang$core$Maybe$Nothing,
-		onTooHigh: _elm_lang$core$Maybe$Nothing,
+		onTooLow: _elm_lang$core$Maybe$Just(_thebritican$elm_autocomplete$SectionsExample$Reset),
+		onTooHigh: _elm_lang$core$Maybe$Just(_thebritican$elm_autocomplete$SectionsExample$Reset),
 		onMouseEnter: function (_p6) {
 			return _elm_lang$core$Maybe$Nothing;
 		},
@@ -10355,16 +10358,13 @@ var _thebritican$elm_autocomplete$SectionsExample$updateConfig = _thebritican$el
 			return _elm_lang$core$Maybe$Just(
 				_thebritican$elm_autocomplete$SectionsExample$SelectPerson(id));
 		},
-		toId: function (_) {
-			return _.name;
-		},
 		separateSelections: true
 	});
 var _thebritican$elm_autocomplete$SectionsExample$update = F2(
 	function (msg, model) {
 		update:
 		while (true) {
-			var _p8 = msg;
+			var _p8 = A2(_elm_lang$core$Debug$log, 'sections', msg);
 			switch (_p8.ctor) {
 				case 'SetQuery':
 					return A2(
@@ -10407,7 +10407,12 @@ var _thebritican$elm_autocomplete$SectionsExample$update = F2(
 						_elm_lang$core$Native_Utils.update(
 							model,
 							{
-								autoState: A2(_thebritican$elm_autocomplete$Autocomplete$reset, _thebritican$elm_autocomplete$SectionsExample$updateConfig, model.autoState)
+								autoState: A4(
+									_thebritican$elm_autocomplete$Autocomplete$resetToFirstItem,
+									_thebritican$elm_autocomplete$SectionsExample$updateConfig,
+									_thebritican$elm_autocomplete$SectionsExample$acceptablePeople(model),
+									model.howManyToShow,
+									model.autoState)
 							}),
 						_elm_lang$core$Native_List.fromArray(
 							[]));
@@ -10740,7 +10745,7 @@ var _thebritican$elm_autocomplete$Main$Simple = {ctor: 'Simple'};
 var _thebritican$elm_autocomplete$Main$update = F2(
 	function (msg, model) {
 		var newModel = function () {
-			var _p0 = A2(_elm_lang$core$Debug$log, 'msg', msg);
+			var _p0 = msg;
 			if (_p0.ctor === 'AccessibleExample') {
 				var _p2 = _p0._0;
 				var toggleFocus = F2(
@@ -10810,9 +10815,11 @@ var _thebritican$elm_autocomplete$Main$viewSectionsExample = function (autocompl
 				_elm_lang$core$Native_List.fromArray(
 					[
 						A2(
-						_elm_lang$html$Html$h2,
+						_elm_lang$html$Html$h1,
 						_elm_lang$core$Native_List.fromArray(
-							[]),
+							[
+								_elm_lang$html$Html_Attributes$class('example-title')
+							]),
 						_elm_lang$core$Native_List.fromArray(
 							[
 								_elm_lang$html$Html$text('Sections')
@@ -10823,7 +10830,7 @@ var _thebritican$elm_autocomplete$Main$viewSectionsExample = function (autocompl
 							[]),
 						_elm_lang$core$Native_List.fromArray(
 							[
-								_elm_lang$html$Html$text('Presidents sectioned by century')
+								_elm_lang$html$Html$text('Presidents grouped by birth century')
 							]))
 					])),
 				A2(
@@ -10879,9 +10886,11 @@ var _thebritican$elm_autocomplete$Main$viewSimpleExample = function (autocomplet
 				_elm_lang$core$Native_List.fromArray(
 					[
 						A2(
-						_elm_lang$html$Html$h2,
+						_elm_lang$html$Html$h1,
 						_elm_lang$core$Native_List.fromArray(
-							[]),
+							[
+								_elm_lang$html$Html_Attributes$class('example-title')
+							]),
 						_elm_lang$core$Native_List.fromArray(
 							[
 								_elm_lang$html$Html$text('Simple')
