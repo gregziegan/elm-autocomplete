@@ -107,16 +107,16 @@ reset (UpdateConfig config) (State state) =
 
 {-| Like `reset` but defaults to a keyboard selection of the first item.
 -}
-resetToFirstItem : List data -> UpdateConfig msg data -> Int -> State -> State
-resetToFirstItem data (UpdateConfig config) howManyToShow (State state) =
-    State <| Internal.resetToFirstItem data config howManyToShow state
+resetToFirstItem : UpdateConfig msg data -> List data -> Int -> State -> State
+resetToFirstItem (UpdateConfig config) data howManyToShow (State state) =
+    State <| Internal.resetToFirstItem config data howManyToShow state
 
 
 {-| Like `reset` but defaults to a keyboard selection of the last item.
 -}
-resetToLastItem : List data -> UpdateConfig msg data -> Int -> State -> State
-resetToLastItem data (UpdateConfig config) howManyToShow (State state) =
-    State <| Internal.resetToLastItem data config howManyToShow state
+resetToLastItem : UpdateConfig msg data -> List data -> Int -> State -> State
+resetToLastItem (UpdateConfig config) data howManyToShow (State state) =
+    State <| Internal.resetToLastItem config data howManyToShow state
 
 
 
@@ -137,6 +137,7 @@ type UpdateConfig msg data
 
 {-| Use this function to update the autocomplete's `State`.
 Provide the same data as your view.
+The `Int` argument is how many results you would like to show.
 -}
 update : UpdateConfig msg data -> Msg -> Int -> State -> List data -> ( State, Maybe msg )
 update (UpdateConfig config) (Msg msg) howManyToShow (State state) data =
@@ -203,11 +204,12 @@ subscription =
 Take a list of `data` and turn it into an autocomplete menu.
 The `ViewConfig` argument is the configuration for the autocomplete view.
 `ViewConfig` describes the HTML we want to show for each item and the list.
+The `Int` argument is how many results you would like to show.
 The `State` argument describes what is selected via mouse and keyboard.
 
 **Note:** The `State` and `List data` should live in your Model.
 The `ViewConfig` for the autocomplete belongs in your view code.
-`ViewConfig` should not exist in your model.
+`ViewConfig` should never exist in your model.
 Describe any potential autocomplete configurations statically.
 This pattern has been inspired by [Elm Sortable Table](http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest).
 -}
@@ -321,7 +323,7 @@ viewWithSectionsConfig config =
 
 {-| The configuration for a section of the menu.
 
-**Note:** This should not live in your model.
+**Note:** This should never live in your model.
 -}
 type SectionConfig data sectionData
     = SectionConfig (Internal.SectionConfig data sectionData)

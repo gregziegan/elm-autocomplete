@@ -1,0 +1,108 @@
+body {
+  background-color: #60B5CC;
+  height: 100vh;
+  overflow: scroll;
+  color: white;
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.elm-link {
+  position: absolute;
+  left: 1em;
+  margin-top: 1em;
+}
+
+.elm-link-image {
+  width: 28px;
+}
+
+.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  background-color: rgb(18, 22, 32);
+}
+
+.section-title {
+  font-weight: 300;
+  font-size: 50px;
+}
+
+.header-description {
+  font-size: 20px;
+}
+
+.try-it-link {
+  width: 160px;
+  font-size: 20px;
+  line-height: 45px;
+  color: white;
+  background-color: #ffb03a;
+  border-radius: 3px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.examples {
+}
+
+.example {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 680px;
+  height: 150px;
+}
+
+.example-info {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+.example-title {
+  font-weight: 300;
+}
+
+.example-autocomplete {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  width: 200px;
+}
+
+.section {
+  padding: 100px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 600px;
+}
+
+
+.footer {
+  background-color: #92d961;
+  height: 120px;
+}
+
+.footer-link {
+  text-decoration: none;
+  color: white;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}

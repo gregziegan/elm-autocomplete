@@ -1,6 +1,5 @@
 .autocomplete-menu {
-    position: absolute;
-    left: 5px;
+    position: relative;
     margin-top: 5px;
     background: white;
     color: black;
@@ -8,7 +7,6 @@
     border-radius: 3px;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
     min-width: 120px;
-    z-index: 11110 !important;
 }
 
 .autocomplete-key-item {
@@ -51,11 +49,10 @@
 .autocomplete-input {
     min-width: 120px;
     color: black;
-    position: relative;
-    display: block;
     font-size: 12px;
-    font-family: monospace;
-    opacity: 0.5;
+    padding: 4px;
+    border-radius: 4px;
+    background-color: white;
 }
 
 .autocomplete-section-list {

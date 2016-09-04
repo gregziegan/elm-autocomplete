@@ -123,13 +123,13 @@ update msg model =
                 Nothing ->
                     if toTop then
                         { model
-                            | autoState = Autocomplete.resetToLastItem (acceptablePeople model.query model.people) updateConfig model.howManyToShow model.autoState
+                            | autoState = Autocomplete.resetToLastItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
                             , selectedPerson = List.head <| List.reverse <| List.take model.howManyToShow <| (acceptablePeople model.query model.people)
                         }
                             ! []
                     else
                         { model
-                            | autoState = Autocomplete.resetToFirstItem (acceptablePeople model.query model.people) updateConfig model.howManyToShow model.autoState
+                            | autoState = Autocomplete.resetToFirstItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
                             , selectedPerson = List.head <| List.take model.howManyToShow <| (acceptablePeople model.query model.people)
                         }
                             ! []

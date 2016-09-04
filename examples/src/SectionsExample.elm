@@ -76,7 +76,7 @@ update msg model =
                         update updateMsg newModel
 
         Reset ->
-            { model | autoState = Autocomplete.reset updateConfig model.autoState } ! []
+            { model | autoState = Autocomplete.resetToFirstItem updateConfig (acceptablePeople model) model.howManyToShow model.autoState } ! []
 
         SelectPerson id ->
             { model
@@ -162,7 +162,8 @@ viewMenu model =
 updateConfig : Autocomplete.UpdateConfig Msg Person
 updateConfig =
     Autocomplete.updateConfig
-        { onKeyDown =
+        { toId = .name
+        , onKeyDown =
             \code maybeId ->
                 if code == 38 || code == 40 then
                     Nothing
@@ -170,12 +171,11 @@ updateConfig =
                     Maybe.map SelectPerson maybeId
                 else
                     Just Reset
-        , onTooLow = Nothing
-        , onTooHigh = Nothing
+        , onTooLow = Just Reset
+        , onTooHigh = Just Reset
         , onMouseEnter = \_ -> Nothing
         , onMouseLeave = \_ -> Nothing
         , onMouseClick = \id -> Just <| SelectPerson id
-        , toId = .name
         , separateSelections = True
         }
 

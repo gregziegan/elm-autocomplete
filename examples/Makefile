@@ -1,9 +1,7 @@
 ELM_OUTPUT = elm.js
-STATIC =
 BROWSER_TARGET = example.html
 
 SOURCE_DIR = src
-BUILD_DIR = build
 
 ###
 
@@ -19,26 +17,9 @@ new: clean-build all
 
 $(ELM_BUILD): elm
 
-accessible:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/AccessibleExample.elm
+demo:
+	elm make --yes Demo.elm  --output site/index.js
 
-sections:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/SectionsExample.elm
-
-styled:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/StyledExample.elm
-
-remote:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/RemoteExample.elm
-
-typeahead:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/TypeaheadExample.elm
-
-mentions:
-	elm make --yes --output $(ELM_BUILD) $(SOURCE_DIR)/MentionsExample.elm
-
-$(BUILD_DIR):
-	mkdir $(BUILD_DIR)
 
 clean:
 	rm -rf elm-stuff

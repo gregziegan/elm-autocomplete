@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/thebritican/elm-autocomplete.svg?branch=master)](https://travis-ci.org/thebritican/elm-autocomplete)
 
+## Demo
+
+Checkout the [landing page](http://thebritican.github.io/elm-autocomplete) inspired by [React Autosuggest](http://react-autosuggest.js.org/)'s page design
+
 Autocomplete menus have _just enough_ functionality to be tedious to implement again and again.
 This is a flexible library for handling the needs of many different autocompletes.
 
@@ -11,20 +15,6 @@ Make an issue if this library cannot handle your scenario and we'll investigate 
 context!
 
 I recommend looking at the [examples](https://github.com/thebritican/elm-autocomplete/tree/master/examples) before diving into the API or source code!
-
-## Examples
-
-Github mention style defaults
-
-![simple-autocomplete-elm](https://cloud.githubusercontent.com/assets/3099999/15311173/ec6c0bfa-1bac-11e6-85e1-b19f30bcdcfe.gif)
-
-Custom styles via CSS classnames. Maybe insert custom HTML for items
-
-![typeahead-elm](https://cloud.githubusercontent.com/assets/3099999/15311152/aacb0746-1bac-11e6-9e2f-b4c30cc90345.gif)
-
-Control autocomplete inside a textarea or contenteditable
-
-![mentions](https://cloud.githubusercontent.com/assets/3099999/15878393/82c18b38-2ccf-11e6-969f-ac1df4bf0f8d.gif)
 
 ## Usage Rules
 

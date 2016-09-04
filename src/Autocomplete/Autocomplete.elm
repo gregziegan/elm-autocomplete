@@ -69,13 +69,13 @@ reset { separateSelections } { key, mouse } =
         empty
 
 
-resetToFirstItem : List data -> UpdateConfig msg data -> Int -> State -> State
-resetToFirstItem data config howManyToShow state =
-    resetToFirst (List.take howManyToShow data) config state
+resetToFirstItem : UpdateConfig msg data -> List data -> Int -> State -> State
+resetToFirstItem config data howManyToShow state =
+    resetToFirst config (List.take howManyToShow data) state
 
 
-resetToFirst : List data -> UpdateConfig msg data -> State -> State
-resetToFirst data config state =
+resetToFirst : UpdateConfig msg data -> List data -> State -> State
+resetToFirst config data state =
     let
         { toId, separateSelections } =
             config
@@ -96,13 +96,13 @@ resetToFirst data config state =
                         |> setFirstItem datum
 
 
-resetToLastItem : List data -> UpdateConfig msg data -> Int -> State -> State
-resetToLastItem data config howManyToShow state =
+resetToLastItem : UpdateConfig msg data -> List data -> Int -> State -> State
+resetToLastItem config data howManyToShow state =
     let
         reversedData =
             List.reverse <| List.take howManyToShow data
     in
-        resetToFirst reversedData config state
+        resetToFirst config reversedData state
 
 
 

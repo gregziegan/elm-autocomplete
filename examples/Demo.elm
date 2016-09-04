@@ -62,7 +62,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
         newModel =
-            case Debug.log "msg" msg of
+            case msg of
                 AccessibleExample autoMsg ->
                     let
                         toggleFocus autoMsg model =
@@ -178,7 +178,7 @@ viewSimpleExample : AccessibleExample.Model -> Html Msg
 viewSimpleExample autocomplete =
     div [ class "example" ]
         [ div [ class "example-info" ]
-            [ h2 [] [ text "Simple" ]
+            [ h1 [ class "example-title" ] [ text "Simple" ]
             , p [] [ text "A list of presidents" ]
             ]
         , div [ class "example-autocomplete" ]
@@ -191,8 +191,8 @@ viewSectionsExample : SectionsExample.Model -> Html Msg
 viewSectionsExample autocomplete =
     div [ class "example" ]
         [ div [ class "example-info" ]
-            [ h2 [] [ text "Sections" ]
-            , p [] [ text "Presidents sectioned by century" ]
+            [ h1 [ class "example-title" ] [ text "Sections" ]
+            , p [] [ text "Presidents grouped by birth century" ]
             ]
         , div [ class "example-autocomplete" ] [ Html.map SectionsExample (SectionsExample.view autocomplete) ]
         ]
