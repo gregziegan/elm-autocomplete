@@ -182,12 +182,21 @@ updateConfig =
 
 viewConfig : Autocomplete.ViewWithSectionsConfig Person Century
 viewConfig =
-    Autocomplete.viewWithSectionsConfig
-        { toId = .name
-        , ul = [ class "autocomplete-list-with-sections" ]
-        , li = myLi
-        , section = sectionConfig
-        }
+    let
+        customizedLi keySelected mouseSelected person =
+            { attributes =
+                [ classList [ ( "autocomplete-item", True ), ( "key-selected", keySelected ), ( "mouse-selected", mouseSelected ) ]
+                , id person.name
+                ]
+            , children = [ Html.text person.name ]
+            }
+    in
+        Autocomplete.viewWithSectionsConfig
+            { toId = .name
+            , ul = [ class "autocomplete-list-with-sections" ]
+            , li = customizedLi
+            , section = sectionConfig
+            }
 
 
 sectionConfig : Autocomplete.SectionConfig Person Century
@@ -206,26 +215,6 @@ sectionConfig =
                         ]
                     ]
                 }
-        }
-
-
-myLi :
-    Autocomplete.KeySelected
-    -> Autocomplete.MouseSelected
-    -> Person
-    -> Autocomplete.HtmlDetails Never
-myLi keySelected mouseSelected person =
-    if keySelected then
-        { attributes = [ class "autocomplete-key-item" ]
-        , children = [ Html.text person.name ]
-        }
-    else if mouseSelected then
-        { attributes = [ class "autocomplete-mouse-item" ]
-        , children = [ Html.text person.name ]
-        }
-    else
-        { attributes = [ class "autocomplete-item" ]
-        , children = [ Html.text person.name ]
         }
 
 

@@ -1,5 +1,5 @@
 {
-    "version": "3.3.0",
+    "version": "4.0.1",
     "summary": "A customizable autocomplete component",
     "repository": "https://github.com/thebritican/elm-autocomplete.git",
     "license": "BSD3",

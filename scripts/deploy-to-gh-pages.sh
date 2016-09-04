@@ -6,7 +6,7 @@ git checkout gh-pages
 git pull origin gh-pages
 git merge master --no-edit
 cd examples
-elm-make Demo.elm --output site/index.js
+make demo
 cp site/* ..
 cd ..
 git add app.css logo.css autocomplete.css index.html index.js

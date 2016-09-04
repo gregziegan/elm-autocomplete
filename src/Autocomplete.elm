@@ -31,7 +31,7 @@ module Autocomplete
 
  I have (hopefully!) given the users of this library a large amount of customizability.
 
- I recommend looking at the [examples](https://github.com/thebritican/elm-autocomplete/tree/master/examples) before diving into the API or source code
+ I recommend looking at the [examples](https://github.com/thebritican/elm-autocomplete/tree/master/examples) before diving into the API or source code.
 
 # View
 @docs view
@@ -253,30 +253,22 @@ We would create a `ViewConfig` like so:
     import Autocomplete
     viewConfig : Autocomplete.Config Person Msg
     viewConfig =
-      Autocomplete.viewConfig
-        { toId = .name
-        , ul = [ class "autocomplete-list" ]
-        , li = customizedLi
-        }
-
-    customizedLi :
-        Autocomplete.KeySelected
-        -> Autocomplete.MouseSelected
-        -> Person
-        -> Autocomplete.HtmlDetails Never
-    customizedLi keySelected mouseSelected person =
-        if keySelected then
-            { attributes = [ class "autocomplete-key-item" ]
-            , children = [ Html.text person.name ]
-            }
-        else if mouseSelected then
-            { attributes = [ class "autocomplete-mouse-item" ]
-            , children = [ Html.text person.name ]
-            }
-        else
-            { attributes = [ class "autocomplete-item" ]
-            , children = [ Html.text person.name ]
-            }
+      let
+          customizedLi keySelected mouseSelected person =
+              { attributes =
+                  [ classList [ ( "autocomplete-item", True )
+                              , ( "key-selected", keySelected )
+                              , ( "mouse-selected", mouseSelected )
+                              ]
+                  ]
+              , children = [ Html.text person.name ]
+              }
+      in
+          Autocomplete.viewConfig
+              { toId = .name
+              , ul = [ class "autocomplete-list" ]
+              , li = customizedLi
+              }
 You provide the following information in your autocomplete configuration:
   - `toId` &mdash; turn a `Person` into a unique ID. This lets us use
   [`Html.Keyed`][keyed] under the hood to make sorting faster.

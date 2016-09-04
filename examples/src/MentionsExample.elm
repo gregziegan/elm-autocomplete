@@ -115,9 +115,9 @@ update msg model =
             { model
                 | autoState =
                     if toTop then
-                        Autocomplete.resetToFirstItem (acceptablePeople model.query model.people) updateConfig model.howManyToShow model.autoState
+                        Autocomplete.resetToFirstItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
                     else
-                        Autocomplete.resetToLastItem (acceptablePeople model.query model.people) updateConfig model.howManyToShow model.autoState
+                        Autocomplete.resetToLastItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
             }
                 ! []
 
@@ -179,7 +179,6 @@ viewEditor : Model -> Html Msg
 viewEditor model =
     textarea
         [ onInput SetValue
-          -- , onWithOptions "keydown" options dec
         , value model.value
         ]
         []
@@ -223,31 +222,20 @@ updateConfig =
 
 viewConfig : Autocomplete.ViewConfig Person
 viewConfig =
-    Autocomplete.viewConfig
-        { toId = .name
-        , ul = [ class "autocomplete-list" ]
-        , li = customizedLi
-        }
-
-
-customizedLi :
-    Autocomplete.KeySelected
-    -> Autocomplete.MouseSelected
-    -> Person
-    -> Autocomplete.HtmlDetails Never
-customizedLi keySelected mouseSelected person =
-    if keySelected then
-        { attributes = [ class "autocomplete-key-item" ]
-        , children = [ Html.text person.name ]
-        }
-    else if mouseSelected then
-        { attributes = [ class "autocomplete-mouse-item" ]
-        , children = [ Html.text person.name ]
-        }
-    else
-        { attributes = [ class "autocomplete-item" ]
-        , children = [ Html.text person.name ]
-        }
+    let
+        customizedLi keySelected mouseSelected person =
+            { attributes =
+                [ classList [ ( "autocomplete-item", True ), ( "key-selected", keySelected || mouseSelected ) ]
+                , id person.name
+                ]
+            , children = [ Html.text person.name ]
+            }
+    in
+        Autocomplete.viewConfig
+            { toId = .name
+            , ul = [ class "autocomplete-list" ]
+            , li = customizedLi
+            }
 
 
 
