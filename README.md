@@ -87,7 +87,7 @@ update msg { autoState, query, people, howManyToShow } =
         { model | autoState = newState }
 
 -- setup for your autocomplete view
-viewConfig : Autocomplete.ViewConfig Msg Person
+viewConfig : Autocomplete.ViewConfig Person
 viewConfig =
   let
     customizedLi keySelected mouseSelected person =
