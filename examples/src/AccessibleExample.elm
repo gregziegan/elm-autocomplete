@@ -4,7 +4,6 @@ import Autocomplete
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.App as Html
 import String
 import Json.Decode as Json
 import Json.Encode as JE
@@ -12,7 +11,6 @@ import Dom
 import Task
 
 
-main : Program Never
 main =
     Html.program
         { init = init ! []
@@ -151,7 +149,7 @@ update msg model =
                     setQuery model id
                         |> resetMenu
             in
-                ( newModel, Task.perform (\err -> NoOp) (\_ -> NoOp) (Dom.focus "president-input") )
+                ( newModel, Task.attempt (\_ -> NoOp) (Dom.focus "president-input") )
 
         PreviewPerson id ->
             { model | selectedPerson = Just <| getPersonAtId model.people id } ! []
@@ -200,7 +198,7 @@ view model =
             { preventDefault = True, stopPropagation = False }
 
         dec =
-            (Json.customDecoder keyCode
+            (Json.map
                 (\code ->
                     if code == 38 || code == 40 then
                         Ok NoOp
@@ -209,7 +207,19 @@ view model =
                     else
                         Err "not handling that key"
                 )
+                keyCode
             )
+                |> Json.andThen
+                    fromResult
+
+        fromResult : Result String a -> Json.Decoder a
+        fromResult result =
+            case result of
+                Ok val ->
+                    Json.succeed val
+
+                Err reason ->
+                    Json.fail reason
 
         menu =
             if model.showMenu then

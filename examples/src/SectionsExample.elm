@@ -4,12 +4,11 @@ import Autocomplete
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.App as Html
 import String
 import Json.Decode as Json
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
     Html.program
         { init = init ! []
@@ -104,14 +103,26 @@ view model =
             { preventDefault = True, stopPropagation = False }
 
         dec =
-            (Json.customDecoder keyCode
+            (Json.map
                 (\code ->
                     if code == 38 || code == 40 then
                         Ok NoOp
                     else
                         Err "not handling that key"
                 )
+                keyCode
             )
+                |> Json.andThen
+                    fromResult
+
+        fromResult : Result String a -> Json.Decoder a
+        fromResult result =
+            case result of
+                Ok val ->
+                    Json.succeed val
+
+                Err reason ->
+                    Json.fail reason
     in
         div []
             [ input

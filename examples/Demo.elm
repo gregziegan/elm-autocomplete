@@ -1,15 +1,15 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.App as Html
 import Html.Attributes exposing (..)
+import Tuple
 import AccessibleExample
 import SectionsExample
 import Svg exposing (path)
 import Svg.Attributes exposing (d, fill, viewBox)
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
     Html.program
         { init = init ! []
@@ -73,7 +73,7 @@ update msg model =
                                 _ ->
                                     model
                     in
-                        { model | accessibleAutocomplete = fst <| AccessibleExample.update autoMsg model.accessibleAutocomplete }
+                        { model | accessibleAutocomplete = Tuple.first <| AccessibleExample.update autoMsg model.accessibleAutocomplete }
                             |> toggleFocus autoMsg
 
                 SectionsExample autoMsg ->
@@ -86,7 +86,7 @@ update msg model =
                                 _ ->
                                     model
                     in
-                        { model | sectionsAutocomplete = fst <| SectionsExample.update autoMsg model.sectionsAutocomplete }
+                        { model | sectionsAutocomplete = Tuple.first <| SectionsExample.update autoMsg model.sectionsAutocomplete }
                             |> toggleFocus autoMsg
     in
         ( newModel, Cmd.none )
@@ -213,11 +213,11 @@ viewFooter =
 
 
 footerLink : String -> String -> Html Msg
-footerLink url text' =
+footerLink url text_ =
     a
         [ href url
         , class "footer-link"
         , target "_blank"
         , rel "noopenner noreferrer"
         ]
-        [ text text' ]
+        [ text text_ ]
