@@ -20,11 +20,11 @@ type alias Model =
     }
 
 
-init : Model
+init : String -> String -> Model
 init query selectedId =
     { menuState = Menu.empty
     , query = query
-    , selectedId = selectedId
+    , selectedId = Just selectedId
     , showMenu = False
     }
 
@@ -44,108 +44,126 @@ type Msg
 
 update : Config item -> List item -> Int -> Msg -> Model -> ( Model, Cmd Msg )
 update config items howManyToShow msg model =
-    case msg of
-        SetQuery newQuery ->
-            let
-                showMenu =
-                    not << List.isEmpty <| config.filterItems newQuery items
-            in
-                { model | query = newQuery, showMenu = showMenu, selectedId = Nothing } ! []
+    let
+        menuConfig =
+            menuUpdateConfig config
+    in
+        case msg of
+            SetQuery newQuery ->
+                let
+                    showMenu =
+                        not << List.isEmpty <| config.filterItems newQuery items
+                in
+                    { model | query = newQuery, showMenu = showMenu, selectedId = Nothing } ! []
 
-        SetMenuState menuMsg ->
-            let
-                ( newState, maybeMsg ) =
-                    Menu.update menuUpdateConfig menuMsg howManyToShow model.menuState (config.filterItems model.query items)
+            SetMenuState menuMsg ->
+                let
+                    ( newState, maybeMsg ) =
+                        Menu.update menuConfig menuMsg howManyToShow model.menuState (config.filterItems model.query items)
 
-                newModel =
-                    { model | menuState = newState }
-            in
-                case maybeMsg of
-                    Nothing ->
-                        newModel ! []
-
-                    Just updateMsg ->
-                        update updateMsg newModel
-
-        HandleEscape ->
-            let
-                validOptions =
-                    not <| List.isEmpty (config.filterItems model.query items)
-
-                handleEscape =
-                    if validOptions then
-                        model
-                            |> removeSelection
-                            |> resetMenu
-                    else
-                        { model | query = "" }
-                            |> removeSelection
-                            |> resetMenu
-
-                escapedModel =
-                    case model.selectedId of
-                        Just id ->
-                            if model.query == id then
-                                model
-                                    |> resetInput
-                            else
-                                handleEscape
-
+                    newModel =
+                        { model | menuState = newState }
+                in
+                    case maybeMsg of
                         Nothing ->
-                            handleEscape
-            in
-                escapedModel ! []
+                            newModel ! []
 
-        Wrap toTop ->
-            case model.selectedId of
-                Just selectedId ->
-                    update Reset model
+                        Just updateMsg ->
+                            update config items howManyToShow updateMsg newModel
 
-                Nothing ->
-                    if toTop then
-                        { model
-                            | menuState = Menu.resetToLastItem menuUpdateConfig (config.filterItems model.query items) howManyToShow model.menuState
-                            , selectedId = List.head <| List.reverse <| List.take howManyToShow <| (config.filterItems model.query items)
-                        }
-                            ! []
-                    else
-                        { model
-                            | menuState = Menu.resetToFirstItem menuUpdateConfig (config.filterItems model.query items) howManyToShow model.menuState
-                            , selectedId = List.head <| List.take howManyToShow <| (config.filterItems model.query items)
-                        }
-                            ! []
+            HandleEscape ->
+                let
+                    validOptions =
+                        not <| List.isEmpty (config.filterItems model.query items)
 
-        Reset ->
-            { model | menuState = Menu.reset menuUpdateConfig model.menuState, selectedId = Nothing } ! []
+                    handleEscape =
+                        if validOptions then
+                            model
+                                |> removeSelection
+                                |> resetMenu
+                        else
+                            model
+                                |> resetQuery
+                                |> removeSelection
+                                |> resetMenu
 
-        SelectItemKeyboard id ->
-            let
-                newModel =
-                    setQuery config model id items
-                        |> resetMenu
-            in
-                newModel ! []
+                    shouldResetInput : String -> String -> Model
+                    shouldResetInput query id =
+                        if query == id then
+                            resetInput model
+                        else
+                            model
 
-        SelectItemMouse id ->
-            let
-                newModel =
-                    setQuery config model id
-                        |> resetMenu
-            in
-                ( newModel, Task.attempt (\_ -> NoOp) (Dom.focus "autocomplete-input") )
+                    escapedModel =
+                        Maybe.map (shouldResetInput model.query) model.selectedId
+                            |> Maybe.withDefault handleEscape
+                in
+                    escapedModel ! []
 
-        PreviewItem id ->
-            { model | selectedId = getItemAtId config items id } ! []
+            Wrap toTop ->
+                case model.selectedId of
+                    Just selectedId ->
+                        update config items howManyToShow Reset model
 
-        OnFocus ->
-            model ! []
+                    Nothing ->
+                        if toTop then
+                            { model
+                                | menuState = Menu.resetToLastItem menuConfig (config.filterItems model.query items) howManyToShow model.menuState
+                                , selectedId =
+                                    config.filterItems model.query items
+                                        |> List.take howManyToShow
+                                        |> List.reverse
+                                        |> List.head
+                                        |> Maybe.map config.toId
+                            }
+                                ! []
+                        else
+                            { model
+                                | menuState = Menu.resetToFirstItem menuConfig (config.filterItems model.query items) howManyToShow model.menuState
+                                , selectedId =
+                                    config.filterItems model.query items
+                                        |> List.take howManyToShow
+                                        |> List.head
+                                        |> Maybe.map config.toId
+                            }
+                                ! []
 
-        NoOp ->
-            model ! []
+            Reset ->
+                { model | menuState = Menu.reset menuConfig model.menuState, selectedId = Nothing } ! []
+
+            SelectItemKeyboard id ->
+                let
+                    newModel =
+                        setQuery config items model id
+                            |> resetMenu
+                in
+                    newModel ! []
+
+            SelectItemMouse id ->
+                let
+                    newModel =
+                        setQuery config items model id
+                            |> resetMenu
+                in
+                    ( newModel, Task.attempt (\_ -> NoOp) (Dom.focus "autocomplete-input") )
+
+            PreviewItem id ->
+                { model | selectedId = Just id } ! []
+
+            OnFocus ->
+                model ! []
+
+            NoOp ->
+                model ! []
+
+
+resetQuery model =
+    { model | query = "" }
 
 
 resetInput model =
-    { model | query = "" }
+    model
+        |> resetQuery
         |> removeSelection
         |> resetMenu
 
@@ -159,12 +177,12 @@ getItemAtId config items id =
         |> List.head
 
 
-setQuery config model items id =
+setQuery config items model id =
     { model
         | query =
-            Maybe.map .name (getItemAtId config items id)
+            Maybe.map config.value (getItemAtId config items id)
                 |> Maybe.withDefault ""
-        , selectedId = Maybe.map .id (getItemAtId config items id)
+        , selectedId = Maybe.map config.toId (getItemAtId config items id)
     }
 
 
@@ -239,20 +257,23 @@ view config items howManyToShow model =
                 []
 
         query =
-            Maybe.map config.value (getItemAtId config items id)
-                |> Maybe.withDefault query
+            model.selectedId
+                |> Maybe.andThen (getItemAtId config items)
+                |> Maybe.map config.value
+                |> Maybe.withDefault model.query
+
+        activeDescendantAttr itemValue =
+            attribute "aria-activedescendant" itemValue
+
+        addToAttrs attrs ariaAttr =
+            ariaAttr :: attrs
 
         activeDescendant attributes =
-            case model.selectedId of
-                Just person ->
-                    (attribute "aria-activedescendant"
-                        config.value
-                        person
-                    )
-                        :: attributes
-
-                Nothing ->
-                    attributes
+            model.selectedId
+                |> Maybe.andThen (getItemAtId config items)
+                |> Maybe.map (activeDescendantAttr << config.value)
+                |> Maybe.map (addToAttrs attributes)
+                |> Maybe.withDefault attributes
     in
         div []
             ([ input
@@ -279,7 +300,7 @@ view config items howManyToShow model =
 viewMenu : Config item -> List item -> Int -> Model -> Html Msg
 viewMenu config items howManyToShow model =
     div [ class "autocomplete-menu" ]
-        [ Html.map SetMenuState (Menu.view viewConfig howManyToShow model.menuState (config.filterItems model.query items)) ]
+        [ Html.map SetMenuState (Menu.view (viewConfig config) howManyToShow model.menuState (config.filterItems model.query items)) ]
 
 
 viewConfig : Config item -> Menu.ViewConfig item
