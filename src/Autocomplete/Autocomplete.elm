@@ -26,7 +26,6 @@ module Autocomplete.Autocomplete
 
 import Char exposing (KeyCode)
 import Html exposing (Html, Attribute)
-import Html.App
 import Html.Keyed
 import Html.Events
 import Keyboard
@@ -281,7 +280,7 @@ viewSection config state section =
             List.map trickyMap sectionNode.attributes
 
         customChildren =
-            List.map (Html.App.map (\html -> NoOp)) sectionNode.children
+            List.map (Html.map (\html -> NoOp)) sectionNode.children
 
         getKeyedItems datum =
             ( config.toId datum, viewData config state datum )
@@ -327,7 +326,7 @@ viewData { toId, li } { key, mouse } data =
                     False
     in
         Html.li customLiAttr
-            (List.map (Html.App.map (\html -> NoOp)) listItemData.children)
+            (List.map (Html.map (\html -> NoOp)) listItemData.children)
 
 
 viewList : ViewConfig data -> Int -> State -> List data -> Html Msg
@@ -373,7 +372,7 @@ viewItem { toId, li } { key, mouse } data =
                     False
     in
         Html.li customLiAttr
-            (List.map (Html.App.map (\html -> NoOp)) listItemData.children)
+            (List.map (Html.map (\html -> NoOp)) listItemData.children)
 
 
 type alias HtmlDetails msg =
