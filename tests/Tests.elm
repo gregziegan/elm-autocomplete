@@ -128,10 +128,10 @@ presidents =
 all : Test
 all =
     describe "A Test Suite"
-        [ test "Addition"
-            <| \() ->
+        [ test "Addition" <|
+            \() ->
                 Expect.equal (3 + 7) 10
-        , test "String.left"
-            <| \() ->
+        , test "String.left" <|
+            \() ->
                 Expect.equal "a" (String.left 1 "abcdefg")
         ]

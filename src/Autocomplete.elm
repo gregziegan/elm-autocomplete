@@ -68,7 +68,6 @@ just tell the autocomplete how to grab an ID for a section and its related data.
 
 import Autocomplete.Autocomplete as Internal
 import Html exposing (..)
-import Html.App as Html
 import Char exposing (KeyCode)
 
 
@@ -307,8 +306,8 @@ viewWithSectionsConfig :
     }
     -> ViewWithSectionsConfig data sectionData
 viewWithSectionsConfig config =
-    ViewWithSectionsConfig
-        <| case config.section of
+    ViewWithSectionsConfig <|
+        case config.section of
             SectionConfig section ->
                 Internal.viewWithSectionsConfig { config | section = section }
 
