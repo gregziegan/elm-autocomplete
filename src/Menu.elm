@@ -306,8 +306,8 @@ viewWithSectionsConfig :
     }
     -> ViewWithSectionsConfig data sectionData
 viewWithSectionsConfig config =
-    ViewWithSectionsConfig
-        <| case config.section of
+    ViewWithSectionsConfig <|
+        case config.section of
             SectionConfig section ->
                 Internal.viewWithSectionsConfig { config | section = section }
 
@@ -322,10 +322,10 @@ type SectionConfig data sectionData
 
 {-| Describe everything about a Section HTML node.
 -}
-type alias SectionNode msg =
+type alias SectionNode =
     { nodeType : String
     , attributes : List (Attribute Never)
-    , children : List (Html msg)
+    , children : List (Html Never)
     }
 
 
@@ -369,7 +369,7 @@ sectionConfig :
     { toId : sectionData -> String
     , getData : sectionData -> List data
     , ul : List (Attribute Never)
-    , li : sectionData -> SectionNode Never
+    , li : sectionData -> SectionNode
     }
     -> SectionConfig data sectionData
 sectionConfig section =

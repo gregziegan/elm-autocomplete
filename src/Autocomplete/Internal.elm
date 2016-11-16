@@ -7,12 +7,12 @@ import Html.Events exposing (..)
 import Html
 import String
 import Json.Decode as Json
-import Json.Encode as JE
 import Task
 import Dom
+import Char exposing (KeyCode)
 
 
-type alias Model =
+type alias State =
     { menuState : Menu.State
     , query : String
     , selectedId : Maybe String
@@ -20,11 +20,11 @@ type alias Model =
     }
 
 
-init : String -> String -> Model
+init : String -> Maybe String -> State
 init query selectedId =
     { menuState = Menu.empty
     , query = query
-    , selectedId = Just selectedId
+    , selectedId = selectedId
     , showMenu = False
     }
 
@@ -42,8 +42,8 @@ type Msg
     | NoOp
 
 
-update : Config item -> List item -> Int -> Msg -> Model -> ( Model, Cmd Msg )
-update config items howManyToShow msg model =
+update : Config msg item -> List item -> Int -> Msg -> State -> ( State, Cmd Msg, Maybe msg )
+update config items howManyToShow msg state =
     let
         menuConfig =
             menuUpdateConfig config
@@ -54,153 +54,292 @@ update config items howManyToShow msg model =
                     showMenu =
                         not << List.isEmpty <| config.filterItems newQuery items
                 in
-                    { model | query = newQuery, showMenu = showMenu, selectedId = Nothing } ! []
+                    ( { state | query = newQuery, showMenu = showMenu, selectedId = Nothing }
+                    , Cmd.none
+                    , Nothing
+                    )
 
             SetMenuState menuMsg ->
                 let
-                    ( newState, maybeMsg ) =
-                        Menu.update menuConfig menuMsg howManyToShow model.menuState (config.filterItems model.query items)
+                    ( newMenuState, maybeMsg ) =
+                        Menu.update menuConfig menuMsg howManyToShow state.menuState (config.filterItems state.query items)
 
-                    newModel =
-                        { model | menuState = newState }
+                    newState =
+                        { state | menuState = newMenuState }
                 in
                     case maybeMsg of
                         Nothing ->
-                            newModel ! []
+                            ( newState, Cmd.none, Nothing )
 
                         Just updateMsg ->
-                            update config items howManyToShow updateMsg newModel
+                            update config items howManyToShow updateMsg newState
 
             HandleEscape ->
                 let
                     validOptions =
-                        not <| List.isEmpty (config.filterItems model.query items)
+                        not <| List.isEmpty (config.filterItems state.query items)
 
                     handleEscape =
                         if validOptions then
-                            model
+                            state
                                 |> removeSelection
                                 |> resetMenu
                         else
-                            model
+                            state
                                 |> resetQuery
                                 |> removeSelection
                                 |> resetMenu
 
-                    shouldResetInput : String -> String -> Model
+                    shouldResetInput : String -> String -> State
                     shouldResetInput query id =
                         if query == id then
-                            resetInput model
+                            resetInput state
                         else
-                            model
+                            state
 
-                    escapedModel =
-                        Maybe.map (shouldResetInput model.query) model.selectedId
+                    escapedState =
+                        Maybe.map (shouldResetInput state.query) state.selectedId
                             |> Maybe.withDefault handleEscape
                 in
-                    escapedModel ! []
+                    ( escapedState, Cmd.none, Nothing )
 
             Wrap toTop ->
-                case model.selectedId of
+                case state.selectedId of
                     Just selectedId ->
-                        update config items howManyToShow Reset model
+                        update config items howManyToShow Reset state
 
                     Nothing ->
                         if toTop then
-                            { model
-                                | menuState = Menu.resetToLastItem menuConfig (config.filterItems model.query items) howManyToShow model.menuState
+                            ( { state
+                                | menuState = Menu.resetToLastItem menuConfig (config.filterItems state.query items) howManyToShow state.menuState
                                 , selectedId =
-                                    config.filterItems model.query items
+                                    config.filterItems state.query items
                                         |> List.take howManyToShow
                                         |> List.reverse
                                         |> List.head
                                         |> Maybe.map config.toId
-                            }
-                                ! []
+                              }
+                            , Cmd.none
+                            , Nothing
+                            )
                         else
-                            { model
-                                | menuState = Menu.resetToFirstItem menuConfig (config.filterItems model.query items) howManyToShow model.menuState
+                            ( { state
+                                | menuState = Menu.resetToFirstItem menuConfig (config.filterItems state.query items) howManyToShow state.menuState
                                 , selectedId =
-                                    config.filterItems model.query items
+                                    config.filterItems state.query items
                                         |> List.take howManyToShow
                                         |> List.head
                                         |> Maybe.map config.toId
-                            }
-                                ! []
+                              }
+                            , Cmd.none
+                            , Nothing
+                            )
 
             Reset ->
-                { model | menuState = Menu.reset menuConfig model.menuState, selectedId = Nothing } ! []
+                ( { state | menuState = Menu.reset menuConfig state.menuState, selectedId = Nothing }
+                , Cmd.none
+                , Nothing
+                )
 
             SelectItemKeyboard id ->
                 let
-                    newModel =
-                        setQuery config items model id
+                    newState =
+                        setQuery config items id state
                             |> resetMenu
                 in
-                    newModel ! []
+                    ( newState
+                    , Cmd.none
+                    , Nothing
+                    )
 
             SelectItemMouse id ->
                 let
-                    newModel =
-                        setQuery config items model id
+                    newState =
+                        state
+                            |> setQuery config items id
                             |> resetMenu
                 in
-                    ( newModel, Task.attempt (\_ -> NoOp) (Dom.focus "autocomplete-input") )
+                    ( newState
+                    , Task.attempt (\_ -> NoOp) (Dom.focus "autocomplete-input")
+                    , Nothing
+                    )
 
             PreviewItem id ->
-                { model | selectedId = Just id } ! []
+                ( { state | selectedId = Just id }
+                , Cmd.none
+                , Nothing
+                )
 
             OnFocus ->
-                model ! []
+                ( state
+                , Cmd.none
+                , Nothing
+                )
 
             NoOp ->
-                model ! []
+                ( state
+                , Cmd.none
+                , Nothing
+                )
 
 
-resetQuery model =
-    { model | query = "" }
+resetQuery : State -> State
+resetQuery state =
+    { state | query = "" }
 
 
-resetInput model =
-    model
+resetInput : State -> State
+resetInput state =
+    state
         |> resetQuery
         |> removeSelection
         |> resetMenu
 
 
-removeSelection model =
-    { model | selectedId = Nothing }
+removeSelection : State -> State
+removeSelection state =
+    { state | selectedId = Nothing }
 
 
-getItemAtId config items id =
-    List.filter (\item -> (config.toId item) == id) items
+getItemAtId : (item -> String) -> List item -> String -> Maybe item
+getItemAtId toId items id =
+    List.filter (\item -> (toId item) == id) items
         |> List.head
 
 
-setQuery config items model id =
-    { model
+setQuery :
+    { a | toId : item -> String, toValue : item -> String }
+    -> List item
+    -> String
+    -> State
+    -> State
+setQuery { toId, toValue } items id state =
+    { state
         | query =
-            Maybe.map config.value (getItemAtId config items id)
+            Maybe.map toValue (getItemAtId toId items id)
                 |> Maybe.withDefault ""
-        , selectedId = Maybe.map config.toId (getItemAtId config items id)
+        , selectedId = Maybe.map toId (getItemAtId toId items id)
     }
 
 
-resetMenu model =
-    { model
+resetMenu : State -> State
+resetMenu state =
+    { state
         | menuState = Menu.empty
         , showMenu = False
     }
 
 
-type alias Config item =
+type alias Config msg item =
     { toId : item -> String
-    , value : item -> String
+    , toValue : item -> String
     , filterItems : String -> List item -> List item
+    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onTooLow : Maybe msg
+    , onTooHigh : Maybe msg
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
+    , separateSelections : Bool
+    , ul : List (Attribute Never)
+    , li : Bool -> Bool -> item -> { attributes : List (Attribute Never), children : List (Html Never) }
     }
 
 
-menuUpdateConfig : Config item -> Menu.UpdateConfig Msg item
+type alias ConfigWithSections msg item section =
+    { toId : item -> String
+    , toValue : item -> String
+    , filterItems : String -> List item -> List item
+    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onTooLow : Maybe msg
+    , onTooHigh : Maybe msg
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
+    , separateSelections : Bool
+    , ul : List (Attribute Never)
+    , li : Bool -> Bool -> item -> { attributes : List (Attribute Never), children : List (Html Never) }
+    , sectionToId : section -> String
+    , filterSections : String -> List section -> List section
+    , getSectionItems : section -> List item
+    , sections : List (Attribute Never)
+    , section : section -> { nodeType : String, attributes : List (Attribute Never), children : List (Html Never) }
+    }
+
+
+config :
+    { toId : item -> String
+    , toValue : item -> String
+    , filterItems : String -> List item -> List item
+    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onTooLow : Maybe msg
+    , onTooHigh : Maybe msg
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
+    , separateSelections : Bool
+    , ul : List (Attribute Never)
+    , li : Bool -> Bool -> item -> { attributes : List (Attribute Never), children : List (Html Never) }
+    }
+    -> Config msg item
+config (config as c) =
+    { toId = c.toId
+    , toValue = c.toValue
+    , filterItems = c.filterItems
+    , onKeyDown = c.onKeyDown
+    , onTooLow = c.onTooLow
+    , onTooHigh = c.onTooHigh
+    , onMouseEnter = c.onMouseEnter
+    , onMouseLeave = c.onMouseLeave
+    , onMouseClick = c.onMouseClick
+    , separateSelections = c.separateSelections
+    , ul = c.ul
+    , li = c.li
+    }
+
+
+configWithSections :
+    { toId : item -> String
+    , toValue : item -> String
+    , filterItems : String -> List item -> List item
+    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onTooLow : Maybe msg
+    , onTooHigh : Maybe msg
+    , onMouseEnter : String -> Maybe msg
+    , onMouseLeave : String -> Maybe msg
+    , onMouseClick : String -> Maybe msg
+    , separateSelections : Bool
+    , ul : List (Attribute Never)
+    , li : Bool -> Bool -> item -> { attributes : List (Attribute Never), children : List (Html Never) }
+    , sectionToId : section -> String
+    , filterSections : String -> List section -> List section
+    , getSectionItems : section -> List item
+    , sections : List (Attribute Never)
+    , section : section -> { nodeType : String, attributes : List (Attribute Never), children : List (Html Never) }
+    }
+    -> ConfigWithSections msg item section
+configWithSections (config as c) =
+    { toId = c.toId
+    , toValue = c.toValue
+    , filterItems = c.filterItems
+    , onKeyDown = c.onKeyDown
+    , onTooLow = c.onTooLow
+    , onTooHigh = c.onTooHigh
+    , onMouseEnter = c.onMouseEnter
+    , onMouseLeave = c.onMouseLeave
+    , onMouseClick = c.onMouseClick
+    , separateSelections = c.separateSelections
+    , ul = c.ul
+    , li = c.li
+    , sectionToId = c.sectionToId
+    , filterSections = c.filterSections
+    , getSectionItems = c.getSectionItems
+    , sections = c.sections
+    , section = c.section
+    }
+
+
+menuUpdateConfig : Config msg item -> Menu.UpdateConfig Msg item
 menuUpdateConfig config =
     Menu.updateConfig
         { toId = config.toId
@@ -221,8 +360,22 @@ menuUpdateConfig config =
         }
 
 
-view : Config item -> List item -> Int -> Model -> Html Msg
-view config items howManyToShow model =
+fromResult : Result String a -> Json.Decoder a
+fromResult result =
+    case result of
+        Ok val ->
+            Json.succeed val
+
+        Err reason ->
+            Json.fail reason
+
+
+autocompleteInput :
+    { config | toId : item -> String, toValue : item -> String }
+    -> List item
+    -> State
+    -> Html Msg
+autocompleteInput ({ toId, toValue } as config) items ({ showMenu, query, selectedId } as state) =
     let
         options =
             { preventDefault = True, stopPropagation = False }
@@ -241,69 +394,97 @@ view config items howManyToShow model =
             )
                 |> Json.andThen fromResult
 
-        fromResult : Result String a -> Json.Decoder a
-        fromResult result =
-            case result of
-                Ok val ->
-                    Json.succeed val
-
-                Err reason ->
-                    Json.fail reason
-
-        menu =
-            if model.showMenu then
-                [ viewMenu config items howManyToShow model ]
-            else
-                []
-
-        query =
-            model.selectedId
-                |> Maybe.andThen (getItemAtId config items)
-                |> Maybe.map config.value
-                |> Maybe.withDefault model.query
-
         activeDescendantAttr itemValue =
             attribute "aria-activedescendant" itemValue
 
         addToAttrs attrs ariaAttr =
             ariaAttr :: attrs
 
-        activeDescendant attributes =
-            model.selectedId
-                |> Maybe.andThen (getItemAtId config items)
-                |> Maybe.map (activeDescendantAttr << config.value)
+        activeDescendant items selectedId attributes =
+            selectedId
+                |> Maybe.andThen (getItemAtId toId items)
+                |> Maybe.map (activeDescendantAttr << toValue)
                 |> Maybe.map (addToAttrs attributes)
                 |> Maybe.withDefault attributes
+
+        currentQuery items query selectedId =
+            selectedId
+                |> Maybe.andThen (getItemAtId toId items)
+                |> Maybe.map toValue
+                |> Maybe.withDefault query
     in
-        div []
-            ([ input
-                (activeDescendant
-                    [ onInput SetQuery
-                    , onFocus OnFocus
-                    , onWithOptions "keydown" options dec
-                    , value query
-                    , class "autocomplete-input"
-                    , autocomplete False
-                    , attribute "aria-owns" "autocomplete-options"
-                    , attribute "aria-expanded" <| String.toLower <| toString model.showMenu
-                    , attribute "aria-haspopup" <| String.toLower <| toString model.showMenu
-                    , attribute "role" "combobox"
-                    , attribute "aria-autocomplete" "list"
-                    ]
-                )
-                []
-             ]
-                ++ menu
+        input
+            (activeDescendant
+                items
+                selectedId
+                [ onInput SetQuery
+                , onFocus OnFocus
+                , onWithOptions "keydown" options dec
+                , value <| currentQuery items query selectedId
+                , class "autocomplete-input"
+                , autocomplete False
+                , attribute "aria-owns" "autocomplete-options"
+                , attribute "aria-expanded" <| String.toLower <| toString showMenu
+                , attribute "aria-haspopup" <| String.toLower <| toString showMenu
+                , attribute "role" "combobox"
+                , attribute "aria-autocomplete" "list"
+                ]
+            )
+            []
+
+
+view : Config msg item -> List item -> Int -> State -> Html Msg
+view config items howManyToShow state =
+    let
+        input =
+            autocompleteInput config items state
+
+        menu =
+            viewMenu config items howManyToShow state
+    in
+        div [ class "autocomplete" ]
+            (if state.showMenu then
+                [ input, menu ]
+             else
+                [ input ]
             )
 
 
-viewMenu : Config item -> List item -> Int -> Model -> Html Msg
-viewMenu config items howManyToShow model =
+viewMenu : Config msg item -> List item -> Int -> State -> Html Msg
+viewMenu config items howManyToShow state =
     div [ class "autocomplete-menu" ]
-        [ Html.map SetMenuState (Menu.view (viewConfig config) howManyToShow model.menuState (config.filterItems model.query items)) ]
+        [ Html.map SetMenuState (Menu.view (viewConfig config) howManyToShow state.menuState (config.filterItems state.query items)) ]
 
 
-viewConfig : Config item -> Menu.ViewConfig item
+viewWithSections : ConfigWithSections msg item section -> List section -> Int -> State -> Html Msg
+viewWithSections config sections howManyToShow state =
+    let
+        items =
+            List.concatMap config.getSectionItems sections
+
+        input =
+            autocompleteInput config items state
+
+        menu =
+            viewMenuWithSections config sections howManyToShow state
+    in
+        div [ class "autocomplete" ]
+            (if state.showMenu then
+                [ input, menu ]
+             else
+                [ input ]
+            )
+
+
+viewMenuWithSections : ConfigWithSections msg item section -> List section -> Int -> State -> Html Msg
+viewMenuWithSections config sections howManyToShow state =
+    div [ class "autocomplete-menu" ]
+        [ Menu.viewWithSections (viewWithSectionsConfig config) howManyToShow state.menuState (config.filterSections state.query sections)
+            |> Html.map SetMenuState
+        ]
+
+
+viewConfig : Config msg item -> Menu.ViewConfig item
 viewConfig config =
     let
         customizedLi keySelected mouseSelected item =
@@ -313,7 +494,7 @@ viewConfig config =
                     , ( "key-selected", keySelected || mouseSelected )
                     ]
                 ]
-            , children = [ Html.text <| config.value item ]
+            , children = [ Html.text <| config.toValue item ]
             }
     in
         Menu.viewConfig
@@ -321,3 +502,35 @@ viewConfig config =
             , ul = [ class "autocomplete-list" ]
             , li = customizedLi
             }
+
+
+viewWithSectionsConfig : ConfigWithSections msg item section -> Menu.ViewWithSectionsConfig item section
+viewWithSectionsConfig config =
+    let
+        customizedLi keySelected mouseSelected item =
+            { attributes =
+                [ classList
+                    [ ( "autocomplete-item", True )
+                    , ( "key-selected", keySelected )
+                    , ( "mouse-selected", mouseSelected )
+                    ]
+                ]
+            , children = [ Html.text <| config.toValue item ]
+            }
+    in
+        Menu.viewWithSectionsConfig
+            { toId = config.toId
+            , ul = [ class "autocomplete-list-with-sections" ]
+            , li = customizedLi
+            , section = sectionConfig config
+            }
+
+
+sectionConfig : ConfigWithSections msg item section -> Menu.SectionConfig item section
+sectionConfig { sectionToId, getSectionItems, sections, section } =
+    Menu.sectionConfig
+        { toId = sectionToId
+        , getData = getSectionItems
+        , ul = sections
+        , li = section
+        }
