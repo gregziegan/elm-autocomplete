@@ -1,15 +1,13 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.App as Html
 import Html.Attributes exposing (..)
-import AccessibleExample
-import SectionsExample
+import SimpleExample
 import Svg exposing (path)
 import Svg.Attributes exposing (d, fill, viewBox)
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
     Html.program
         { init = init ! []
@@ -21,75 +19,33 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.currentFocus of
-        Simple ->
-            Sub.map AccessibleExample (AccessibleExample.subscriptions model.accessibleAutocomplete)
-
-        Sections ->
-            Sub.map SectionsExample (SectionsExample.subscriptions model.sectionsAutocomplete)
-
-        None ->
-            Sub.none
+    Sub.none
 
 
 type alias Model =
-    { accessibleAutocomplete : AccessibleExample.Model
-    , sectionsAutocomplete : SectionsExample.Model
-    , currentFocus : Focused
+    { simpleAutocomplete : SimpleExample.Model
     }
-
-
-type Focused
-    = Simple
-    | Sections
-    | None
 
 
 init : Model
 init =
-    { accessibleAutocomplete = AccessibleExample.init
-    , sectionsAutocomplete = SectionsExample.init
-    , currentFocus = None
+    { simpleAutocomplete = SimpleExample.init
     }
 
 
 type Msg
-    = AccessibleExample AccessibleExample.Msg
-    | SectionsExample SectionsExample.Msg
+    = SimpleExample SimpleExample.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        newModel =
-            case msg of
-                AccessibleExample autoMsg ->
-                    let
-                        toggleFocus autoMsg model =
-                            case autoMsg of
-                                AccessibleExample.OnFocus ->
-                                    { model | currentFocus = Simple }
-
-                                _ ->
-                                    model
-                    in
-                        { model | accessibleAutocomplete = fst <| AccessibleExample.update autoMsg model.accessibleAutocomplete }
-                            |> toggleFocus autoMsg
-
-                SectionsExample autoMsg ->
-                    let
-                        toggleFocus autoMsg model =
-                            case autoMsg of
-                                SectionsExample.OnFocus ->
-                                    { model | currentFocus = Sections }
-
-                                _ ->
-                                    model
-                    in
-                        { model | sectionsAutocomplete = fst <| SectionsExample.update autoMsg model.sectionsAutocomplete }
-                            |> toggleFocus autoMsg
-    in
-        ( newModel, Cmd.none )
+    case msg of
+        SimpleExample autoMsg ->
+            let
+                ( autoState, cmd ) =
+                    SimpleExample.update autoMsg model.simpleAutocomplete
+            in
+                ( { model | simpleAutocomplete = autoState }, Cmd.map SimpleExample cmd )
 
 
 view : Model -> Html Msg
@@ -169,12 +125,11 @@ viewExamples : Model -> Html Msg
 viewExamples model =
     div [ class "section examples" ]
         [ h1 [ class "section-title" ] [ text "Examples" ]
-        , viewSimpleExample model.accessibleAutocomplete
-        , viewSectionsExample model.sectionsAutocomplete
+        , viewSimpleExample model.simpleAutocomplete
         ]
 
 
-viewSimpleExample : AccessibleExample.Model -> Html Msg
+viewSimpleExample : SimpleExample.Model -> Html Msg
 viewSimpleExample autocomplete =
     div [ class "example" ]
         [ div [ class "example-info" ]
@@ -182,19 +137,8 @@ viewSimpleExample autocomplete =
             , p [] [ text "A list of presidents" ]
             ]
         , div [ class "example-autocomplete" ]
-            [ Html.map AccessibleExample (AccessibleExample.view autocomplete)
+            [ Html.map SimpleExample (SimpleExample.view autocomplete)
             ]
-        ]
-
-
-viewSectionsExample : SectionsExample.Model -> Html Msg
-viewSectionsExample autocomplete =
-    div [ class "example" ]
-        [ div [ class "example-info" ]
-            [ h1 [ class "example-title" ] [ text "Sections" ]
-            , p [] [ text "Presidents grouped by birth century" ]
-            ]
-        , div [ class "example-autocomplete" ] [ Html.map SectionsExample (SectionsExample.view autocomplete) ]
         ]
 
 
@@ -213,11 +157,11 @@ viewFooter =
 
 
 footerLink : String -> String -> Html Msg
-footerLink url text' =
+footerLink url footerText =
     a
         [ href url
         , class "footer-link"
         , target "_blank"
         , rel "noopenner noreferrer"
         ]
-        [ text text' ]
+        [ text footerText ]

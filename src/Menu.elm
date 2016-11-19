@@ -2,7 +2,6 @@ module Menu
     exposing
         ( view
         , update
-        , subscription
         , viewConfig
         , updateConfig
         , State
@@ -37,7 +36,7 @@ module Menu
 @docs view
 
 # Update
-@docs update, subscription
+@docs update
 
 # Configuration
 @docs viewConfig, updateConfig
@@ -190,13 +189,6 @@ updateConfig :
     -> UpdateConfig msg data
 updateConfig config =
     UpdateConfig <| Internal.updateConfig config
-
-
-{-| Add this to your `program`'s subscriptions so the the menu menu will respond to keyboard input.
--}
-subscription : Sub Msg
-subscription =
-    Sub.map Msg Internal.subscription
 
 
 {-|

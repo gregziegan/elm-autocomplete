@@ -20,6 +20,8 @@ $(ELM_BUILD): elm
 demo:
 	elm make --yes Demo.elm  --output site/index.js
 
+test:
+	elm make --yes Demo.elm  --output site/index.js --debug
 
 clean:
 	rm -rf elm-stuff

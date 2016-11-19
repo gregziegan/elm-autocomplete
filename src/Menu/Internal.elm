@@ -35,8 +35,9 @@ import Keyboard
 -- MODEL
 
 
-type alias State =
-    { key : Maybe String
+type alias States menuId =
+    { id : menuId
+    , key : Maybe String
     , mouse : Maybe String
     }
 
@@ -49,12 +50,12 @@ type alias MouseSelected =
     Bool
 
 
-empty : State
+empty : menuId -> States menuId
 empty =
-    { key = Nothing, mouse = Nothing }
+    Just <| { menuId = menuId, key = Nothing, mouse = Nothing }
 
 
-reset : UpdateConfig msg data -> State -> State
+reset : UpdateConfig msg data -> States menuId -> States menuId
 reset { separateSelections } { key, mouse } =
     if separateSelections then
         { key = Nothing, mouse = mouse }
