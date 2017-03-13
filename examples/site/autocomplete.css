@@ -33,7 +33,7 @@
 }
 
 .autocomplete-list-with-sections {
-  ist-style: none;
+  list-style: none;
   padding: 0;
   margin: auto;
 }
