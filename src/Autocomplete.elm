@@ -250,7 +250,7 @@ Say we have a `List Person` that we want to show as a series of options.
 We would create a `ViewConfig` like so:
 
     import Autocomplete
-    viewConfig : Autocomplete.Config Person
+    viewConfig : Autocomplete.ViewConfig Person
     viewConfig =
       let
           customizedLi keySelected mouseSelected person =
