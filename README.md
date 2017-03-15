@@ -107,7 +107,7 @@ viewConfig =
 view : Model -> Html Msg
 view { autoState, query, people } =
   div []
-      [ input [ onInput SetQuery ]
+      [ input [ onInput SetQuery ] []
       , Html.App.map SetAutocompleteState (Autocomplete.view viewConfig 5 autoState (acceptablePeople query people))
       ]
 
