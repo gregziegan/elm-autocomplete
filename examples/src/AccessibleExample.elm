@@ -95,9 +95,8 @@ update msg model =
                             |> removeSelection
                             |> resetMenu
                     else
-                        { model | query = "" }
-                            |> removeSelection
-                            |> resetMenu
+                        model
+                            |> resetInput
 
                 escapedModel =
                     case model.selectedPerson of
