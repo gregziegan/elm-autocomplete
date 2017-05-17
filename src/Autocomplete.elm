@@ -124,8 +124,8 @@ resetToLastItem (UpdateConfig config) data howManyToShow (State state) =
 
 {-| A message type for the autocomplete to update.
 -}
-type Msg
-    = Msg Internal.Msg
+type Msg data
+    = Msg (Internal.Msg data)
 
 
 {-| Configuration for updates
@@ -138,7 +138,7 @@ type UpdateConfig msg data
 Provide the same data as your view.
 The `Int` argument is how many results you would like to show.
 -}
-update : UpdateConfig msg data -> Msg -> Int -> State -> List data -> ( State, Maybe msg )
+update : UpdateConfig msg data -> Msg data -> Int -> State -> List data -> ( State, Maybe msg )
 update (UpdateConfig config) (Msg msg) howManyToShow (State state) data =
     let
         ( newState, maybeMsg ) =
@@ -179,12 +179,12 @@ You provide the following information in your autocomplete configuration:
 -}
 updateConfig :
     { toId : data -> String
-    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onKeyDown : KeyCode -> Maybe data -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
-    , onMouseEnter : String -> Maybe msg
-    , onMouseLeave : String -> Maybe msg
-    , onMouseClick : String -> Maybe msg
+    , onMouseEnter : data -> Maybe msg
+    , onMouseLeave : data -> Maybe msg
+    , onMouseClick : data -> Maybe msg
     , separateSelections : Bool
     }
     -> UpdateConfig msg data
@@ -194,7 +194,7 @@ updateConfig config =
 
 {-| Add this to your `program`'s subscriptions so the the autocomplete menu will respond to keyboard input.
 -}
-subscription : Sub Msg
+subscription : Sub (Msg data)
 subscription =
     Sub.map Msg Internal.subscription
 
@@ -212,7 +212,7 @@ The `ViewConfig` for the autocomplete belongs in your view code.
 Describe any potential autocomplete configurations statically.
 This pattern has been inspired by [Elm Sortable Table](http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest).
 -}
-view : ViewConfig data -> Int -> State -> List data -> Html Msg
+view : ViewConfig data -> Int -> State -> List data -> Html (Msg data)
 view (ViewConfig config) howManyToShow (State state) data =
     Html.map Msg <| Internal.view config howManyToShow state data
 
@@ -222,7 +222,7 @@ You can follow the same instructions as described for `view`, providing a more a
 `ViewWithSectionsConfig` sets up your autocomplete to handle sectioned data.
 The sectioned data becomes the new data argument for `viewWithSections`.
 -}
-viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html Msg
+viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html (Msg data)
 viewWithSections (ViewWithSectionsConfig config) howManyToShow (State state) sections =
     Html.map Msg <| Internal.viewWithSections config howManyToShow state sections
 
