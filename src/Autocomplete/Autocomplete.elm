@@ -1,35 +1,36 @@
 module Autocomplete.Autocomplete
     exposing
-        ( view
-        , update
-        , subscription
-        , viewConfig
-        , updateConfig
+        ( HtmlDetails
+        , KeySelected
+        , MouseSelected
+        , Msg
+        , SectionConfig
+        , SectionNode
         , State
+        , UpdateConfig
+        , ViewConfig
+        , ViewWithSectionsConfig
         , empty
         , reset
         , resetToFirstItem
         , resetToLastItem
-        , KeySelected
-        , MouseSelected
-        , Msg
-        , ViewConfig
-        , UpdateConfig
-        , HtmlDetails
-        , viewWithSections
         , sectionConfig
+        , subscription
+        , update
+        , updateConfig
+        , view
+        , viewConfig
+        , viewWithSections
         , viewWithSectionsConfig
-        , SectionNode
-        , SectionConfig
-        , ViewWithSectionsConfig
         )
 
-import Char exposing (KeyCode)
-import Html exposing (Html, Attribute)
+import Browser
+import Html exposing (Attribute, Html)
 import Html.Attributes
-import Html.Keyed
 import Html.Events
-import Keyboard
+import Html.Keyed
+import Json.Decode
+
 
 
 -- MODEL
@@ -58,6 +59,7 @@ reset : UpdateConfig msg data -> State -> State
 reset { separateSelections } { key, mouse } =
     if separateSelections then
         { key = Nothing, mouse = mouse }
+
     else
         empty
 
@@ -76,17 +78,18 @@ resetToFirst config data state =
         setFirstItem datum newState =
             { newState | key = Just <| toId datum }
     in
-        case List.head data of
-            Nothing ->
-                empty
+    case List.head data of
+        Nothing ->
+            empty
 
-            Just datum ->
-                if separateSelections then
-                    reset config state
-                        |> setFirstItem datum
-                else
-                    empty
-                        |> setFirstItem datum
+        Just datum ->
+            if separateSelections then
+                reset config state
+                    |> setFirstItem datum
+
+            else
+                empty
+                    |> setFirstItem datum
 
 
 resetToLastItem : UpdateConfig msg data -> List data -> Int -> State -> State
@@ -95,7 +98,7 @@ resetToLastItem config data howManyToShow state =
         reversedData =
             List.reverse <| List.take howManyToShow data
     in
-        resetToFirst config reversedData state
+    resetToFirst config reversedData state
 
 
 
@@ -106,11 +109,16 @@ resetToLastItem config data howManyToShow state =
 -}
 subscription : Sub Msg
 subscription =
-    Keyboard.downs KeyDown
+    let
+        decoder =
+            Json.Decode.field "keyCode" Json.Decode.int
+                |> Json.Decode.map KeyDown
+    in
+    Browser.onDocument "keydown" decoder
 
 
 type Msg
-    = KeyDown KeyCode
+    = KeyDown Int
     | WentTooLow
     | WentTooHigh
     | MouseEnter String
@@ -120,7 +128,7 @@ type Msg
 
 
 type alias UpdateConfig msg data =
-    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    { onKeyDown : Int -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : String -> Maybe msg
@@ -133,7 +141,7 @@ type alias UpdateConfig msg data =
 
 updateConfig :
     { toId : data -> String
-    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onKeyDown : Int -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : String -> Maybe msg
@@ -166,18 +174,21 @@ update config msg howManyToShow state data =
                 newKey =
                     navigateWithKey keyCode boundedList state.key
             in
-                if newKey == state.key && keyCode == 38 then
-                    update config WentTooHigh howManyToShow state data
-                else if newKey == state.key && keyCode == 40 then
-                    update config WentTooLow howManyToShow state data
-                else if config.separateSelections then
-                    ( { state | key = newKey }
-                    , config.onKeyDown keyCode newKey
-                    )
-                else
-                    ( { key = newKey, mouse = newKey }
-                    , config.onKeyDown keyCode newKey
-                    )
+            if newKey == state.key && keyCode == 38 then
+                update config WentTooHigh howManyToShow state data
+
+            else if newKey == state.key && keyCode == 40 then
+                update config WentTooLow howManyToShow state data
+
+            else if config.separateSelections then
+                ( { state | key = newKey }
+                , config.onKeyDown keyCode newKey
+                )
+
+            else
+                ( { key = newKey, mouse = newKey }
+                , config.onKeyDown keyCode newKey
+                )
 
         WentTooLow ->
             ( state
@@ -212,6 +223,7 @@ resetMouseStateWithId : Bool -> String -> State -> State
 resetMouseStateWithId separateSelections id state =
     if separateSelections then
         { key = state.key, mouse = Just id }
+
     else
         { key = Just id, mouse = Just id }
 
@@ -225,8 +237,10 @@ getPrevious : String -> String -> Maybe String -> Maybe String
 getPrevious id selectedId resultId =
     if selectedId == id then
         Just id
-    else if (Maybe.withDefault "" resultId) == id then
+
+    else if Maybe.withDefault "" resultId == id then
         Just selectedId
+
     else
         resultId
 
@@ -260,8 +274,8 @@ viewWithSections config howManyToShow state sections =
         getKeyedItems section =
             ( config.section.toId section, viewSection config state section )
     in
-        Html.Keyed.ul (List.map mapNeverToMsg config.section.ul)
-            (List.map getKeyedItems sections)
+    Html.Keyed.ul (List.map mapNeverToMsg config.section.ul)
+        (List.map getKeyedItems sections)
 
 
 viewSection : ViewWithSectionsConfig data sectionData -> State -> sectionData -> Html Msg
@@ -288,8 +302,8 @@ viewSection config state section =
         children =
             List.append customChildren [ viewItemList ]
     in
-        Html.li attributes
-            [ Html.node sectionNode.nodeType attributes children ]
+    Html.li attributes
+        [ Html.node sectionNode.nodeType attributes children ]
 
 
 viewData : ViewWithSectionsConfig data sectionData -> State -> data -> Html Msg
@@ -302,7 +316,7 @@ viewData { toId, li } { key, mouse } data =
             li (isSelected key) (isSelected mouse) data
 
         customAttributes =
-            (List.map mapNeverToMsg listItemData.attributes)
+            List.map mapNeverToMsg listItemData.attributes
 
         customLiAttr =
             List.append customAttributes
@@ -319,8 +333,8 @@ viewData { toId, li } { key, mouse } data =
                 Nothing ->
                     False
     in
-        Html.li customLiAttr
-            (List.map (Html.map (\html -> NoOp)) listItemData.children)
+    Html.li customLiAttr
+        (List.map (Html.map (\html -> NoOp)) listItemData.children)
 
 
 viewList : ViewConfig data -> Int -> State -> List data -> Html Msg
@@ -332,10 +346,10 @@ viewList config howManyToShow state data =
         getKeyedItems datum =
             ( config.toId datum, viewItem config state datum )
     in
-        Html.Keyed.ul customUlAttr
-            (List.take howManyToShow data
-                |> List.map getKeyedItems
-            )
+    Html.Keyed.ul customUlAttr
+        (List.take howManyToShow data
+            |> List.map getKeyedItems
+        )
 
 
 viewItem : ViewConfig data -> State -> data -> Html Msg
@@ -348,7 +362,7 @@ viewItem { toId, li } { key, mouse } data =
             li (isSelected key) (isSelected mouse) data
 
         customAttributes =
-            (List.map mapNeverToMsg listItemData.attributes)
+            List.map mapNeverToMsg listItemData.attributes
 
         customLiAttr =
             List.append customAttributes
@@ -365,8 +379,8 @@ viewItem { toId, li } { key, mouse } data =
                 Nothing ->
                     False
     in
-        Html.li customLiAttr
-            (List.map (Html.map (\html -> NoOp)) listItemData.children)
+    Html.li customLiAttr
+        (List.map (Html.map (\html -> NoOp)) listItemData.children)
 
 
 type alias HtmlDetails msg =

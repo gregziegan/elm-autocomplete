@@ -1,19 +1,24 @@
 module AccessibleExample exposing (..)
 
 import Autocomplete
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import String
 import Json.Decode as Json
 import Json.Encode as JE
-import Dom
+import String
 import Task
 
 
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init ! []
+    Browser.embed
+        { init =
+            always
+                ( init
+                , Cmd.none
+                )
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -65,9 +70,11 @@ update msg model =
         SetQuery newQuery ->
             let
                 showMenu =
-                    not << List.isEmpty <| (acceptablePeople newQuery model.people)
+                    not << List.isEmpty <| acceptablePeople newQuery model.people
             in
-                { model | query = newQuery, showMenu = showMenu, selectedPerson = Nothing } ! []
+                ( { model | query = newQuery, showMenu = showMenu, selectedPerson = Nothing }
+                , Cmd.none
+                )
 
         SetAutoState autoMsg ->
             let
@@ -79,7 +86,9 @@ update msg model =
             in
                 case maybeMsg of
                     Nothing ->
-                        newModel ! []
+                        ( newModel
+                        , Cmd.none
+                        )
 
                     Just updateMsg ->
                         update updateMsg newModel
@@ -110,7 +119,9 @@ update msg model =
                         Nothing ->
                             handleEscape
             in
-                escapedModel ! []
+                ( escapedModel
+                , Cmd.none
+                )
 
         Wrap toTop ->
             case model.selectedPerson of
@@ -119,20 +130,24 @@ update msg model =
 
                 Nothing ->
                     if toTop then
-                        { model
+                        ( { model
                             | autoState = Autocomplete.resetToLastItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
-                            , selectedPerson = List.head <| List.reverse <| List.take model.howManyToShow <| (acceptablePeople model.query model.people)
-                        }
-                            ! []
+                            , selectedPerson = List.head <| List.reverse <| List.take model.howManyToShow <| acceptablePeople model.query model.people
+                          }
+                        , Cmd.none
+                        )
                     else
-                        { model
+                        ( { model
                             | autoState = Autocomplete.resetToFirstItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
-                            , selectedPerson = List.head <| List.take model.howManyToShow <| (acceptablePeople model.query model.people)
-                        }
-                            ! []
+                            , selectedPerson = List.head <| List.take model.howManyToShow <| acceptablePeople model.query model.people
+                          }
+                        , Cmd.none
+                        )
 
         Reset ->
-            { model | autoState = Autocomplete.reset updateConfig model.autoState, selectedPerson = Nothing } ! []
+            ( { model | autoState = Autocomplete.reset updateConfig model.autoState, selectedPerson = Nothing }
+            , Cmd.none
+            )
 
         SelectPersonKeyboard id ->
             let
@@ -140,7 +155,9 @@ update msg model =
                     setQuery model id
                         |> resetMenu
             in
-                newModel ! []
+                ( newModel
+                , Cmd.none
+                )
 
         SelectPersonMouse id ->
             let
@@ -148,16 +165,22 @@ update msg model =
                     setQuery model id
                         |> resetMenu
             in
-                ( newModel, Task.attempt (\_ -> NoOp) (Dom.focus "president-input") )
+                ( newModel, Task.attempt (\_ -> NoOp) (Browser.focus "president-input") )
 
         PreviewPerson id ->
-            { model | selectedPerson = Just <| getPersonAtId model.people id } ! []
+            ( { model | selectedPerson = Just <| getPersonAtId model.people id }
+            , Cmd.none
+            )
 
         OnFocus ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
         NoOp ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
 
 resetInput model =
@@ -193,11 +216,9 @@ resetMenu model =
 view : Model -> Html Msg
 view model =
     let
-        options =
-            { preventDefault = True, stopPropagation = False }
-
+        dec : Json.Decoder ( Msg, Bool )
         dec =
-            (Json.map
+            Json.map
                 (\code ->
                     if code == 38 || code == 40 then
                         Ok NoOp
@@ -207,9 +228,9 @@ view model =
                         Err "not handling that key"
                 )
                 keyCode
-            )
                 |> Json.andThen
                     fromResult
+                |> Json.map (\msg -> ( msg, True ))
 
         fromResult : Result String a -> Json.Decoder a
         fromResult result =
@@ -237,13 +258,18 @@ view model =
         activeDescendant attributes =
             case model.selectedPerson of
                 Just person ->
-                    (attribute "aria-activedescendant"
+                    attribute "aria-activedescendant"
                         person.name
-                    )
                         :: attributes
 
                 Nothing ->
                     attributes
+
+        boolToString v =
+            if v then
+                "true"
+            else
+                "false"
     in
         div []
             (List.append
@@ -251,14 +277,14 @@ view model =
                     (activeDescendant
                         [ onInput SetQuery
                         , onFocus OnFocus
-                        , onWithOptions "keydown" options dec
+                        , preventDefaultOn "keydown" dec
                         , value query
                         , id "president-input"
                         , class "autocomplete-input"
                         , autocomplete False
                         , attribute "aria-owns" "list-of-presidents"
-                        , attribute "aria-expanded" <| String.toLower <| toString model.showMenu
-                        , attribute "aria-haspopup" <| String.toLower <| toString model.showMenu
+                        , attribute "aria-expanded" (boolToString model.showMenu)
+                        , attribute "aria-haspopup" (boolToString model.showMenu)
                         , attribute "role" "combobox"
                         , attribute "aria-autocomplete" "list"
                         ]

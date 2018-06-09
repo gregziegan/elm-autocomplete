@@ -1,17 +1,22 @@
 module SectionsExample exposing (..)
 
 import Autocomplete
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import String
 import Json.Decode as Json
+import String
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init ! []
+    Browser.embed
+        { init =
+            always
+                ( init
+                , Cmd.none
+                )
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -57,7 +62,9 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetQuery newQuery ->
-            { model | query = newQuery, showMenu = True } ! []
+            ( { model | query = newQuery, showMenu = True }
+            , Cmd.none
+            )
 
         SetAutoState autoMsg ->
             let
@@ -69,16 +76,20 @@ update msg model =
             in
                 case maybeMsg of
                     Nothing ->
-                        newModel ! []
+                        ( newModel
+                        , Cmd.none
+                        )
 
                     Just updateMsg ->
                         update updateMsg newModel
 
         Reset ->
-            { model | autoState = Autocomplete.resetToFirstItem updateConfig (acceptablePeople model) model.howManyToShow model.autoState } ! []
+            ( { model | autoState = Autocomplete.resetToFirstItem updateConfig (acceptablePeople model) model.howManyToShow model.autoState }
+            , Cmd.none
+            )
 
         SelectPerson id ->
-            { model
+            ( { model
                 | query =
                     List.filter (\person -> person.name == id) model.people
                         |> List.head
@@ -86,24 +97,26 @@ update msg model =
                         |> .name
                 , autoState = Autocomplete.empty
                 , showMenu = False
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         OnFocus ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
         NoOp ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
 
 view : Model -> Html Msg
 view model =
     let
-        options =
-            { preventDefault = True, stopPropagation = False }
-
         dec =
-            (Json.map
+            Json.map
                 (\code ->
                     if code == 38 || code == 40 then
                         Ok NoOp
@@ -111,9 +124,9 @@ view model =
                         Err "not handling that key"
                 )
                 keyCode
-            )
                 |> Json.andThen
                     fromResult
+                |> Json.map (\msg -> ( msg, True ))
 
         fromResult : Result String a -> Json.Decoder a
         fromResult result =
@@ -128,7 +141,7 @@ view model =
             [ input
                 [ onInput SetQuery
                 , onFocus OnFocus
-                , onWithOptions "keydown" options dec
+                , preventDefaultOn "keydown" dec
                 , class "autocomplete-input"
                 , value model.query
                 ]

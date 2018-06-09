@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Tuple
@@ -9,10 +10,10 @@ import Svg exposing (path)
 import Svg.Attributes exposing (d, fill, viewBox)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init ! []
+    Browser.embed
+        { init = always ( init, Cmd.none )
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -65,29 +66,29 @@ update msg model =
             case msg of
                 AccessibleExample autoMsg ->
                     let
-                        toggleFocus autoMsg model =
+                        toggleFocus updatedModel =
                             case autoMsg of
                                 AccessibleExample.OnFocus ->
-                                    { model | currentFocus = Simple }
+                                    { updatedModel | currentFocus = Simple }
 
                                 _ ->
-                                    model
+                                    updatedModel
                     in
                         { model | accessibleAutocomplete = Tuple.first <| AccessibleExample.update autoMsg model.accessibleAutocomplete }
-                            |> toggleFocus autoMsg
+                            |> toggleFocus
 
                 SectionsExample autoMsg ->
                     let
-                        toggleFocus autoMsg model =
+                        toggleFocus updatedModel =
                             case autoMsg of
                                 SectionsExample.OnFocus ->
-                                    { model | currentFocus = Sections }
+                                    { updatedModel | currentFocus = Sections }
 
                                 _ ->
-                                    model
+                                    updatedModel
                     in
                         { model | sectionsAutocomplete = Tuple.first <| SectionsExample.update autoMsg model.sectionsAutocomplete }
-                            |> toggleFocus autoMsg
+                            |> toggleFocus
     in
         ( newModel, Cmd.none )
 

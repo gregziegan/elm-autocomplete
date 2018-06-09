@@ -18,7 +18,7 @@ new: clean-build all
 $(ELM_BUILD): elm
 
 demo:
-	elm make --yes Demo.elm --debug --output site/index.js
+	elm make Demo.elm --debug --output site/index.js
 
 
 clean:
