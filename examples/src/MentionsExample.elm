@@ -1,17 +1,22 @@
 port module Main exposing (..)
 
 import Autocomplete
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import String
 import Json.Decode as Json
+import String
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init ! []
+    Browser.embed
+        { init =
+            always
+                ( init
+                , Cmd.none
+                )
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -91,9 +96,11 @@ update msg model =
                         value
 
                 showMenu =
-                    not << List.isEmpty <| (acceptablePeople query model.people)
+                    not << List.isEmpty <| acceptablePeople query model.people
             in
-                { model | value = value, showMenu = showMenu, query = query } ! []
+                ( { model | value = value, showMenu = showMenu, query = query }
+                , Cmd.none
+                )
 
         SetAutoState autoMsg ->
             let
@@ -105,27 +112,30 @@ update msg model =
             in
                 case maybeMsg of
                     Nothing ->
-                        newModel ! []
+                        ( newModel
+                        , Cmd.none
+                        )
 
                     Just updateMsg ->
                         update updateMsg newModel
 
         Reset toTop ->
-            { model
+            ( { model
                 | autoState =
                     if toTop then
                         Autocomplete.resetToFirstItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
                     else
                         Autocomplete.resetToLastItem updateConfig (acceptablePeople model.query model.people) model.howManyToShow model.autoState
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         SelectPerson id ->
             let
                 meh =
                     List.filter (\person -> person.name == id) model.people
             in
-                { model
+                ( { model
                     | query =
                         List.filter (\person -> person.name == id) model.people
                             |> List.head
@@ -133,14 +143,19 @@ update msg model =
                             |> .name
                     , autoState = Autocomplete.empty
                     , showMenu = False
-                }
-                    ! []
+                  }
+                , Cmd.none
+                )
 
         SetCaretPosition pos ->
-            { model | caretPos = pos } ! []
+            ( { model | caretPos = pos }
+            , Cmd.none
+            )
 
         NoOp ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
 
 view : Model -> Html Msg
@@ -150,7 +165,7 @@ view model =
             { preventDefault = True, stopPropagation = False }
 
         dec =
-            (Json.map
+            Json.map
                 (\code ->
                     if code == 38 || code == 40 then
                         Ok NoOp
@@ -158,7 +173,6 @@ view model =
                         Err "not handling that key"
                 )
                 keyCode
-            )
                 |> Json.andThen fromResult
 
         fromResult : Result String a -> Json.Decoder a
