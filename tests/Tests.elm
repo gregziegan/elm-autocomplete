@@ -1,55 +1,39 @@
-module Tests exposing (..)
+module Tests exposing (all)
 
-import Test exposing (..)
 import Expect
+import Menu
+import Test
 
 
--- import Html
--- import Html.Attributes exposing (..)
+updateConfigWithSeparateSelections : Menu.UpdateConfig msg Person
+updateConfigWithSeparateSelections =
+    Menu.updateConfig
+        { toId = .name
+        , onKeyDown = \_ _ -> Nothing
+        , onTooLow = Nothing
+        , onTooHigh = Nothing
+        , onMouseEnter = \_ -> Nothing
+        , onMouseLeave = \_ -> Nothing
+        , onMouseClick = \_ -> Nothing
+        , separateSelections = True
+        }
 
-import String
+
+updateConfigWithCombinedSelections : Menu.UpdateConfig msg Person
+updateConfigWithCombinedSelections =
+    Menu.updateConfig
+        { toId = .name
+        , onKeyDown = \_ _ -> Nothing
+        , onTooLow = Nothing
+        , onTooHigh = Nothing
+        , onMouseEnter = \_ -> Nothing
+        , onMouseLeave = \_ -> Nothing
+        , onMouseClick = \_ -> Nothing
+        , separateSelections = False
+        }
 
 
--- updateConfig : Autocomplete.UpdateConfig msg Person
--- updateConfig =
---     Autocomplete.updateConfig
---         { onKeyDown =
---             \code maybeId -> Nothing
---         , onTooLow = Nothing
---         , onTooHigh = Nothing
---         , onMouseEnter = \_ -> Nothing
---         , onMouseLeave = \_ -> Nothing
---         , onMouseClick = \id -> Nothing
---         , toId = .name
---         }
--- viewConfig : Autocomplete.ViewConfig Person
--- viewConfig =
---     Autocomplete.viewConfig
---         { toId = .name
---         , ul = [ class "autocomplete-list" ]
---         , li = myLi
---         , input = [ class "autocomplete-input", placeholder "Search by name" ]
---         }
---
---
--- myLi :
---     Autocomplete.KeySelected
---     -> Autocomplete.MouseSelected
---     -> Person
---     -> Autocomplete.HtmlDetails Never
--- myLi keySelected mouseSelected person =
---     if keySelected then
---         { attributes = [ class "autocomplete-key-item" ]
---         , children = [ Html.text person.name ]
---         }
---     else if mouseSelected then
---         { attributes = [ class "autocomplete-mouse-item" ]
---         , children = [ Html.text person.name ]
---         }
---     else
---         { attributes = [ class "autocomplete-item" ]
---         , children = [ Html.text person.name ]
---         }
+
 -- PEOPLE
 
 
@@ -109,29 +93,48 @@ presidents =
     ]
 
 
-
--- all : Test
--- all =
---     describe "completes"
---         [ describe "given list of data"
---             [ test "the first element is selected on down key press"
---                 <| \() ->
---                     let
---                         ( state, maybeMsg ) =
---                             Autocomplete.update updateConfig (Autocomplete.KeyDown 40) Autocomplete.empty presidents 5
---                     in
---                         Expect.equal (Maybe.withDefault "" state.key) "George Washington"
---             ]
---         ]
+howManyPeopleToShow : Int
+howManyPeopleToShow =
+    5
 
 
-all : Test
+
+-- TESTS
+
+
+all : Test.Test
 all =
-    describe "A Test Suite"
-        [ test "Addition"
-            <| \() ->
-                Expect.equal (3 + 7) 10
-        , test "String.left"
-            <| \() ->
-                Expect.equal "a" (String.left 1 "abcdefg")
+    Test.describe "State"
+        [ Test.test "should empty the state" <|
+            \() ->
+                Expect.equal (Menu.current Menu.empty) ( Nothing, Nothing )
+        , Test.test "should reset to empty state when selections are not separated" <|
+            \() ->
+                let
+                    state =
+                        Menu.reset updateConfigWithCombinedSelections Menu.empty
+                in
+                Expect.equal (Menu.current state) ( Nothing, Nothing )
+        , Test.test "should reset to first item" <|
+            \() ->
+                let
+                    state =
+                        Menu.resetToFirstItem
+                            updateConfigWithCombinedSelections
+                            presidents
+                            howManyPeopleToShow
+                            Menu.empty
+                in
+                Expect.equal (Menu.current state) ( Just "George Washington", Nothing )
+        , Test.test "should reset to last item" <|
+            \() ->
+                let
+                    state =
+                        Menu.resetToLastItem
+                            updateConfigWithCombinedSelections
+                            presidents
+                            howManyPeopleToShow
+                            Menu.empty
+                in
+                Expect.equal (Menu.current state) ( Just "James Monroe", Nothing )
         ]

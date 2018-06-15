@@ -1,35 +1,38 @@
-module Autocomplete.Autocomplete
+module Menu.Internal
     exposing
-        ( view
-        , update
-        , subscription
-        , viewConfig
-        , updateConfig
+        ( HtmlDetails
+        , KeySelected
+        , MouseSelected
+        , Msg
+        , SectionConfig
+        , SectionNode
         , State
+        , UpdateConfig
+        , ViewConfig
+        , ViewWithSectionsConfig
+        , current
         , empty
         , reset
         , resetToFirstItem
         , resetToLastItem
-        , KeySelected
-        , MouseSelected
-        , Msg
-        , ViewConfig
-        , UpdateConfig
-        , HtmlDetails
-        , viewWithSections
         , sectionConfig
+        , subscription
+        , update
+        , updateConfig
+        , view
+        , viewConfig
+        , viewWithSections
         , viewWithSectionsConfig
-        , SectionNode
-        , SectionConfig
-        , ViewWithSectionsConfig
         )
 
-import Char exposing (KeyCode)
-import Html exposing (Html, Attribute)
-import Html.Attributes
-import Html.Keyed
-import Html.Events
-import Keyboard
+import Browser
+import Char
+import Html
+import Html.Attributes as Attrs
+import Html.Events as Events
+import Html.Keyed as Keyed
+import Json.Decode as Decode
+
 
 
 -- MODEL
@@ -49,6 +52,11 @@ type alias MouseSelected =
     Bool
 
 
+current : State -> ( Maybe String, Maybe String )
+current state =
+    ( state.key, state.mouse )
+
+
 empty : State
 empty =
     { key = Nothing, mouse = Nothing }
@@ -58,6 +66,7 @@ reset : UpdateConfig msg data -> State -> State
 reset { separateSelections } { key, mouse } =
     if separateSelections then
         { key = Nothing, mouse = mouse }
+
     else
         empty
 
@@ -74,28 +83,29 @@ resetToFirst config data state =
             config
 
         setFirstItem datum newState =
-            { newState | key = Just <| toId datum }
+            { newState | key = Just (toId datum) }
     in
-        case List.head data of
-            Nothing ->
-                empty
+    case List.head data of
+        Nothing ->
+            empty
 
-            Just datum ->
-                if separateSelections then
-                    reset config state
-                        |> setFirstItem datum
-                else
-                    empty
-                        |> setFirstItem datum
+        Just datum ->
+            if separateSelections then
+                reset config state
+                    |> setFirstItem datum
+
+            else
+                empty
+                    |> setFirstItem datum
 
 
 resetToLastItem : UpdateConfig msg data -> List data -> Int -> State -> State
 resetToLastItem config data howManyToShow state =
     let
         reversedData =
-            List.reverse <| List.take howManyToShow data
+            List.reverse (List.take howManyToShow data)
     in
-        resetToFirst config reversedData state
+    resetToFirst config reversedData state
 
 
 
@@ -106,11 +116,11 @@ resetToLastItem config data howManyToShow state =
 -}
 subscription : Sub Msg
 subscription =
-    Keyboard.downs KeyDown
+    Browser.onDocument "keydown" (Decode.map KeyDown Events.keyCode)
 
 
 type Msg
-    = KeyDown KeyCode
+    = KeyDown Int
     | WentTooLow
     | WentTooHigh
     | MouseEnter String
@@ -120,7 +130,7 @@ type Msg
 
 
 type alias UpdateConfig msg data =
-    { onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    { onKeyDown : Int -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : String -> Maybe msg
@@ -133,7 +143,7 @@ type alias UpdateConfig msg data =
 
 updateConfig :
     { toId : data -> String
-    , onKeyDown : KeyCode -> Maybe String -> Maybe msg
+    , onKeyDown : Int -> Maybe String -> Maybe msg
     , onTooLow : Maybe msg
     , onTooHigh : Maybe msg
     , onMouseEnter : String -> Maybe msg
@@ -166,18 +176,21 @@ update config msg howManyToShow state data =
                 newKey =
                     navigateWithKey keyCode boundedList state.key
             in
-                if newKey == state.key && keyCode == 38 then
-                    update config WentTooHigh howManyToShow state data
-                else if newKey == state.key && keyCode == 40 then
-                    update config WentTooLow howManyToShow state data
-                else if config.separateSelections then
-                    ( { state | key = newKey }
-                    , config.onKeyDown keyCode newKey
-                    )
-                else
-                    ( { key = newKey, mouse = newKey }
-                    , config.onKeyDown keyCode newKey
-                    )
+            if newKey == state.key && keyCode == 38 then
+                update config WentTooHigh howManyToShow state data
+
+            else if newKey == state.key && keyCode == 40 then
+                update config WentTooLow howManyToShow state data
+
+            else if config.separateSelections then
+                ( { state | key = newKey }
+                , config.onKeyDown keyCode newKey
+                )
+
+            else
+                ( { key = newKey, mouse = newKey }
+                , config.onKeyDown keyCode newKey
+                )
 
         WentTooLow ->
             ( state
@@ -212,28 +225,31 @@ resetMouseStateWithId : Bool -> String -> State -> State
 resetMouseStateWithId separateSelections id state =
     if separateSelections then
         { key = state.key, mouse = Just id }
+
     else
         { key = Just id, mouse = Just id }
 
 
 getPreviousItemId : List String -> String -> String
 getPreviousItemId ids selectedId =
-    Maybe.withDefault selectedId <| List.foldr (getPrevious selectedId) Nothing ids
+    Maybe.withDefault selectedId (List.foldr (getPrevious selectedId) Nothing ids)
 
 
 getPrevious : String -> String -> Maybe String -> Maybe String
 getPrevious id selectedId resultId =
     if selectedId == id then
         Just id
-    else if (Maybe.withDefault "" resultId) == id then
+
+    else if Maybe.withDefault "" resultId == id then
         Just selectedId
+
     else
         resultId
 
 
 getNextItemId : List String -> String -> String
 getNextItemId ids selectedId =
-    Maybe.withDefault selectedId <| List.foldl (getPrevious selectedId) Nothing ids
+    Maybe.withDefault selectedId (List.foldl (getPrevious selectedId) Nothing ids)
 
 
 navigateWithKey : Int -> List String -> Maybe String -> Maybe String
@@ -249,22 +265,22 @@ navigateWithKey code ids maybeId =
             maybeId
 
 
-view : ViewConfig data -> Int -> State -> List data -> Html Msg
+view : ViewConfig data -> Int -> State -> List data -> Html.Html Msg
 view config howManyToShow state data =
     viewList config howManyToShow state data
 
 
-viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html Msg
+viewWithSections : ViewWithSectionsConfig data sectionData -> Int -> State -> List sectionData -> Html.Html Msg
 viewWithSections config howManyToShow state sections =
     let
         getKeyedItems section =
             ( config.section.toId section, viewSection config state section )
     in
-        Html.Keyed.ul (List.map mapNeverToMsg config.section.ul)
-            (List.map getKeyedItems sections)
+    Keyed.ul (List.map mapNeverToMsg config.section.ul)
+        (List.map getKeyedItems sections)
 
 
-viewSection : ViewWithSectionsConfig data sectionData -> State -> sectionData -> Html Msg
+viewSection : ViewWithSectionsConfig data sectionData -> State -> sectionData -> Html.Html Msg
 viewSection config state section =
     let
         sectionNode =
@@ -280,7 +296,7 @@ viewSection config state section =
             ( config.toId datum, viewData config state datum )
 
         viewItemList =
-            Html.Keyed.ul (List.map mapNeverToMsg config.ul)
+            Keyed.ul (List.map mapNeverToMsg config.ul)
                 (config.section.getData section
                     |> List.map getKeyedItems
                 )
@@ -288,11 +304,11 @@ viewSection config state section =
         children =
             List.append customChildren [ viewItemList ]
     in
-        Html.li attributes
-            [ Html.node sectionNode.nodeType attributes children ]
+    Html.li attributes
+        [ Html.node sectionNode.nodeType attributes children ]
 
 
-viewData : ViewWithSectionsConfig data sectionData -> State -> data -> Html Msg
+viewData : ViewWithSectionsConfig data sectionData -> State -> data -> Html.Html Msg
 viewData { toId, li } { key, mouse } data =
     let
         id =
@@ -302,13 +318,13 @@ viewData { toId, li } { key, mouse } data =
             li (isSelected key) (isSelected mouse) data
 
         customAttributes =
-            (List.map mapNeverToMsg listItemData.attributes)
+            List.map mapNeverToMsg listItemData.attributes
 
         customLiAttr =
             List.append customAttributes
-                [ Html.Events.onMouseEnter (MouseEnter id)
-                , Html.Events.onMouseLeave (MouseLeave id)
-                , Html.Events.onClick (MouseClick id)
+                [ Events.onMouseEnter (MouseEnter id)
+                , Events.onMouseLeave (MouseLeave id)
+                , Events.onClick (MouseClick id)
                 ]
 
         isSelected maybeId =
@@ -319,11 +335,11 @@ viewData { toId, li } { key, mouse } data =
                 Nothing ->
                     False
     in
-        Html.li customLiAttr
-            (List.map (Html.map (\html -> NoOp)) listItemData.children)
+    Html.li customLiAttr
+        (List.map (Html.map (\html -> NoOp)) listItemData.children)
 
 
-viewList : ViewConfig data -> Int -> State -> List data -> Html Msg
+viewList : ViewConfig data -> Int -> State -> List data -> Html.Html Msg
 viewList config howManyToShow state data =
     let
         customUlAttr =
@@ -332,13 +348,13 @@ viewList config howManyToShow state data =
         getKeyedItems datum =
             ( config.toId datum, viewItem config state datum )
     in
-        Html.Keyed.ul customUlAttr
-            (List.take howManyToShow data
-                |> List.map getKeyedItems
-            )
+    Keyed.ul customUlAttr
+        (List.take howManyToShow data
+            |> List.map getKeyedItems
+        )
 
 
-viewItem : ViewConfig data -> State -> data -> Html Msg
+viewItem : ViewConfig data -> State -> data -> Html.Html Msg
 viewItem { toId, li } { key, mouse } data =
     let
         id =
@@ -348,13 +364,13 @@ viewItem { toId, li } { key, mouse } data =
             li (isSelected key) (isSelected mouse) data
 
         customAttributes =
-            (List.map mapNeverToMsg listItemData.attributes)
+            List.map mapNeverToMsg listItemData.attributes
 
         customLiAttr =
             List.append customAttributes
-                [ Html.Events.onMouseEnter (MouseEnter id)
-                , Html.Events.onMouseLeave (MouseLeave id)
-                , Html.Events.onClick (MouseClick id)
+                [ Events.onMouseEnter (MouseEnter id)
+                , Events.onMouseLeave (MouseLeave id)
+                , Events.onClick (MouseClick id)
                 ]
 
         isSelected maybeId =
@@ -365,26 +381,26 @@ viewItem { toId, li } { key, mouse } data =
                 Nothing ->
                     False
     in
-        Html.li customLiAttr
-            (List.map (Html.map (\html -> NoOp)) listItemData.children)
+    Html.li customLiAttr
+        (List.map (Html.map (\html -> NoOp)) listItemData.children)
 
 
 type alias HtmlDetails msg =
-    { attributes : List (Attribute msg)
-    , children : List (Html msg)
+    { attributes : List (Html.Attribute msg)
+    , children : List (Html.Html msg)
     }
 
 
 type alias ViewConfig data =
     { toId : data -> String
-    , ul : List (Attribute Never)
+    , ul : List (Html.Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     }
 
 
 type alias ViewWithSectionsConfig data sectionData =
     { toId : data -> String
-    , ul : List (Attribute Never)
+    , ul : List (Html.Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     , section : SectionConfig data sectionData
     }
@@ -393,21 +409,21 @@ type alias ViewWithSectionsConfig data sectionData =
 type alias SectionConfig data sectionData =
     { toId : sectionData -> String
     , getData : sectionData -> List data
-    , ul : List (Attribute Never)
+    , ul : List (Html.Attribute Never)
     , li : sectionData -> SectionNode Never
     }
 
 
 type alias SectionNode msg =
     { nodeType : String
-    , attributes : List (Attribute msg)
-    , children : List (Html msg)
+    , attributes : List (Html.Attribute msg)
+    , children : List (Html.Html msg)
     }
 
 
 viewConfig :
     { toId : data -> String
-    , ul : List (Attribute Never)
+    , ul : List (Html.Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     }
     -> ViewConfig data
@@ -420,7 +436,7 @@ viewConfig { toId, ul, li } =
 
 viewWithSectionsConfig :
     { toId : data -> String
-    , ul : List (Attribute Never)
+    , ul : List (Html.Attribute Never)
     , li : KeySelected -> MouseSelected -> data -> HtmlDetails Never
     , section : SectionConfig data sectionData
     }
@@ -436,7 +452,7 @@ viewWithSectionsConfig { toId, ul, li, section } =
 sectionConfig :
     { toId : sectionData -> String
     , getData : sectionData -> List data
-    , ul : List (Attribute Never)
+    , ul : List (Html.Attribute Never)
     , li : sectionData -> SectionNode Never
     }
     -> SectionConfig data sectionData
@@ -452,6 +468,6 @@ sectionConfig { toId, getData, ul, li } =
 -- HELPERS
 
 
-mapNeverToMsg : Attribute Never -> Attribute Msg
+mapNeverToMsg : Html.Attribute Never -> Html.Attribute Msg
 mapNeverToMsg msg =
-    Html.Attributes.map (\_ -> NoOp) msg
+    Attrs.map (\_ -> NoOp) msg
