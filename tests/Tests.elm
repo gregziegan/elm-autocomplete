@@ -1,16 +1,13 @@
-module Tests exposing (..)
+module Tests exposing (all)
 
--- import Html
--- import Html.Attributes exposing (..)
-
-import Autocomplete
 import Expect
-import Test exposing (..)
+import Menu
+import Test
 
 
-updateConfigWithSeparateSelections : Autocomplete.UpdateConfig msg Person
+updateConfigWithSeparateSelections : Menu.UpdateConfig msg Person
 updateConfigWithSeparateSelections =
-    Autocomplete.updateConfig
+    Menu.updateConfig
         { toId = .name
         , onKeyDown = \_ _ -> Nothing
         , onTooLow = Nothing
@@ -22,9 +19,9 @@ updateConfigWithSeparateSelections =
         }
 
 
-updateConfigWithCombinedSelections : Autocomplete.UpdateConfig msg Person
+updateConfigWithCombinedSelections : Menu.UpdateConfig msg Person
 updateConfigWithCombinedSelections =
-    Autocomplete.updateConfig
+    Menu.updateConfig
         { toId = .name
         , onKeyDown = \_ _ -> Nothing
         , onTooLow = Nothing
@@ -105,39 +102,39 @@ howManyPeopleToShow =
 -- TESTS
 
 
-all : Test
+all : Test.Test
 all =
-    describe "State"
-        [ test "should empty the state" <|
+    Test.describe "State"
+        [ Test.test "should empty the state" <|
             \() ->
-                Expect.equal (Autocomplete.current Autocomplete.empty) ( Nothing, Nothing )
-        , test "should reset to empty state when selections are not separated" <|
+                Expect.equal (Menu.current Menu.empty) ( Nothing, Nothing )
+        , Test.test "should reset to empty state when selections are not separated" <|
             \() ->
                 let
                     state =
-                        Autocomplete.reset updateConfigWithCombinedSelections Autocomplete.empty
+                        Menu.reset updateConfigWithCombinedSelections Menu.empty
                 in
-                Expect.equal (Autocomplete.current state) ( Nothing, Nothing )
-        , test "should reset to first item" <|
+                Expect.equal (Menu.current state) ( Nothing, Nothing )
+        , Test.test "should reset to first item" <|
             \() ->
                 let
                     state =
-                        Autocomplete.resetToFirstItem
+                        Menu.resetToFirstItem
                             updateConfigWithCombinedSelections
                             presidents
                             howManyPeopleToShow
-                            Autocomplete.empty
+                            Menu.empty
                 in
-                Expect.equal (Autocomplete.current state) ( Just "George Washington", Nothing )
-        , test "should reset to last item" <|
+                Expect.equal (Menu.current state) ( Just "George Washington", Nothing )
+        , Test.test "should reset to last item" <|
             \() ->
                 let
                     state =
-                        Autocomplete.resetToLastItem
+                        Menu.resetToLastItem
                             updateConfigWithCombinedSelections
                             presidents
                             howManyPeopleToShow
-                            Autocomplete.empty
+                            Menu.empty
                 in
-                Expect.equal (Autocomplete.current state) ( Just "James Monroe", Nothing )
+                Expect.equal (Menu.current state) ( Just "James Monroe", Nothing )
         ]

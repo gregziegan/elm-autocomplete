@@ -1,17 +1,18 @@
 module SectionsExample exposing (..)
 
-import Autocomplete
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Json.Decode as Json
+import Browser
+import Html
+import Html.Attributes as Attrs
+import Html.Events as Events
+import Json.Decode as Decode
+import Menu
 import String
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init ! []
+    Browser.embed
+        { init = \_ -> ( init, Cmd.none )
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -20,13 +21,13 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.map SetAutoState Autocomplete.subscription
+    Sub.map SetAutoState Menu.subscription
 
 
 type alias Model =
     { people : List Person
     , peopleByCentury : List Century
-    , autoState : Autocomplete.State
+    , autoState : Menu.State
     , howManyToShow : Int
     , query : String
     , showMenu : Bool
@@ -37,7 +38,7 @@ init : Model
 init =
     { people = presidents
     , peopleByCentury = presidentsByCentury
-    , autoState = Autocomplete.empty
+    , autoState = Menu.empty
     , howManyToShow = List.length presidents
     , query = ""
     , showMenu = False
@@ -46,7 +47,7 @@ init =
 
 type Msg
     = SetQuery String
-    | SetAutoState Autocomplete.Msg
+    | SetAutoState Menu.Msg
     | Reset
     | SelectPerson String
     | OnFocus
@@ -57,85 +58,84 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetQuery newQuery ->
-            { model | query = newQuery, showMenu = True } ! []
+            ( { model | query = newQuery, showMenu = True }
+            , Cmd.none
+            )
 
         SetAutoState autoMsg ->
             let
                 ( newState, maybeMsg ) =
-                    Autocomplete.update updateConfig autoMsg model.howManyToShow model.autoState (acceptablePeople model)
+                    Menu.update updateConfig autoMsg model.howManyToShow model.autoState (acceptablePeople model)
 
                 newModel =
                     { model | autoState = newState }
             in
             case maybeMsg of
                 Nothing ->
-                    newModel ! []
+                    ( newModel
+                    , Cmd.none
+                    )
 
                 Just updateMsg ->
                     update updateMsg newModel
 
         Reset ->
-            { model | autoState = Autocomplete.resetToFirstItem updateConfig (acceptablePeople model) model.howManyToShow model.autoState } ! []
+            ( { model
+                | autoState =
+                    Menu.resetToFirstItem updateConfig (acceptablePeople model) model.howManyToShow model.autoState
+              }
+            , Cmd.none
+            )
 
         SelectPerson id ->
-            { model
+            ( { model
                 | query =
                     List.filter (\person -> person.name == id) model.people
                         |> List.head
                         |> Maybe.withDefault (Person "" 0 "" "")
                         |> .name
-                , autoState = Autocomplete.empty
+                , autoState = Menu.empty
                 , showMenu = False
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         OnFocus ->
-            model ! []
+            ( model, Cmd.none )
 
         NoOp ->
-            model ! []
+            ( model, Cmd.none )
 
 
-view : Model -> Html Msg
+view : Model -> Html.Html Msg
 view model =
     let
-        options =
-            { preventDefault = True, stopPropagation = False }
+        upDownDecoderHelper : Int -> Decode.Decoder ( Msg, Bool )
+        upDownDecoderHelper code =
+            if code == 38 || code == 40 then
+                Decode.succeed ( NoOp, True )
 
-        dec =
-            Json.map
-                (\code ->
-                    if code == 38 || code == 40 then
-                        Ok NoOp
-                    else
-                        Err "not handling that key"
-                )
-                keyCode
-                |> Json.andThen
-                    fromResult
+            else
+                Decode.fail "not handling that key"
 
-        fromResult : Result String a -> Json.Decoder a
-        fromResult result =
-            case result of
-                Ok val ->
-                    Json.succeed val
-
-                Err reason ->
-                    Json.fail reason
+        upDownDecoder : Decode.Decoder ( Msg, Bool )
+        upDownDecoder =
+            Events.keyCode |> Decode.andThen upDownDecoderHelper
     in
-    div []
-        [ input
-            [ onInput SetQuery
-            , onFocus OnFocus
-            , onWithOptions "keydown" options dec
-            , class "autocomplete-input"
-            , value model.query
+    Html.div []
+        [ Html.input
+            [ Events.onInput SetQuery
+            , Events.onFocus OnFocus
+            , Events.preventDefaultOn "keydown" upDownDecoder
+            , Attrs.class "autocomplete-input"
+            , Attrs.value model.query
             ]
             []
         , if model.showMenu then
             viewMenu model
+
           else
-            div [] []
+            Html.div [] []
         ]
 
 
@@ -149,7 +149,7 @@ acceptablePeopleByCentury { query, peopleByCentury } =
             { century | people = people }
 
         filterPeople century =
-            filteredCentury century <| List.filter (String.contains lowerQuery << String.toLower << .name) century.people
+            filteredCentury century (List.filter (String.contains lowerQuery << String.toLower << .name) century.people)
     in
     List.map filterPeople peopleByCentury
 
@@ -163,65 +163,73 @@ acceptablePeople { query, people } =
     List.filter (String.contains lowerQuery << String.toLower << .name) people
 
 
-viewMenu : Model -> Html Msg
+viewMenu : Model -> Html.Html Msg
 viewMenu model =
-    div [ class "autocomplete-menu" ]
-        [ Html.map SetAutoState (Autocomplete.viewWithSections viewConfig model.howManyToShow model.autoState (acceptablePeopleByCentury model)) ]
+    Html.div [ Attrs.class "autocomplete-menu" ]
+        [ Html.map SetAutoState <|
+            Menu.viewWithSections
+                viewConfig
+                model.howManyToShow
+                model.autoState
+                (acceptablePeopleByCentury model)
+        ]
 
 
-updateConfig : Autocomplete.UpdateConfig Msg Person
+updateConfig : Menu.UpdateConfig Msg Person
 updateConfig =
-    Autocomplete.updateConfig
+    Menu.updateConfig
         { toId = .name
         , onKeyDown =
             \code maybeId ->
                 if code == 38 || code == 40 then
                     Nothing
+
                 else if code == 13 then
                     Maybe.map SelectPerson maybeId
+
                 else
                     Just Reset
         , onTooLow = Just Reset
         , onTooHigh = Just Reset
         , onMouseEnter = \_ -> Nothing
         , onMouseLeave = \_ -> Nothing
-        , onMouseClick = \id -> Just <| SelectPerson id
+        , onMouseClick = \id -> Just (SelectPerson id)
         , separateSelections = True
         }
 
 
-viewConfig : Autocomplete.ViewWithSectionsConfig Person Century
+viewConfig : Menu.ViewWithSectionsConfig Person Century
 viewConfig =
     let
         customizedLi keySelected mouseSelected person =
             { attributes =
-                [ classList [ ( "autocomplete-item", True ), ( "key-selected", keySelected ), ( "mouse-selected", mouseSelected ) ]
-                , id person.name
+                [ Attrs.classList [ ( "autocomplete-item", True ), ( "key-selected", keySelected ), ( "mouse-selected", mouseSelected ) ]
+                , Attrs.id person.name
                 ]
             , children = [ Html.text person.name ]
             }
     in
-    Autocomplete.viewWithSectionsConfig
+    Menu.viewWithSectionsConfig
         { toId = .name
-        , ul = [ class "autocomplete-list-with-sections" ]
+        , ul = [ Attrs.class "autocomplete-list-with-sections" ]
         , li = customizedLi
         , section = sectionConfig
         }
 
 
-sectionConfig : Autocomplete.SectionConfig Person Century
+sectionConfig : Menu.SectionConfig Person Century
 sectionConfig =
-    Autocomplete.sectionConfig
+    Menu.sectionConfig
         { toId = .title
         , getData = .people
-        , ul = [ class "autocomplete-section-list" ]
+        , ul = [ Attrs.class "autocomplete-section-list" ]
         , li =
             \section ->
                 { nodeType = "div"
-                , attributes = [ class "autocomplete-section-item" ]
+                , attributes = [ Attrs.class "autocomplete-section-item" ]
                 , children =
-                    [ div [ class "autocomplete-section-box" ]
-                        [ strong [ class "autocomplete-section-text" ] [ text section.title ]
+                    [ Html.div [ Attrs.class "autocomplete-section-box" ]
+                        [ Html.strong [ Attrs.class "autocomplete-section-text" ] [ Html.text section.title ]
                         ]
                     ]
                 }

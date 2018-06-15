@@ -2,13 +2,22 @@
 
 ## !!! Fork of http://package.elm-lang.org/packages/thebritican/elm-autocomplete/latest
 
-> Per discussion in [#37](https://github.com/thebritican/elm-autocomplete/issues/37), this library will be moved into `elm-menu` (Since it's really just a menu currently). The `AccessibleExample` (with a simple API and included `input` field) will be the _mostly_ drop-in solution for this library. If you want to build more complicated features (like mentions), use `elm-menu` after the work is done porting it! Meanwhile, you'll have to copy/paste the example... obviously not ideal! The motivation here: no one wants to have 300 lines of boilerplate for the common case of a typical form autocomplete!
+> Per discussion in [#37](https://github.com/thebritican/elm-autocomplete/issues/37),
+this library will be moved into `elm-menu` (Since it's really just a menu currently).
+The `AccessibleExample` (with a simple API and included `input` field) will be the _mostly_
+drop-in solution for this library. If you want to build more complicated features (like mentions),
+use `elm-menu` after the work is done porting it! Meanwhile, you'll have to copy/paste the example...
+obviously not ideal! The motivation here: no one wants to have 300 lines of boilerplate for the common
+case of a typical form autocomplete!
 
 [![Build Status](https://travis-ci.org/thebritican/elm-autocomplete.svg?branch=master)](https://travis-ci.org/thebritican/elm-autocomplete)
 
 ## Demo
 
-Checkout the [landing page](http://thebritican.github.io/elm-autocomplete) inspired by [React Autosuggest](http://react-autosuggest.js.org/)'s page design
+Checkout the [landing page] inspired by [React Autosuggest]'s page design
+
+[landing page]: http://thebritican.github.io/elm-autocomplete
+[React Autosuggest]: http://react-autosuggest.js.org/
 
 Autocomplete menus have _just enough_ functionality to be tedious to implement again and again.
 This is a flexible library for handling the needs of many different autocompletes.
@@ -18,11 +27,13 @@ Your data is stored separately; keep it in whatever shape makes the most sense f
 Make an issue if this library cannot handle your scenario and we'll investigate together if it makes sense in the larger
 context!
 
-I recommend looking at the [examples](https://github.com/akoppela/elm-autocomplete/tree/master/examples) before diving into the API or source code!
+I recommend looking at the [examples] before diving into the API or source code!
+
+[examples]: https://github.com/akoppela/elm-autocomplete/tree/master/examples
 
 ## Usage Rules
 
-  - Always put `Autocomplete.State` in your model.
+  - Always put `Menu.State` in your model.
   - Never put _any_ `Config` in your model.
 
 Design inspired by [elm-sortable-table](https://github.com/evancz/elm-sortable-table/).
@@ -40,11 +51,11 @@ elm-package install akoppela/elm-autocomplete
 
 ## Setup
 ```elm
-import Autocomplete
+import Menu
 
 
 type alias Model =
-  { autoState : Autocomplete.State -- Own the State of the menu in your model
+  { autoState : Menu.State -- Own the State of the menu in your model
   , query : String -- Perhaps you want to filter by a string?
   , people : List Person -- The data you want to list and filter
   }
@@ -59,9 +70,9 @@ acceptablePeople query people =
       List.filter (String.contains lowerQuery << String.toLower << .name) people
 
 -- Set up what will happen with your menu updates
-updateConfig : Autocomplete.UpdateConfig Msg Person
+updateConfig : Menu.UpdateConfig Msg Person
 updateConfig =
-    Autocomplete.updateConfig
+    Menu.updateConfig
         { toId = .name
         , onKeyDown =
             \code maybeId ->
@@ -78,7 +89,7 @@ updateConfig =
         }
 
 type Msg
-  = SetAutocompleteState Autocomplete.Msg
+  = SetAutocompleteState Menu.Msg
 
 update : Msg -> Model -> Model
 update msg { autoState, query, people, howManyToShow } =
@@ -86,12 +97,12 @@ update msg { autoState, query, people, howManyToShow } =
     SetAutocompleteState autoMsg ->
       let
         (newState, maybeMsg) =
-          Autocomplete.update updateConfig autoMsg howManyToShow autoState (acceptablePeople query people)
+          Menu.update updateConfig autoMsg howManyToShow autoState (acceptablePeople query people)
       in
         { model | autoState = newState }
 
 -- setup for your autocomplete view
-viewConfig : Autocomplete.ViewConfig Person
+viewConfig : Menu.ViewConfig Person
 viewConfig =
   let
     customizedLi keySelected mouseSelected person =
@@ -99,7 +110,7 @@ viewConfig =
       , children = [ Html.text person.name ]
       }
   in
-    Autocomplete.viewConfig
+    Menu.viewConfig
       { toId = .name
       , ul = [ class "autocomplete-list" ] -- set classes for your list
       , li = customizedLi -- given selection states and a person, create some Html!
@@ -110,7 +121,7 @@ view : Model -> Html Msg
 view { autoState, query, people } =
   div []
       [ input [ onInput SetQuery ] []
-      , Html.App.map SetAutocompleteState (Autocomplete.view viewConfig 5 autoState (acceptablePeople query people))
+      , Html.App.map SetAutocompleteState (Menu.view viewConfig 5 autoState (acceptablePeople query people))
       ]
 
 ```
